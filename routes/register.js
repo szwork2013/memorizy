@@ -1,3 +1,4 @@
+var util = require('util');
 var register = require('../models/register.js');
 /*
  *register page
@@ -24,15 +25,18 @@ module.exports = function(app){
 
 	app.post(uri.register, function(req, res){
 		var props = {
-			username : req.body.username
+			username : req.body.username,
+			password : req.body.password,
+			email : req.body.email
 		};
 
-		register.createUser(req, function(err, res){
+		register.createUser(props, function(err, results){
 			if (err) {
 				props.err = err;
 				res.render(views.register, props);
 			}
 			else {
+				console.log(util.inspect(results));
 				res.render(views.registerSuccess, props);
 			}
 		});

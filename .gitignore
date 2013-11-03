@@ -13,3 +13,9 @@ results
 
 npm-debug.log
 node_modules
+
+/* test coverage */
+coverage/
+
+/* vim swap files */
+*.swp

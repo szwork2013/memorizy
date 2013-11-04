@@ -30,16 +30,15 @@ module.exports = function(app){
 			email : req.body.email
 		};
 
-		register.createUser(props, function(err, results){
-			if (err) {
-				props.err = err;
-				res.render(views.register, props);
-			}
-			else {
-				console.log(util.inspect(results));
-				res.render(views.registerSuccess, props);
-			}
-		});
+		register.createUser(props)
+		.then(function(results){
+			res.render(views.registerSuccess, props);
+		})
+		.catch(function(err){
+			props.err = err;
+			res.render(views.register, props);
+		})
+		.done();
 	});
 }
 

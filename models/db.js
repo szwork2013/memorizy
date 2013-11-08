@@ -15,7 +15,6 @@ db.prototype.executePreparedStatement = function(pstat){
 			deferred.reject(err);
 		}
 		else {
-			console.log('Send query...');
 			client.query(pstat, function(err, result) {
 				//call `done()` to release the client back to the pool
 				done();

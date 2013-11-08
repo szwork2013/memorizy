@@ -1,14 +1,38 @@
-create or replace function create_user(_username_display text, _real_username text, _password text, _email text) returns boolean as $$
+create or replace function create_user(_username_display text, _real_username text, _password text, _email text) returns record as $$
+declare
+	res			record;
+	username_already_exists	boolean;
+	email_already_exists	boolean;
 begin 
-	insert into users (username, username_display, password, email, enabled)
-		select distinct _real_username, _username_display, _password, _email, false
-		from users
-		where not exists (
-			select 1 from users
-			where username = _real_username or email = _email
-		);
+	select exists (
+		select 1 from users
+		where username = _real_username
+	), exists (
+		select 1 from users
+		where email = _email
+	) into username_already_exists, email_already_exists;
 
-	return found;
+	
+	if not (username_already_exists or email_already_exists) then
+		insert into users (username, username_display, password, email, enabled)
+			values( _real_username, _username_display, _password, _email, false);
+		res := (found, username_already_exists, email_already_exists); -- Arguments order must NOT be changed
+	else
+		res := (false, username_already_exists, email_already_exists);
+	end if;
+
+
+	return res;
+	--Impossible to say if the email already exists OR the username already exists
+	--insert into users (username, username_display, password, email, enabled)
+		--select distinct _real_username, _username_display, _password, _email, false
+		--from users
+		--where not exists (
+			--select 1 from users
+			--where username = _real_username or email = _email
+		--);
+
+	--return found;
 end;
 $$ language plpgsql;
 

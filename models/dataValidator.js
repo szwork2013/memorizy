@@ -31,9 +31,13 @@ var singleton = new dataValidator();
  * @param propertyValidators Contains required properties and possibly their respective
  * validator, which must be a boolean function or null. If the validator function
  * return true, the value is considered valid, invalid otherwise
- * @return an object containing two array called missingProperties and invalidProperties
+ * @return an object containing two arrays called missingProperties and invalidProperties
  */
 dataValidator.prototype.validate = function(data, propertyValidators){
+	if (typeof data != 'object' || typeof propertyValidators != 'object'){
+		throw new Error('data and propertyValidators must be an object literal');
+	}
+
 	var err = {
 		missingProperties : [],
 		invalidProperties : []
@@ -41,8 +45,8 @@ dataValidator.prototype.validate = function(data, propertyValidators){
 	
 	for (var key in propertyValidators) {
 		if (propertyValidators.hasOwnProperty(key)) {
-			if (typeof data[key] == 'undefined') {
-				// Corresponding validator isn't check in this case
+			if (!(key in data)) {
+				// Corresponding validator isn't checked in this case
 				err.missingProperties.push(key);				
 			}
 			// Property validators must return a boolean
@@ -61,7 +65,7 @@ dataValidator.prototype.validate = function(data, propertyValidators){
 			else if (propertyValidators[key] !== null) {
 				throw new Error('Invalid property validator : ' 
 						+ propertyValidators[key] +
-						' (expected a function or null)');
+						' (expected a boolean function or null)');
 			}
 		}
 	};

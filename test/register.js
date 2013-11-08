@@ -15,11 +15,28 @@ describe('register.createUser', function(){
 		password : 'ab',
 		email : 'test'
 	}
+
+	it('should throw an IllegalArgumentError if user properties are not an object', function(done){
+		var s = [ null, 'abc', 123, []];
+		for (var i in s) {
+			try { 
+				register.createUser(s[i]); 
+				throw new Error('should have thrown an IllegalArgumentError');
+			} 
+			catch(e) { 
+				if (e.name != 'IllegalArgumentError') { 
+					done(e); 
+				}
+			}
+		}
+
+		done();
+	});
+
 	it('should return a rejected promise if at least one required user property is invalid, without hitting the database', function(done){
-		register.createUser(null).isRejected().should.be.true;
-		register.createUser({ password: valid.password, email : valid.email }).isRejected().should.be.true; 
-		register.createUser({ username : valid.user, email : valid.email}).isRejected().should.be.true; 
-		register.createUser({ username : valid.user, password : valid.password }).isRejected().should.be.true; 
+		register.createUser({ password: valid.password, email : valid.email }).catch(function(){ done(); }); 
+		register.createUser({ username : valid.user, email : valid.email}).catch(function(){ done(); }); 
+		register.createUser({ username : valid.user, password : valid.password }).catch(function(){ done(); }); 
 	});
 
 	it('should return a rejected promise if at least one required user property is invalid, without hitting the database', function(done){

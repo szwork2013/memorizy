@@ -52,7 +52,7 @@ dataValidator.prototype.validate = function(data, propertyValidators){
 			// Property validators must return a boolean
 			// if they are defined
 			else if (typeof propertyValidators[key] == 'function'){
-				var res = propertyValidators[key](key);
+				var res = propertyValidators[key](data[key]);
 				if (typeof res != 'boolean') {
 					throw new Error('Property validators must return a boolean');
 				}

@@ -1,7 +1,7 @@
 create or replace function create_user(_username_display text, _real_username text, _password text, _email text) returns boolean as $$
 begin 
 	insert into users (username, username_display, password, email, enabled)
-		select _real_username, _username_display, _password, _email, false
+		select distinct _real_username, _username_display, _password, _email, false
 		from users
 		where not exists (
 			select 1 from users

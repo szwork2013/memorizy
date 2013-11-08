@@ -15,7 +15,32 @@ db.prototype.executePreparedStatement = function(pstat){
 			deferred.reject(err);
 		}
 		else {
+			console.log('Send query...');
 			client.query(pstat, function(err, result) {
+				//call `done()` to release the client back to the pool
+				done();
+				if (err) {
+					deferred.reject(err);
+				}
+				else {
+					deferred.resolve(result);
+				}
+			});
+		}
+	});
+	return deferred.promise;
+};
+
+//NOT TESTED
+db.prototype.executeParameterizedQuery = function(query, values){
+	var deferred = q.defer();
+	pg.connect(this.conn, function(err, client, done) {
+		if(err) {
+			deferred.reject(err);
+			done(client);
+		}
+		else {
+			client.query(query, values, function(err, result) {
 				//call `done()` to release the client back to the pool
 				done();
 				if (err) {

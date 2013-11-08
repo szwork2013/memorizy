@@ -7,14 +7,14 @@ var assert = require('assert');
 describe('register.createUser', function(){ 
 	var valid = {
 		username : 'test',
-		password : 'test',
+		password : 'test1234',
 		email : 'test@test.com'
-	}
+	};
 	var invalid = {
 		username : 'ab',
 		password : 'ab',
 		email : 'test'
-	}
+	};
 
 	it('should throw an IllegalArgumentError if user properties are not an object', function(done){
 		var s = [ null, 'abc', 123, []];
@@ -35,24 +35,24 @@ describe('register.createUser', function(){
 
 	it('should return a rejected promise if at least one required user property is missing, without hitting the database', function(done){
 		var err = new Error('should have returned a rejected promise');
-		register.createUser({ password: valid.password, email : valid.email }).then(function(){ done(err); }); 
-		register.createUser({ username : valid.user, email : valid.email}).then(function(){ done(err); }); 
-		register.createUser({ username : valid.user, password : valid.password }).then(function(){ done(err); }); 
+		register.createUser({ password: valid.password, email : valid.email }).isRejected().should.be.true; 
+		register.createUser({ username : valid.user, email : valid.email}).isRejected().should.be.true; 
+		register.createUser({ username : valid.user, password : valid.password }).isRejected().should.be.true; 
 
 		done();
 	});
 
 	it('should return a rejected promise if at least one required user property is invalid, without hitting the database', function(done){
 		var err = new Error('should have returned a rejected promise');
-		register.createUser({ username : invalid.username, password: valid.password, email : valid.email }).then(function(){ done(err); }); 
-		register.createUser({ username : valid.user, password : invalid.password, email : valid.email }).then(function(){ done(err); }); 
-		register.createUser({ username : valid.user, password : valid.password, email : invalid.email }).then(function(){ done(err); }); 
+		register.createUser({ username : invalid.username, password: valid.password, email : valid.email }).isRejected().should.be.true; 
+		register.createUser({ username : valid.user, password : invalid.password, email : valid.email }).isRejected().should.be.true; 
+		register.createUser({ username : valid.user, password : valid.password, email : invalid.email }).isRejected().should.be.true; 
 
 		done();
 	});
 
-	it('should return a resolved promise if all parameters are supplied and valid', function(){
-		register.createUser(valid).isFulfilled().should.be.true;
+	it.only('should return a resolved promise if all parameters are supplied and valid', function(done){
+		register.createUser(valid).then(function(){ done(); }).catch(done);
 	});
 
 	it('should call its callback with an error if the user cannot be created');

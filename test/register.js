@@ -34,9 +34,10 @@ describe('register.createUser', function(){
 	});
 
 	it('should return a rejected promise if at least one required user property is invalid, without hitting the database', function(done){
-		register.createUser({ password: valid.password, email : valid.email }).catch(function(){ done(); }); 
-		register.createUser({ username : valid.user, email : valid.email}).catch(function(){ done(); }); 
-		register.createUser({ username : valid.user, password : valid.password }).catch(function(){ done(); }); 
+		var err = new Error('should have returned a rejected promise');
+		register.createUser({ password: valid.password, email : valid.email }).then(function(){ done(err)); }); 
+		register.createUser({ username : valid.user, email : valid.email}).then(function(){ done(err)); }); 
+		register.createUser({ username : valid.user, password : valid.password }).then(function(){ done(err)); }); 
 	});
 
 	it('should return a rejected promise if at least one required user property is invalid, without hitting the database', function(done){

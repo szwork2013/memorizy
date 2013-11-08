@@ -33,18 +33,22 @@ describe('register.createUser', function(){
 		done();
 	});
 
-	it('should return a rejected promise if at least one required user property is invalid, without hitting the database', function(done){
+	it('should return a rejected promise if at least one required user property is missing, without hitting the database', function(done){
 		var err = new Error('should have returned a rejected promise');
-		register.createUser({ password: valid.password, email : valid.email }).then(function(){ done(err)); }); 
-		register.createUser({ username : valid.user, email : valid.email}).then(function(){ done(err)); }); 
-		register.createUser({ username : valid.user, password : valid.password }).then(function(){ done(err)); }); 
+		register.createUser({ password: valid.password, email : valid.email }).then(function(){ done(err); }); 
+		register.createUser({ username : valid.user, email : valid.email}).then(function(){ done(err); }); 
+		register.createUser({ username : valid.user, password : valid.password }).then(function(){ done(err); }); 
+
+		done();
 	});
 
 	it('should return a rejected promise if at least one required user property is invalid, without hitting the database', function(done){
-		// should stub db.executePreparedStatement...
-		register.createUser({ username : invalid.username, password: valid.password, email : valid.email }).fail(done); 
-		register.createUser({ username : valid.user, password : invalid.password, email : valid.email }).fail(done); 
-		register.createUser({ username : valid.user, password : valid.password, email : invalid.email }).fail(done); 
+		var err = new Error('should have returned a rejected promise');
+		register.createUser({ username : invalid.username, password: valid.password, email : valid.email }).then(function(){ done(err); }); 
+		register.createUser({ username : valid.user, password : invalid.password, email : valid.email }).then(function(){ done(err); }); 
+		register.createUser({ username : valid.user, password : valid.password, email : invalid.email }).then(function(){ done(err); }); 
+
+		done();
 	});
 
 	it('should return a resolved promise if all parameters are supplied and valid', function(){

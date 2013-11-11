@@ -35,7 +35,31 @@ begin
 end;
 $$ language plpgsql;	
 
-create or replace function get_folder_content(_username text, _path text[]) returns setof record as $$
+
+create or replace function get_folder_content(_user_id integer, _folder_id integer) returns setof record as $$
+	declare                                                                                                                                    
+begin                                                                                                                                      
+	raise notice 'asking for %, %', _user_id, _folder_id;
+	-- The path is correct, so we return the last folder found's children                                                              
+	return query execute                                                                                                               
+	'with children_ids as ( ' ||                                                                                               
+			'select descendant_id children_id ' ||                                                                                     
+			'from files_tree ' ||                                                                                                      
+			'where ancestor_id = ' || _folder_id ||                                                                                    
+			' and dist = 1 ' ||                                                                                                        
+			') ' ||                                                                                                                            
+	'select f.id, f.owner_id, f.name_display::TEXT, f.name::TEXT'                     
+	|| ', f.n_cards, f.type_id'                                                                                        
+	|| ', coalesce(ufp.percentage, 0) percentage'                                                                              
+	|| ' from files f left join users_files_status'                                                                            
+	|| ' ufp on f.id = ufp.file_id'                                                                                            
+	|| ' where f.id in (select children_id from children_ids)'                                                                 
+	|| ' and (ufp.user_id = ' || _user_id || ' or ufp.user_id is null)'
+	|| ' order by type_id asc, name_display asc';                                                                              
+end;                                                                  
+$$ language plpgsql;
+
+create or replace function get_folder_content(_user_id integer, _path text[]) returns setof record as $$
 	declare                                                                                                                                    
 	_file_id	integer := 0;                                                                                                      
 begin                                                                                                                                      
@@ -52,13 +76,13 @@ begin
 			'where ancestor_id = ' || _file_id ||                                                                                    
 			' and dist = 1 ' ||                                                                                                        
 			') ' ||                                                                                                                            
-	'select f.id, f.owner_id, f.name_display'                                                                                          
-	|| ', f.n_cards, f.type_id, f.name'                                                                                        
+	'select f.id, f.owner_id, f.name_display::TEXT, f.name::TEXT'                     
+	|| ', f.n_cards, f.type_id'                                                                                        
 	|| ', coalesce(ufp.percentage, 0) percentage'                                                                              
 	|| ' from files f left join users_files_status'                                                                            
 	|| ' ufp on f.id = ufp.file_id'                                                                                            
 	|| ' where f.id in (select children_id from children_ids)'                                                                 
-	|| ' and (ufp.user_id = (select id from users where username = ' || quote_literal(_username) || ') or ufp.user_id is null)'
+	|| ' and (ufp.user_id = ' || _user_id || ' or ufp.user_id is null)'
 	|| ' order by type_id asc, name_display asc';                                                                              
 end;                                                                  
 $$ language plpgsql;
@@ -77,22 +101,12 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function add_file(_owner_id integer, _name text, _name_display text, _type_id integer, _path text[]) returns boolean as $$
+create or replace function add_file(_owner_id integer, _name text, _name_display text, _type_id integer, _parent_id integer) returns boolean as $$
 declare
 	_file_id	integer;
-	_parent_id	integer;
 	_already_exists	boolean;
 	_parent_found	boolean;
 begin
-	select get_file_id(_path) into _parent_id;
-	if _parent_id < 0 then
-		return false;
-	end if;
-
-	-- Check that there's no file with the same name and parent
-	if _parent_id is null then
-		select 0 into _parent_id;
-	end if;	
 	select exists(select 1 from files where id = _parent_id) into _parent_found;
 	if _parent_found is false then
 		return false;

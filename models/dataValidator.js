@@ -34,8 +34,12 @@ var singleton = new dataValidator();
  * @return an object containing two arrays called missingProperties and invalidProperties
  */
 dataValidator.prototype.validate = function(data, propertyValidators){
-	if (typeof data != 'object' || typeof propertyValidators != 'object'){
-		throw new Error('data and propertyValidators must be an object literal');
+	if (Object.prototype.toString.call(data) != '[object Object]' 
+		|| Object.prototype.toString.call(propertyValidators) != '[object Object]') {
+
+		throw new IllegalArgumentError('data = ' + data + ' and propertyValidators = ' +
+						propertyValidators + 
+						' (expected two objects literal)');	
 	}
 
 	var err = {
@@ -60,7 +64,7 @@ dataValidator.prototype.validate = function(data, propertyValidators){
 					err.invalidProperties.push(key);
 				}
 			}
-			// Property validators are either a function
+			// Each property validator is either a function
 			// or null
 			else if (propertyValidators[key] !== null) {
 				throw new Error('Invalid property validator : ' 

@@ -45,7 +45,7 @@ begin
 	where id = _user_id
 	returning username, username_display into _user_record;
 
-	perform add_file(_user_id, _user_record.username, _user_record.username_display, 1, null);
+	perform add_file(_user_id, _user_record.username, _user_record.username_display, 1, 0);
 end;
 $$ language plpgsql;
 
@@ -58,31 +58,5 @@ begin
 	where username = _username;
 
 	return _user_id;
-end;
-$$ language plpgsql;
-
-create or replace function get_file_id(_path text[]) returns integer as $$
-declare
-	_parent_id	integer := 0;
-	_folder		text;
-begin
-	foreach _folder in array _path                                                                                                     
-	loop                                                                                                                               
-		select descendant_id into _parent_id                                                                                       
-		from files_tree ft                                                                                                         
-		where ft.ancestor_id = _parent_id                                                                                          
-		and dist = 1                                                                                                               
-		and _folder = (                                                                                                            
-			select name                                                                                                        
-			from files                                                                                                         
-			where id = ft.descendant_id                                                                                        
-		);                                                                                                                         
-
-		if not found then                                                                                                          
-			return -1;                                                                                                            
-		end if;                                                                                                                    
-	end loop;                                                                                                                          
-
-	return _parent_id;                                                                                                                                            
 end;
 $$ language plpgsql;

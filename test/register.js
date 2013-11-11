@@ -76,7 +76,8 @@ describe('register.createUser', function(){
 			stub.calledOnce.should.be.true;
 			stub.restore();
 			done();
-		});
+		})
+		.done();
 
 	});
 
@@ -93,7 +94,8 @@ describe('register.createUser', function(){
 			stub.calledOnce.should.be.true;
 			stub.restore();
 			done();
-		});
+		})
+		.done();
 	});
 
 	it('should return a resolved promise if the user has been created successfully', function(done){
@@ -108,7 +110,8 @@ describe('register.createUser', function(){
 			stub.restore();
 			done();
 		})
-		.catch(done);
+		.catch(done)
+		.done();
 	});
 });
 

@@ -4,7 +4,7 @@
  */
 
 module.exports = function(app){
-	var display = function(req, res){
+	var display = function(req, res, next){
   		res.render('index', { title: 'Study' });
 	};
 

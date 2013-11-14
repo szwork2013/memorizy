@@ -2,27 +2,32 @@ var should = require('should');
 var register = require('../models/register');
 var sinon = require('sinon');
 var util = require('util');
+var q = require('q');
 var home = require('../models/home');
+var db = require('../models/db');
 
-describe.only('home.getFolderContent', function(){
-	it.only('should return a rejected promise if userId is not a number or path is not an array', function(done){
+describe.only('home.getFolderContentById', function(){
+	it.only('should return a rejected promise if userId or folderId is not a number', function(done){
+		var stub = sinon.stub(db, 'executePreparedStatement');		
 		
-		home.getFolderContentByPath(186, '/carl//').then(function(rows){
-			console.log('success');
-			console.log(rows[0]);
-			done();
-		})
-		.catch(function(err){
-			console.log('failed');
-			console.log(err);
-			done(err);
-		});
+		var wrongUserId = home.getFolderContentById('abc', 3);
+		var wrongFolderId = home.getFolderContentById(4, 'def');
 
+		console.log('1- wrongUserId = ' + wrongUserId.isFulfilled());
+		q.allSettled([ wrongUserId, wrongFolderId ]).then(function(){
+			if (wrongUserId.isFulfilled() || wrongFolderId.isFulfilled()) {
+				done(new Error('should have thrown an error'));	
+			}
+			else {
+				done();
+			}
+		})
+		.finally(function(){
+			stub.restore();
+		});
 	});
 
 	it('should return a rejected promise if the user isn\'t allowed to get the folder\'s content');
-
-	it('should return a rejected promise if the path is invalid');
 
 	it('should return a resolved promise with an object literal containing every file info. if the user has access to the folder');
 });

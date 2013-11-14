@@ -15,9 +15,9 @@ begin
 			where id = ft.descendant_id                                                                                        
 		);                                                                                                                         
 
-		if not found then                                                                                                          
-			return -1;                                                                                                            
-		end if;                                                                                                                    
+		if not found then
+			raise invalid_parameter_value using message = 'Folder with path "' || array_to_string(_path, '/') || '" not found';
+		end if;
 	end loop;                                                                                                                          
 	return _parent_id;                                                                                                                                            
 end;
@@ -28,10 +28,7 @@ create or replace function get_folder(_path text[]) returns setof record as $$
 	_file_id	integer := 0;
 begin
 	select get_file_id(_path) into _file_id;
-	if _file_id < 0 then
-		return;
-	end if;
-	return query execute 'select id, owner_id, name_display, name, n_cards, type_id from files where id = ' || _file_id;
+	return query execute 'select id, owner_id, name, n_cards, type_id from files where id = ' || _file_id;
 end;
 $$ language plpgsql;	
 
@@ -39,7 +36,10 @@ $$ language plpgsql;
 create or replace function get_folder_content(_user_id integer, _folder_id integer) returns setof record as $$
 	declare                                                                                                                                    
 begin                                                                                                                                      
-	raise notice 'asking for %, %', _user_id, _folder_id;
+	if not exists(select 1 from files f where f.id = _folder_id and f.type_id = 1) then
+		raise invalid_parameter_value using message = 'Folder with id ' || _folder_id || ' not found';
+	end if;
+
 	-- The path is correct, so we return the last folder found's children                                                              
 	return query execute                                                                                                               
 	'with children_ids as ( ' ||                                                                                               
@@ -48,14 +48,14 @@ begin
 			'where ancestor_id = ' || _folder_id ||                                                                                    
 			' and dist = 1 ' ||                                                                                                        
 			') ' ||                                                                                                                            
-	'select f.id, f.owner_id, f.name_display::TEXT, f.name::TEXT'                     
+	'select f.id, f.owner_id, f.name::TEXT'                     
 	|| ', f.n_cards, f.type_id'                                                                                        
 	|| ', coalesce(ufp.percentage, 0) percentage'                                                                              
 	|| ' from files f left join users_files_status'                                                                            
 	|| ' ufp on f.id = ufp.file_id'                                                                                            
 	|| ' where f.id in (select children_id from children_ids)'                                                                 
 	|| ' and (ufp.user_id = ' || _user_id || ' or ufp.user_id is null)'
-	|| ' order by type_id asc, name_display asc';                                                                              
+	|| ' order by type_id asc, name asc';                                                                              
 end;                                                                  
 $$ language plpgsql;
 
@@ -64,9 +64,6 @@ create or replace function get_folder_content(_user_id integer, _path text[]) re
 	_file_id	integer := 0;                                                                                                      
 begin                                                                                                                                      
 	select get_file_id(_path) into _file_id;
-	if _file_id < 0 then
-		return;
-	end if;
 
 	-- The path is correct, so we return the last folder found's children                                                              
 	return query execute                                                                                                               
@@ -76,58 +73,54 @@ begin
 			'where ancestor_id = ' || _file_id ||                                                                                    
 			' and dist = 1 ' ||                                                                                                        
 			') ' ||                                                                                                                            
-	'select f.id, f.owner_id, f.name_display::TEXT, f.name::TEXT'                     
+	'select f.id, f.owner_id, f.name::TEXT'                     
 	|| ', f.n_cards, f.type_id'                                                                                        
 	|| ', coalesce(ufp.percentage, 0) percentage'                                                                              
 	|| ' from files f left join users_files_status'                                                                            
 	|| ' ufp on f.id = ufp.file_id'                                                                                            
 	|| ' where f.id in (select children_id from children_ids)'                                                                 
 	|| ' and (ufp.user_id = ' || _user_id || ' or ufp.user_id is null)'
-	|| ' order by type_id asc, name_display asc';                                                                              
+	|| ' order by type_id asc, name asc';                                                                              
 end;                                                                  
 $$ language plpgsql;
 
-create or replace function add_file(_owner_username text, _name text, _name_display text, _type_id integer, _path text[]) returns boolean as $$
+create or replace function create_file(_owner_id integer, _name text, _type_id integer, _path text[]) returns boolean as $$
 declare		
 	_owner_id	integer;
 	_parent_id 	integer;
 begin
 	select get_file_id(_path) into _parent_id;
-	if _parent_id < 0 then
-		return false;
-	end if;
-	select get_user_id(_owner_username) into _owner_id;
-	return add_file(_owner_id, _name, _name_display, _type_id, _parent_id);
+
+	return create_file(_owner_id, _name, _type_id, _parent_id);
 end;
 $$ language plpgsql;
 
-create or replace function add_file(_owner_id integer, _name text, _name_display text, _type_id integer, _parent_id integer) returns boolean as $$
+create or replace function create_file(_owner_id integer, _name text, _type_id integer, _parent_id integer) returns boolean as $$
 declare
 	_file_id	integer;
 	_already_exists	boolean;
 	_parent_found	boolean;
 begin
-	select exists(select 1 from files where id = _parent_id) into _parent_found;
-	if _parent_found is false then
-		return false;
+	perform exists(select 1 from files where id = _parent_id);
+	if not found then
+		raise invalid_parameter_value using message = 'Parent folder with id ' || _parent_id || ' not found';
 	end if;
 
 	with children as (
-			select * from files f
-			where f.id in (
-				select t.descendant_id from files_tree t
-				where t.ancestor_id = _parent_id
-				and dist = 1
-				)
+		select * from files f
+		where f.id in (
+			select t.descendant_id from files_tree t
+			where t.ancestor_id = _parent_id
+			and dist = 1
 			)
+		)
 	select exists(select 1 from children where name = _name) into _already_exists;
 
 	if _already_exists is not true then
 		-- Add file
-		insert into files (owner_id, name, name_display, type_id) values(
+		insert into files (owner_id, name, type_id) values(
 			_owner_id, 
 			_name,
-			_name_display,
 			_type_id)
 		returning id into _file_id;
 
@@ -142,6 +135,156 @@ begin
 	else
 		return false;
 	end if;
+end;
+$$ language plpgsql;
+
+create or replace function rename_file(_user_id integer, _file_id integer, _new_filename text) returns void as $$
+declare
+	_old_filename	text;
+	_already_exists	boolean;
+begin
+	select name from files where id = _file_id into _old_filename;
+	if not found then
+		raise exception 'File with id % not found', _file_id
+			using errcode = '22023'; /*invalid_parameter_value*/
+	end if;
+
+	if _old_filename = _new_filename then
+		return;
+	end if;
+
+	perform _new_filename in (
+		select f.name from files f
+		where f.id in (
+			select ft.descendant_id from files_tree ft
+			where ft.ancestor_id = (
+				select ft2.ancestor_id from files_tree ft2
+				where ft2.descendant_id = _file_id and ft2.dist = 1
+			)
+			and ft.dist = 1
+		)
+	);
+
+	if found is true then
+		raise exception 'A file with filename "%" already exists', _new_filename
+			using errcode = '42710'; /*duplicate_object*/
+	end if;
+
+	update files
+	set name = _new_filename
+	where id = _file_id;
+end;
+$$ language plpgsql;
+
+create or replace function move_file(_user_id integer, _file_id integer,  _new_parent_id integer) returns void as $$
+declare
+	_old_parent_id	integer;
+	_already_exists	boolean;
+begin
+	select ancestor_id from files_tree ft 
+	where descendant_id = _file_id 
+	and dist = 1 
+	into _old_parent_id;
+
+	if not found then
+		raise exception 'File with id % not found', _file_id
+			using errcode = '22023'; /*invalid_parameter_value*/
+	end if;
+
+	if _old_parent_id = _new_parent_id then
+		return;
+	end if;
+
+	perform 1 from files f
+	where f.id = _file_id
+	and f.name in (
+		select f2.name from files f2
+		where f2.id in (
+			select ft.descendant_id from files_tree ft
+			where ft.ancestor_id = _new_parent_id
+			and ft.dist = 1
+		)
+	);
+
+	if found is true then
+		raise exception 'A file with the same filename and parent id(=%) already exists', _new_parent_id
+			using errcode = '42710'; /*duplicate_object*/
+	end if;
+
+	-- Update file hierarchy
+	DELETE FROM files_tree
+	WHERE descendant_id IN (SELECT descendant_id FROM files_tree WHERE ancestor_id = _file_id)
+	AND ancestor_id NOT IN (SELECT descendant_id FROM files_tree WHERE ancestor_id = _file_id);
+
+	-- Insert subtree to its new location
+	INSERT INTO files_tree (ancestor_id, descendant_id, dist)
+	SELECT supertree.ancestor_id, subtree.descendant_id,
+	supertree.dist+subtree.dist+1
+	FROM files_tree AS supertree, files_tree AS subtree
+	WHERE subtree.ancestor_id = _file_id
+	AND supertree.descendant_id = _new_parent_id;
+
+end;
+$$ language plpgsql;
+
+create or replace function copy_file(_user_id integer, _file_id integer, _parent_id integer) returns void as $$
+declare
+	_cpt			integer;
+	_new_subtree_head	integer;
+begin
+	select count(*) from files f
+	where f.id = _file_id or f.id = _parent_id
+	into _cpt;
+
+	if _cpt <> 2 then
+		raise exception 'File with id % or % not found', _file_id, _parent_id
+		using errcode = '22023'; /*invalid_parameter_value*/
+	end if;
+
+	perform 1 from files
+	where id = _file_id
+	and name in (
+		select name from files
+		where id in (
+			select descendant_id from files_tree ft
+			where ft.ancestor_id = _parent_id
+			and ft.dist = 1
+		)
+	);
+
+	if found is true then
+		raise exception 'A file with the same filename and parent id(=%) already exists', _parent_id
+			using errcode = '42710'; /*duplicate_object*/
+	end if;
+
+	with copies as(
+		-- Returns copies id
+		insert into files (owner_id, name, n_cards, type_id, copy_of)
+		select _user_id, f.name, f.n_cards, f.type_id, f.id from files f
+		where f.id in(
+			select ft.descendant_id from files_tree ft
+			where ft.ancestor_id = _file_id
+		)
+		returning * 
+	),
+	hierarchy_subtree as(
+		insert into files_tree(ancestor_id, descendant_id, dist)
+		select c1.id, c2.id, dist
+		from files_tree ft join copies c1 on ft.ancestor_id = c1.copy_of
+		join copies c2 on ft.descendant_id = c2.copy_of
+		where ft.ancestor_id in (select copy_of from copies)
+		and ft.descendant_id in (select copy_of from copies)
+	)
+	select id from copies where copy_of = _file_id into _new_subtree_head;
+
+	-- Insert subtree to its new location
+	INSERT INTO files_tree (ancestor_id, descendant_id, dist)
+	SELECT supertree.ancestor_id, subtree.descendant_id,
+	supertree.dist+subtree.dist+1
+	FROM files_tree AS supertree, files_tree AS subtree
+	WHERE subtree.ancestor_id = _new_subtree_head
+	AND supertree.descendant_id = _parent_id;
+
 end;
 $$ language plpgsql;
 

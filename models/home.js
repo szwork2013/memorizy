@@ -10,16 +10,18 @@ home.prototype.getFolderContentById = function(userId, folderId){
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
 	if(typeof folderId != 'number'){
-		throw new Error('folderId must be either a string or a number');
+		return q.reject('folderId = ' + folderId + ' (expected a number)');	
 	}
 	
 	return db.executePreparedStatement({
 		name : 'getFolderContentById',
-		text : 'select * from get_folder_content($1, $2::INTEGER) as ' +
+		text : 'select * from get_folder_content($1::INTEGER, $2::INTEGER) as ' +
 			'(id integer, owner_id integer, name_display text, name text, n_cards integer, type_id integer, percentage integer)',
 		values : [ userId, folderId ]
 	}).then(function(results){
 		return results.rows;	
+	}).catch(function(err){
+		return err;
 	});
 };
 
@@ -39,7 +41,7 @@ home.prototype.getFolderContentByPath = function(userId, path){
 
 	return db.executePreparedStatement({
 		name : 'getFolderContentByPath',
-		text : 'select * from get_folder_content($1, string_to_array($2, \'/\')) as ' +
+		text : 'select * from get_folder_content($1::INTEGER, string_to_array($2, \'/\')) as ' +
 			'(id integer, owner_id integer, name_display text, name text, n_cards integer, type_id integer, percentage integer)',
 		values : [ userId, path ]
 	}).then(function(results){
@@ -63,18 +65,49 @@ home.prototype.getArrayablePGPath = function(path){
 	}
 };
 
-home.prototype.createFile = function(userId, path){
+home.prototype.createFileWithPath = function(userId, filename, type, path){
 	if (typeof userId != 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
+	}
+	if (typeof filename != 'string') {
+		return q.reject('filename = ' + filename + ' (expected a string)');	
+	}
+	if (typeof type != 'string') {
+		return q.reject('filename = ' + filename + ' (expected a string)');	
 	}
 	if (typeof path != 'string') {
 		return q.reject('path = ' + path + ' (expected a string)');	
 	}
 	
+	path = getArrayablePGPath(path);
 	return db.executePreparedStatement({
-		name: 'createFile',
-		text: 'select create_file($1, $2)',
-		values: [ userId, db.stringToPGPath(path)]
+		name: 'createFileWithPath',
+		text: 'select create_file($1::INTEGER, $2::INTEGER, $3::INTEGER, $4::INTEGER, string_to_array($5, \'/\'))',
+		values: [ userId, filename, filename, type, db.stringToPGPath(path)]
+	}).then(function(result){
+		return result.value.row[0].id;	
+	});
+};
+
+home.prototype.createFileWithParentId = function(userId, filename, type, parentId){
+	if (typeof userId != 'number') {
+		return q.reject('userId = ' + userId + ' (expected a number)');	
+	}
+	if (typeof filename != 'string') {
+		return q.reject('filename = ' + filename + ' (expected a string)');	
+	}
+	if (typeof type != 'string') {
+		return q.reject('filename = ' + filename + ' (expected a string)');	
+	}
+	if (typeof parentId != 'number') {
+		return q.reject('parentId = ' + parentId + ' (expected a string)');	
+	}
+	
+	path = getArrayablePGPath(path);
+	return db.executePreparedStatement({
+		name: 'createFileWithParendId',
+		text: 'select create_file($1::INTEGER, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::INTEGER)',
+		values: [ userId, filename, filename, type, parentId]
 	}).then(function(result){
 		return result.value.row[0].id;	
 	});
@@ -85,13 +118,16 @@ home.prototype.renameFile = function(userId, fileId, newName){
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
 	if(typeof fileId != 'number'){
-		throw new Error('fileId must be a number');
+		return q.reject('fileId must be a number');
+	}
+	if(typeof newName != 'string'){
+		return q.reject('fileId must be a number');
 	}
 
 	return db.executePreparedStatement({
 		name: 'renameFile',
 		text: 'select rename_file($1, $2, $3)',
-		values: [ userId, fileId, newName]
+		values: [ userId, fileId, newName ]
 	}).then(function(result){
 		/* TODO */
 	});

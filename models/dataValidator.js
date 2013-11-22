@@ -121,4 +121,12 @@ dataValidator.prototype.validateEmail= function(email) {
 	return false;
 };
 
+dataValidator.prototype.isNumber = function(n){
+	return typeof n == 'number';
+}
+
+dataValidator.prototype.isString = function(s){
+	return typeof s == 'string';
+}
+
 module.exports = singleton;

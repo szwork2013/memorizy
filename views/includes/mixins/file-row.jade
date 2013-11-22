@@ -1,0 +1,47 @@
+mixin file-row(file)
+	tr.file-row
+		td.file-type
+			if(file.type_id == 1)
+					span.glyphicon.glyphicon-folder-open
+			else
+					span.glyphicon.glyphicon-file
+		td.filename
+			a(href=path + "/" + file.name)= file.name 
+		td.study-mode
+			.btn-group
+				a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
+					| Action
+					span.caret
+				ul.dropdown-menu(role="menu")
+					li(role="presentation")
+						a(role="menuitem" href="#") Classic
+					li(role="presentation")
+						a(role="menuitem" href="#") Random
+					li(role="presentation")
+						a(role="menuitem" href="#") Hardest to easiest
+		td.owner= file.owner_id
+		td.ncards= file.n_cards
+		td.percentage= file.percentage + '%'
+		td.action.dropdown
+			a.btn-action(role="button" data-toggle="dropdown" data-target="#")
+				span.glyphicon.glyphicon-cog
+			ul.dropdown-menu(role="menu" aria-labelledBy="action-dropdown")
+				li(role="presentation")
+					a.mi-study(role="menuitem" href="#") Study
+				li(role="presentation")
+					a.mi-edit(role="menuitem" href="#") Edit
+				li(role="presentation")
+					a.mi-rename(role="menuitem" href="#") Rename
+				li(role="presentation")
+					a.mi-copy(role="menuitem" href="#") Copy
+				li(role="presentation")
+					a.mi-delete(role="menuitem" href="#") Delete
+		td.file-id= file.id
+
+
+
+
+
+
+
+

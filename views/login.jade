@@ -1,0 +1,11 @@
+extends layout
+
+block content
+	h1 = title
+	div.container
+		form.form-signin(action="/login" method="post")
+			h2.form-signin-heading Sign in
+			input(type="text",name="username",class="form-control", placeholder="Email address", required, autofocus)
+			input(type="password",name="password",class="form-control", placeholder="Password", required)
+			button.btn.btn-lg.btn-primary.btn-block(type="submit") Sign in
+

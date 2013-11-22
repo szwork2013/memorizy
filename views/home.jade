@@ -1,0 +1,77 @@
+extends layout
+
+append content
+	#content
+		button#new-folder.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-folder-modal") New folder
+		button#new-deck.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-deck-modal") New deck
+
+		ol.breadcrumb#path
+			- var psplit = path.split('/');
+			- for (var i = 0; i < psplit.length - 1; i++)
+				li
+					a(href="#")= psplit[i]
+			li.active= psplit[i]
+
+		table#file-list.table.table-hover.table-condensed
+			thead
+				tr
+					th.file-type Type
+					th.name Name
+					th.study-mode Study mode
+					th.owner Owner
+					th.ncards Cards
+					th.percentage %
+					th.action Action
+			tbody
+				each val in files
+					include includes/mixins/file-row
+					+file-row(val)
+
+		#file-details
+	
+	//- Modal
+	include includes/mixins/create-file-modal
+	+create-file-modal("new-folder-modal", "Create a new folder", "folder")
+	+create-file-modal("new-deck-modal", "Create a new deck", "deck")
+
+	script.
+		var socket = io.connect();
+		$('.create-file').on('click', function() {
+			var modalBody = $(this).parent().parent().find('.modal-body');
+			socket.emit('createFile', {
+				filename: '' + modalBody.find('#filename-input').val(),
+				type: modalBody.find('#file-type').val(),
+				parentId: #{currentFolder.id}
+			});
+		});
+
+		socket.on('fileCreated', function(file){
+			console.log('fileCreated received !');
+			$('#file-list tbody').prepend(
+				'<tr class="file-row">' +
+					'<td class="file-type">' +
+						(file.typeId == 1 ? '<span class="glyphicon glyphicon-folder-open"></span>' : '<span class="glyphicon glyphicon-file"></span>') + 
+					'</td>' +
+					'<td class="filename">' +
+						'<a href="' + '#{path}' + '/' + file.name + '">' + file.name + '</a>' +
+					'</td>' +
+					'<td class="study-mode"><div class="btn-group"><a id="dropdownMenu" href="#" data-toggle="dropdown" class="dropdown-toggle">Action<span class="caret"></span></a><ul role="menu" class="dropdown-menu"><a role="menuitem" href="#">Classic</a></li><li role="presentation"><a role="menuitem" href="#">Random</a></li><li role="presentation"><a role="menuitem" href="#">Hardest to easiest</a></li></ul></div></td>' +
+					'<td class="owner">' + file.ownerId + '</td>' +
+					'<td class="ncards">0</td>' +
+					'<td class="percentage">0</td>' +
+					'<td class="action"></td>' +
+				'</tr>'
+			);
+		});
+
+		$('#file-list').on('click', '.mi-delete', function(){
+			var row = $(this).parent().parent().parent().parent();
+			socket.emit('deleteFile', {
+				id: parseInt(row.find('.file-id').html())
+			});
+
+			row.remove();
+		});
+
+
+

@@ -10,9 +10,12 @@
     "jade": "*",
     "pg": "*",
     "q" : "0.9.x",
-    "passport" : "0.1.17",
-    "passport-local" : "0.1.6",
-    "connect-flash" : "0.1.1"
+    "passport" : "0.1.x",
+    "passport-local" : "0.1.x",
+    "connect-flash" : "0.1.x",
+    "connect-ensure-login" : "0.1.x",
+    "less-middleware" : "0.1.x",
+    "socket.io" : "0.9.x"
   },
   "devDependencies": {
     "should": "~2.0.2"

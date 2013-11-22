@@ -28,7 +28,7 @@ create or replace function get_folder(_path text[]) returns setof record as $$
 	_file_id	integer := 0;
 begin
 	select get_file_id(_path) into _file_id;
-	return query execute 'select id, owner_id, name, n_cards, type_id from files where id = ' || _file_id;
+	return query execute 'select id, owner_id, name::TEXT, n_cards, type_id from files where id = ' || _file_id;
 end;
 $$ language plpgsql;	
 
@@ -84,7 +84,7 @@ begin
 end;                                                                  
 $$ language plpgsql;
 
-create or replace function create_file(_owner_id integer, _name text, _type_id integer, _path text[]) returns boolean as $$
+create or replace function create_file(_owner_id integer, _name text, _type_id integer, _path text[]) returns integer as $$
 declare		
 	_owner_id	integer;
 	_parent_id 	integer;
@@ -95,10 +95,9 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function create_file(_owner_id integer, _name text, _type_id integer, _parent_id integer) returns boolean as $$
+create or replace function create_file(_owner_id integer, _name text, _type_id integer, _parent_id integer) returns integer as $$
 declare
 	_file_id	integer;
-	_already_exists	boolean;
 	_parent_found	boolean;
 begin
 	perform exists(select 1 from files where id = _parent_id);
@@ -106,17 +105,16 @@ begin
 		raise invalid_parameter_value using message = 'Parent folder with id ' || _parent_id || ' not found';
 	end if;
 
-	with children as (
+	perform 1 from (
 		select * from files f
 		where f.id in (
 			select t.descendant_id from files_tree t
 			where t.ancestor_id = _parent_id
 			and dist = 1
-			)
 		)
-	select exists(select 1 from children where name = _name) into _already_exists;
+	) as children where name = _name;
 
-	if _already_exists is not true then
+	if not found then
 		-- Add file
 		insert into files (owner_id, name, type_id) values(
 			_owner_id, 
@@ -130,11 +128,54 @@ begin
 			from files_tree as t
 			where t.descendant_id = _parent_id
 			union all select _file_id, _file_id, 0;
-
-		return true;
+			
+		return _file_id as id;
 	else
-		return false;
+		raise exception 'A file with filename "%" already exists', _new_filename
+			using errcode = '42710'; /*duplicate_object*/
 	end if;
+end;
+$$ language plpgsql;
+
+create or replace function create_symlink(_user_id integer, _file_id integer, _parent_id integer) returns void as $$
+declare
+	cpt	integer;
+begin
+	select count(*) from (
+		select 1 from files where id = _parent_id or id = _file_id
+	) as found;
+
+	if count <> 2 then
+		raise invalid_parameter_value using message = 'File with id ' || _file_id || ' or ' || _parent_id || ' not found';
+	end if;
+
+	with children as (
+		select * from files f
+		where f.id in (
+			select t.descendant_id from files_tree t
+			where t.ancestor_id = _parent_id
+			and dist = 1
+		)
+	)
+	select 1 from children where name = _name;
+
+	if found is true then
+		raise exception 'A file with filename "%" already exists', _new_filename
+			using errcode = '42710'; /*duplicate_object*/
+	end if;
+	
+	with id as (
+		insert into files (owner_id, name, n_cards, type_id, symlink_of)
+		select owner_id, name, n_cards, type_id, id
+		from files where id = _file_id
+		returning id
+	)
+	-- Update file hierarchy
+	insert into files_tree (ancestor_id, descendant_id, dist)
+	select t.ancestor_id, i.id, t.dist + 1 
+	from files_tree as t, id as i
+	where t.descendant_id = _parent_id
+	union all select i.id, i.id, 0 from id as i;
 end;
 $$ language plpgsql;
 
@@ -257,7 +298,7 @@ begin
 			using errcode = '42710'; /*duplicate_object*/
 	end if;
 
-	with copies as(
+	with file_copies as(
 		-- Returns copies id
 		insert into files (owner_id, name, n_cards, type_id, copy_of)
 		select _user_id, f.name, f.n_cards, f.type_id, f.id from files f
@@ -268,16 +309,24 @@ begin
 		returning * 
 	),
 	hierarchy_subtree as(
+		-- Link copies to make a new subtree
 		insert into files_tree(ancestor_id, descendant_id, dist)
 		select c1.id, c2.id, dist
-		from files_tree ft join copies c1 on ft.ancestor_id = c1.copy_of
-		join copies c2 on ft.descendant_id = c2.copy_of
-		where ft.ancestor_id in (select copy_of from copies)
-		and ft.descendant_id in (select copy_of from copies)
+		from files_tree ft join file_copies c1 on ft.ancestor_id = c1.copy_of
+		join file_copies c2 on ft.descendant_id = c2.copy_of
+		where ft.ancestor_id in (select copy_of from file_copies)
+		and ft.descendant_id in (select copy_of from file_copies)
+	),
+	flashcard_copies as (
+		-- Copy flashcards to copied decks
+		insert into flashcards(owner_id, deck_id, index, term, definition)
+		select _user_id, c1.id, f1.index, f1.term, f1.definition
+		from file_copies c1 join flashcards f1 on c1.copy_of = f1.deck_id
+		where c1.type_id = 2 /* deck */
 	)
-	select id from copies where copy_of = _file_id into _new_subtree_head;
+	select id from file_copies where copy_of = _file_id into _new_subtree_head;
 
-	-- Insert subtree to its new location
+	-- Insert new subtree under _parent_id
 	INSERT INTO files_tree (ancestor_id, descendant_id, dist)
 	SELECT supertree.ancestor_id, subtree.descendant_id,
 	supertree.dist+subtree.dist+1
@@ -285,6 +334,16 @@ begin
 	WHERE subtree.ancestor_id = _new_subtree_head
 	AND supertree.descendant_id = _parent_id;
 
+end;
+$$ language plpgsql;
+
+create or replace function delete_file(_user_id integer, _file_id integer) returns void as $$
+begin
+	delete from files
+	where id in (
+		select descendant_id from files_tree
+		where ancestor_id = _file_id
+	);
 end;
 $$ language plpgsql;
 
@@ -331,11 +390,6 @@ begin
 	return _id;
 end;
 $$ language plpgsql;
-
-/* create or replace function delete_flashcard(flashcard_id integer, deck_id integer) returns void as $$
-   begin
-   end;
-   $$ language plpgsql; */
 
 create or replace function add_flashcard(_owner_id integer, _deck_id integer, _term char(2048), _definition char(2048), _insert_before_id integer) returns integer as $$
 declare

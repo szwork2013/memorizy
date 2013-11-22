@@ -5,6 +5,26 @@ function home(){}
 
 var singleton = new home(); 
 
+home.prototype.getFileByPath = function(path){
+	if(typeof path != 'string'){
+		return q.reject('path = ' + path + ' (expected a string)');	
+	}
+
+	path = this.getArrayablePGPath(path);
+
+	return db.executePreparedStatement({
+		name : 'getFolderByPath',
+		text : 'select * from get_folder(string_to_array($1, \'/\')) as ' +
+			'(id integer, owner_id integer, name text, n_cards integer, type_id integer)',
+		values : [ path ]
+	}).then(function(results){
+		if (results.rows.length <= 0) {
+			throw new Error('Folder at path ' + path + ' not found');
+		}
+		return results.rows[0];	
+	});
+};
+
 home.prototype.getFolderContentById = function(userId, folderId){
 	if (typeof userId != 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
@@ -16,12 +36,10 @@ home.prototype.getFolderContentById = function(userId, folderId){
 	return db.executePreparedStatement({
 		name : 'getFolderContentById',
 		text : 'select * from get_folder_content($1::INTEGER, $2::INTEGER) as ' +
-			'(id integer, owner_id integer, name_display text, name text, n_cards integer, type_id integer, percentage integer)',
+			'(id integer, owner_id integer, name text, n_cards integer, type_id integer, percentage integer)',
 		values : [ userId, folderId ]
 	}).then(function(results){
 		return results.rows;	
-	}).catch(function(err){
-		return err;
 	});
 };
 
@@ -34,15 +52,15 @@ home.prototype.getFolderContentByPath = function(userId, path){
 	 *of the url ('/test/a/b' in 'www.example.com/test/a/b')
 	 */
 	if (typeof path != 'string') {
-		throw new Error('path must be a string');
+		return q.reject('path = ' + path + ' (expected a string)');	
 	}
 	
-	path = getArrayablePGPath(path);
+	path = this.getArrayablePGPath(path);
 
 	return db.executePreparedStatement({
 		name : 'getFolderContentByPath',
 		text : 'select * from get_folder_content($1::INTEGER, string_to_array($2, \'/\')) as ' +
-			'(id integer, owner_id integer, name_display text, name text, n_cards integer, type_id integer, percentage integer)',
+			'(id integer, owner_id integer, name text, n_cards integer, type_id integer, percentage integer)',
 		values : [ userId, path ]
 	}).then(function(results){
 		return results.rows;	
@@ -63,6 +81,8 @@ home.prototype.getArrayablePGPath = function(path){
 	else if(lastChar == '/'){
 		path = path.substring(0, path.length - 1);
 	}
+
+	return path;
 };
 
 home.prototype.createFileWithPath = function(userId, filename, type, path){
@@ -78,12 +98,12 @@ home.prototype.createFileWithPath = function(userId, filename, type, path){
 	if (typeof path != 'string') {
 		return q.reject('path = ' + path + ' (expected a string)');	
 	}
-	
-	path = getArrayablePGPath(path);
+
+	path = this.getArrayablePGPath(path);
 	return db.executePreparedStatement({
 		name: 'createFileWithPath',
-		text: 'select create_file($1::INTEGER, $2::INTEGER, $3::INTEGER, $4::INTEGER, string_to_array($5, \'/\'))',
-		values: [ userId, filename, filename, type, db.stringToPGPath(path)]
+		text: 'select create_file($1::INTEGER, $2::TEXT, $3::INTEGER, string_to_array($5, \'/\'))',
+		values: [ userId, filename, type, db.stringToPGPath(path)]
 	}).then(function(result){
 		return result.value.row[0].id;	
 	});
@@ -96,20 +116,20 @@ home.prototype.createFileWithParentId = function(userId, filename, type, parentI
 	if (typeof filename != 'string') {
 		return q.reject('filename = ' + filename + ' (expected a string)');	
 	}
-	if (typeof type != 'string') {
-		return q.reject('filename = ' + filename + ' (expected a string)');	
+	if (typeof type != 'number') {
+		return q.reject('type = ' + type + ' (expected a number)');	
 	}
 	if (typeof parentId != 'number') {
-		return q.reject('parentId = ' + parentId + ' (expected a string)');	
+		return q.reject('parentId = ' + parentId + ' (expected a number)');	
 	}
 	
-	path = getArrayablePGPath(path);
 	return db.executePreparedStatement({
 		name: 'createFileWithParendId',
-		text: 'select create_file($1::INTEGER, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::INTEGER)',
-		values: [ userId, filename, filename, type, parentId]
+		text: 'select create_file($1::INTEGER, $2::TEXT, $3::INTEGER, $4::INTEGER)',
+		values: [ userId, filename, type, parentId]
 	}).then(function(result){
-		return result.value.row[0].id;	
+		console.log(result);
+		return result.rows[0].create_file; // new file's id
 	});
 };
 
@@ -126,10 +146,8 @@ home.prototype.renameFile = function(userId, fileId, newName){
 
 	return db.executePreparedStatement({
 		name: 'renameFile',
-		text: 'select rename_file($1, $2, $3)',
+		text: 'select rename_file($1::INTEGER, $2::INTEGER, $3::TEXT)',
 		values: [ userId, fileId, newName ]
-	}).then(function(result){
-		/* TODO */
 	});
 };
 
@@ -138,7 +156,7 @@ home.prototype.deleteFile = function(userId, fileId){
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
 	if(typeof fileId != 'number'){
-		throw new Error('fileId must be a number');
+		return q.reject('fileId = ' + fileId  + ' (expected a number)');
 	}
 
 	return db.executePreparedStatement({
@@ -155,18 +173,16 @@ home.prototype.moveFile = function(userId, from, to){
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
 	if(typeof from != 'number'){
-		throw new Error('from must be a number');
+		return q.reject('from must be a number');
 	}
 	if(typeof to != 'number'){
-		throw new Error('to must be a number');
+		return q.reject('to must be a number');
 	}
 
 	return db.executePreparedStatement({
 		name: 'moveFile',
 		text: 'select move_file($1, $2, $3)',
 		values: [ userId, from, to ]
-	}).then(function(result){
-		/* TODO */
 	});
 };
 
@@ -175,23 +191,35 @@ home.prototype.copyFile = function(userId, src, dest){
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
 	if(typeof src != 'number'){
-		throw new Error('src must be a number');
+		return q.reject('src must be a number');
 	}
 	if(typeof dest != 'number'){
-		throw new Error('dest must be a number');
+		return q.reject('dest must be a number');
 	}
 
 	return db.executePreparedStatement({
 		name: 'copyFile',
 		text: 'select copy_file($1, $2, $3)',
 		values: [ userId, src, dest ]
-	}).then(function(result){
-		/* TODO */
 	});
 };
 
 home.prototype.createSymLink = function(userId, src, dest){
+	if (typeof userId != 'number') {
+		return q.reject('userId = ' + userId + ' (expected a number)');	
+	}
+	if(typeof src != 'number'){
+		return q.reject('src must be a number');
+	}
+	if(typeof dest != 'number'){
+		return q.reject('dest must be a number');
+	}
 
+	return db.executePreparedStatement({
+		name: 'createSymLink',
+		text: 'select create_symlink($1, $2, $3)',
+		values: [ userId, src, dest ]
+	});
 };
 
 home.prototype.exportFile = function(userId, path){

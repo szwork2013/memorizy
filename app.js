@@ -11,32 +11,9 @@ var path = require('path');
 var passport = require('passport');
 var flash = require('connect-flash');
 var LocalStrategy = require('passport-local').Strategy;
+var lessMiddleware = require('less-middleware');
 
-/* Test data and functions */
-var users = [
-	{ id: 1, username: 'bob', password: 'secret', email: 'bob@example.com' }
-	, { id: 2, username: 'joe', password: 'birthday', email: 'joe@example.com' }
-];
-
-function findById(id, fn) {
-	var idx = id - 1;
-	if (users[idx]) {
-		fn(null, users[idx]);
-	} else {
-		fn(new Error('User ' + id + ' does not exist'));
-	}
-}
-
-function findByUsername(username, fn) {
-	for (var i = 0, len = users.length; i < len; i++) {
-		var user = users[i];
-		if (user.username === username) {
-			return fn(null, user);
-		}
-	}
-	return fn(null, null);
-}
-/* End test data and functions */
+var usr = require('./models/user');
 
 // Passport session setup.
 // To support persistent login sessions, Passport needs to be able to
@@ -48,23 +25,25 @@ passport.serializeUser(function(user, done) {
 });
 
 passport.deserializeUser(function(id, done) {
-	findById(id, function (err, user) {
-		done(err, user);
-	});
+	usr.getUserById(id).then(function(user){
+		done(null, user);
+	}).catch(done)
+	.done();
 });
 
 passport.use(new LocalStrategy(
 	function(username, password, done) {
-	process.nextTick(function () {
-		findByUsername(username, function(err, user) {
-			if (err) { return done(err); }
-			if (!user) { return done(null, false, { message: 'Unknown user ' + username }); }
-			if (user.password != password) { return done(null, false, { message: 'Invalid password' }); }
-			return done(null, user);
+		process.nextTick(function () {
+			usr.authenticateUser(username, password).then(function(val){
+				done(null, val);
 			})
+			.catch(function(err){
+				done(null, false);
+			})
+			.done();
 		});
-	}
-));
+	})
+);
 
 var app = express();
 
@@ -82,6 +61,12 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(app.router);
+app.use(lessMiddleware({
+    	src : __dirname + "/public",
+	/*
+         *compress : true
+	 */
+}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 /*
@@ -89,6 +74,9 @@ app.use(express.static(path.join(__dirname, 'public')));
  */
 require('./routes/index')(app);
 require('./routes/register')(app);
+require('./routes/login')(app);
+
+require('./routes/home')(app);
 
 
 // development only
@@ -96,7 +84,44 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
-http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
+
+/*
+ *Socket-io configuration
+ */
+
+var io = require('socket.io').listen(server);
+var home = require('./models/home');
+
+io.sockets.on('connection', function(socket) {
+	socket.on('createFile', function(file){
+		file.type = (file.type == 'folder' ? 1 : 2);
+		home.createFileWithParentId(file.ownerId, file.filename, file.type, file.parentId)
+		.then(function(val){
+			socket.emit('fileCreated', {
+				typeId: file.type,
+				name: file.filename,
+				//ownerId: file.ownerId Take id from session
+			});
+		}).catch(function(err){
+			console.log(err);
+		}).done();
+	});
+
+	socket.on('deleteFile', function(file){
+		home.deleteFile(123, file.id).then(function(){
+			socket.emit('fileDeleted');
+		})
+		.catch(function(err){
+			console.log(err);
+			socket.emit('deleteFileError', {
+				fileId: file.id
+			});
+		}).done();
+	});
+});
+
+
 

@@ -66,7 +66,7 @@ describe('db.executePreparedStatement', function(){
 	});
 });
 
-describe.only('db.stringToPGPath', function(){
+describe('db.stringToPGPath', function(){
 	it('should return a postgres array corresponding to the js array passed as argument', function(){
 		db.stringToPGPath('/carl/utc/mi01').should.eql('array[\'carl\',\'utc\',\'mi01\']');
 	});

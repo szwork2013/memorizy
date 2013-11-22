@@ -95,7 +95,6 @@ db.prototype.stringToPGPath = function(path){
 			pgArray += ',\'' + tmp[0] + '\'';
 		}
 		pgArray += ']';
-		console.log(pgArray);
 	}
 	else {
 		throw new Error('path contains invalid characters');

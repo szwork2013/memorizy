@@ -1,8 +1,76 @@
+html {
+  height: 100%;
+  width: 100%;
+}
 body {
-  padding: 50px;
+  height: 100%;
+  width: 100%;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
-
-a {
-  color: #00B7FF;
+#content {
+  width: 90%;
+  height: calc(100% - 71px);
+  margin: 0 5% 0 5%;
+}
+button#new-folder {
+  margin-right: 10px;
+}
+#path {
+  margin: 20px 0 10px 0;
+}
+#file-list {
+  display: inline-block;
+  vertical-align: top;
+  width: 70%;
+  padding-right: 5%;
+  margin: 0;
+  box-sizing: border-box;
+}
+#file-list th,
+#file-list td {
+  box-sizing: border-box;
+}
+.file-type {
+  width: 3%;
+  text-align: center;
+}
+.filename {
+  width: 40%;
+}
+.study-mode {
+  width: 20%;
+}
+.owner {
+  min-width: 12%;
+}
+.ncards {
+  width: 7.5%;
+  text-align: right;
+}
+.percentage {
+  width: 7.5%;
+  text-align: right;
+}
+.action {
+  width: 5%;
+  text-align: center;
+}
+.action a.btn-action {
+  color: #282828;
+  text-decoration: none;
+}
+.file-id {
+  display: none;
+}
+.dropdown-menu {
+  text-align: left;
+}
+#file-details {
+  display: inline-block;
+  vertical-align: top;
+  width: 30%;
+  height: 90%;
+  box-sizing: border-box;
+  margin: 0;
+  background-color: #fafafa;
 }

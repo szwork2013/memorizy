@@ -16,21 +16,14 @@ describe('register.createUser', function(){
 		email : 'test'
 	};
 
-	it('should throw an IllegalArgumentError if user properties are not an object', function(done){
-		var s = [ null, 'abc', 123, []];
-		for (var i in s) {
-			try { 
-				register.createUser(s[i]); 
-				throw new Error('should have thrown an IllegalArgumentError');
-			} 
-			catch(e) { 
-				if (e.name != 'IllegalArgumentError') { 
-					done(e); 
-				}
-			}
-		}
-
-		done();
+	it('should return a rejected promise if user properties are not an object literal', function(done){
+		register.createUser('not an object literal').then(function(){
+			done(new Error('should have returned a rejected promise'));
+		})
+		.catch(function(){
+			done();
+		})
+		.done();
 	});
 
 	it('should return a rejected promise if at least one required user property is missing, without hitting the database', function(done){

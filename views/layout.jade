@@ -1,7 +1,14 @@
 doctype 5
 html
-  head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
-  body
-    block content
+	head
+		title= title
+		link(rel='stylesheet', href='/stylesheets/bootstrap.css')
+		link(rel='stylesheet', href='/stylesheets/bootstrap-theme.css')
+		link(rel='stylesheet', href='/stylesheets/style.css')
+		script(src='/javascripts/jquery-2.0.3.js')
+		script(src='/javascripts/bootstrap.js')
+		script(src='/javascripts/socket.io.js')
+	body
+		block content
+			if user
+				include includes/navbar-logged-in

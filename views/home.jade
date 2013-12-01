@@ -1,43 +1,106 @@
 extends layout
 
+append head
+	//- used for text selection 
+	script(src='/javascripts/rangy/uncompressed/rangy-core.js') 
 append content
 	#content
-		button#new-folder.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-folder-modal") New folder
-		button#new-deck.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-deck-modal") New deck
+		#content-left
+			ol.breadcrumb#path
+				- var psplit = path.split('/');
+				- var tmp = '';
+				- if (psplit.length > 0 && psplit[0] !== ''){
+					- tmp = psplit[0];
+					li
+						a(href=tmp)= psplit[0]
+				- }
+				- for (var i = 1; i < psplit.length - 1; i++) {
+					- if (psplit[i] !== ''){
+						- tmp += '/' + psplit[i];
+						li
+							a(href=tmp)= psplit[i]
+					- }
+				- }
+				li.active= psplit[i]
 
-		ol.breadcrumb#path
-			- var psplit = path.split('/');
-			- for (var i = 0; i < psplit.length - 1; i++)
-				li
-					a(href="#")= psplit[i]
-			li.active= psplit[i]
+			#action-bar
+				button#new-folder.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-folder-modal") New folder
+				button#new-deck.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-deck-modal") New deck
 
-		table#file-list.table.table-hover.table-condensed
-			thead
-				tr
-					th.file-type Type
-					th.name Name
-					th.study-mode Study mode
-					th.owner Owner
-					th.ncards Cards
-					th.percentage %
-					th.action Action
-			tbody
-				each val in files
-					include includes/mixins/file-row
-					+file-row(val)
+			br
 
-		#file-details
+			table#file-list.table.table-hover.table-condensed
+				thead
+					tr
+						th.file-type Type
+						th.name Name
+						th.study-mode Study mode
+						th.owner Owner
+						th.ncards Size
+						th.percentage %
+				tbody
+					each val in files
+						include includes/mixins/file-row
+						+file-row(val)
+		#content-right
+			#file-details
+
+	#contextMenu.dropdown.clearfix
+		ul.dropdown-menu(role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;")
+			li
+				a#mi-study(tabindex="-1" href="#") Study
+			li
+				a#mi-edit(tabindex="-1" href="#") Edit	
+			li
+				a#mi-rename(tabindex="-1" href="#") Rename
+			li
+				a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal") Move 
+			li
+				a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal") Copy
+			li
+				a#mi-delete(tabindex="-1" href="#") Delete
 	
 	//- Modal
 	include includes/mixins/create-file-modal
 	+create-file-modal("new-folder-modal", "Create a new folder", "folder")
 	+create-file-modal("new-deck-modal", "Create a new deck", "deck")
+	include includes/mixins/file-tree-modal.jade
+	+file-tree-modal("move-file-modal", "Move file", "Move")
+	+file-tree-modal("copy-file-modal", "Copy file", "Copy")
 
 	script.
+		var contextMenu = $('#contextMenu');
+		var body = $('body');
+		var fileList = $('#file-list');
+
+		body.on('click', function(e){
+			if(contextMenu.css('display') != 'none'){
+				contextMenu.hide();	
+			}
+		});
+
+		body.on('contextmenu', 'table tr', function(e) {
+			contextMenu.css({
+				display: 'block',
+				left: e.pageX,
+				top: e.pageY
+			});
+
+			contextMenu.row = $(this);
+			console.log('contextMenu.row set to ' + contextMenu.row);
+
+			return false; // prevent browser context menu display
+		});
+
+		contextMenu.on('click', 'a', function() {
+			contextMenu.hide();
+		});
+
 		var socket = io.connect();
 		$('.create-file').on('click', function() {
 			var modalBody = $(this).parent().parent().find('.modal-body');
+			var filename = '' + modalBody.find('#filename-input').val();
+
 			socket.emit('createFile', {
 				filename: '' + modalBody.find('#filename-input').val(),
 				type: modalBody.find('#file-type').val(),
@@ -46,8 +109,7 @@ append content
 		});
 
 		socket.on('fileCreated', function(file){
-			console.log('fileCreated received !');
-			$('#file-list tbody').prepend(
+			fileList.find('tbody').prepend(
 				'<tr class="file-row">' +
 					'<td class="file-type">' +
 						(file.typeId == 1 ? '<span class="glyphicon glyphicon-folder-open"></span>' : '<span class="glyphicon glyphicon-file"></span>') + 
@@ -64,14 +126,90 @@ append content
 			);
 		});
 
-		$('#file-list').on('click', '.mi-delete', function(){
-			var row = $(this).parent().parent().parent().parent();
-			socket.emit('deleteFile', {
-				id: parseInt(row.find('.file-id').html())
-			});
+		socket.on('createFileError', function(err){
 
-			row.remove();
 		});
 
+		/* Rename */
+		$('#mi-rename').on('click', function(){
+			//Select filename and allow user to change it
+			var filename = contextMenu.row.find('.filename a');
+			filename.attr('contentEditable', 'true');
+
+			var range = rangy.createRange();
+			range.selectNodeContents(filename.get(0));
+			var sel = rangy.getSelection();
+			sel.setSingleRange(range);
+		});
+
+		
+		fileList.on('keydown', '.filename a', function(e){
+			// stop editing when press ENTER or ESC
+			if(e.which == 13 || e.which == 27){
+				$(this).blur();
+			}
+		});
+
+		fileList.on('blur', '.filename a', function(){
+			var newName = $(this).html();
+
+			socket.emit('renameFile', {
+				fileId: parseInt($(this).parent().parent().find('.file-id').html()),
+				newName: newName
+			});
+
+			$(this).attr({
+				contentEditable: 'false',
+			});
+		});
+
+		socket.on('fileRenamed', function(data){
+			var fileIds = $('.file-id');
+			for (var i = 0; i < fileIds.size(); i++){
+				var c = fileIds.eq(i);
+				console.log('c => ' + c.html());
+				if (parseInt(c.html()) == data.fileId){
+					console.log('changing href');
+					c.parent().children('.filename').children('a').attr('href', '#{path}/' + data.newName);
+					return;
+				}
+			}
+		});
+
+		socket.on('renameFileError', function(reason){
+
+		});
+
+		/* end rename */
+
+		/* Delete */
+
+		$('#mi-delete').on('click', function(){
+			socket.emit('deleteFile', {
+				id: parseInt(contextMenu.row.find('.file-id').html())
+			});
+
+			contextMenu.row.remove();
+		});
+
+		socket.on('fileDeleted', function(file){
+			console.log('file deleted');
+		});
+
+		socket.on('deleteFileError', function(){
+
+		});
+
+		/* end delete */
+
+		$('*[data-target="#move-file-modal"]', '*[data-target="#move-file-modal"]').on('click', function(e){
+			socket.emit('getFileTree', {
+				root : $('#path li a').first().html()
+			});
+		});
+
+		socket.on('fileTree', function(tree){
+			
+		});
 
 

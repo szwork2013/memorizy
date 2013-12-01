@@ -1,5 +1,6 @@
 var q = require('q');
 var db = require('./db');
+var dv = require('./dataValidator');
 
 function home(){}
 
@@ -85,6 +86,33 @@ home.prototype.getArrayablePGPath = function(path){
 	return path;
 };
 
+home.prototype.getFileTree = function(userId, rootFolder){
+	if (typeof userId != 'number') {
+		return q.reject('userId = ' + userId + ' (expected a number)');	
+	}
+	if (typeof rootFolder != 'string') {
+		return q.reject('rootFolder = ' + rootFolder + ' (expected a string)');	
+	}
+
+	return db.executePreparedStatement({
+		name: 'getFileTree',
+		text: 'select * from files f join files_tree ft on f.id = ft.descendant_id' +
+			' where f.id in (' +
+				'select descendant_id from files_tree ft2' +
+				' where ft2.ancestor_id = (' + 
+					'select f2.id from files f2' +
+					' where f2.name = $1 and f2.id in (' +
+						'select descendant_id from files_tree ft3' + 
+						' where ft3.ancestor_id = 0 and ft3.dist = 1' + 
+					')' + 
+				')' + 
+			') and dist =1 order by descendant_id asc, dist desc',
+		values: [rootFolder]
+	}).then(function(result){
+		return result.rows;
+	});
+};
+
 home.prototype.createFileWithPath = function(userId, filename, type, path){
 	if (typeof userId != 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
@@ -142,6 +170,10 @@ home.prototype.renameFile = function(userId, fileId, newName){
 	}
 	if(typeof newName != 'string'){
 		return q.reject('fileId must be a number');
+	}
+
+	if(dv.validateFilename(newName) == false){
+		return q.reject('filename must contain a-Z0-9_ characters only');
 	}
 
 	return db.executePreparedStatement({

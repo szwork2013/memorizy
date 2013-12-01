@@ -121,6 +121,14 @@ dataValidator.prototype.validateEmail= function(email) {
 	return false;
 };
 
+dataValidator.prototype.validateFilename = function(filename) {
+	var reg = /^\w{1,128}$/;
+	if (reg.test(filename)){
+		return true; 
+	}
+	return false;
+};
+
 dataValidator.prototype.isNumber = function(n){
 	return typeof n == 'number';
 }

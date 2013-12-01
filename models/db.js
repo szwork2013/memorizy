@@ -8,6 +8,18 @@ function db(){
 
 var singleton = new db();
 
+db.prototype.pgConnect = function(callback){
+	pg.connect('tcp://nodepg:npg1475369!@localhost:5432/study', function (err, client, done) {
+		if (err) {
+			console.log(JSON.stringify(err));
+		}
+		if (client) {
+			callback( client);
+			done();
+		}
+	});
+};
+
 /**
  * executePreparedStatement
  *
@@ -27,17 +39,17 @@ db.prototype.executePreparedStatement = function(pstat){
 		}
 		else {
 			client.query(pstat, function(err, result) {
-				//call `done()` to release the client back to the pool
-				done();
-				if (err) {
-					deferred.reject(err);
-				}
-				else {
-					deferred.resolve(result);
-				}
-			});
-		}
-	});
+			//call `done()` to release the client back to the pool
+			done();
+			if (err) {
+				deferred.reject(err);
+			}
+			else {
+				deferred.resolve(result);
+			}
+		});
+	}
+});
 	return deferred.promise;
 };
 
@@ -78,7 +90,7 @@ db.prototype.stringToPGPath = function(path){
 	if (typeof path != 'string') {
 		throw new Error('path = ' + path + ' (expected a string)');	
 	}
-	
+
 	if (path.length == 0) {
 		throw new Error('path must not be empty');
 	}

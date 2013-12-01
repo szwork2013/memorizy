@@ -34,7 +34,6 @@ $$ language plpgsql;
 
 
 create or replace function get_folder_content(_user_id integer, _folder_id integer) returns setof record as $$
-	declare                                                                                                                                    
 begin                                                                                                                                      
 	if not exists(select 1 from files f where f.id = _folder_id and f.type_id = 1) then
 		raise invalid_parameter_value using message = 'Folder with id ' || _folder_id || ' not found';
@@ -60,7 +59,7 @@ end;
 $$ language plpgsql;
 
 create or replace function get_folder_content(_user_id integer, _path text[]) returns setof record as $$
-	declare                                                                                                                                    
+declare                                                                                                                                    
 	_file_id	integer := 0;                                                                                                      
 begin                                                                                                                                      
 	select get_file_id(_path) into _file_id;
@@ -131,7 +130,7 @@ begin
 			
 		return _file_id as id;
 	else
-		raise exception 'A file with filename "%" already exists', _new_filename
+		raise exception 'A file with filename "%" already exists', _name
 			using errcode = '42710'; /*duplicate_object*/
 	end if;
 end;
@@ -182,7 +181,6 @@ $$ language plpgsql;
 create or replace function rename_file(_user_id integer, _file_id integer, _new_filename text) returns void as $$
 declare
 	_old_filename	text;
-	_already_exists	boolean;
 begin
 	select name from files where id = _file_id into _old_filename;
 	if not found then
@@ -194,7 +192,7 @@ begin
 		return;
 	end if;
 
-	perform _new_filename in (
+	perform 1 where _new_filename in (
 		select f.name from files f
 		where f.id in (
 			select ft.descendant_id from files_tree ft

@@ -4,13 +4,15 @@ nav.navbar.navbar-default.navbar-static-top(role="navigation")
 
 	ul.nav.navbar-nav
 		li#nav-home
-			a(href=username) Home
-		li#nav-profile.disabled
-			a(href="#") Profile 
-		li#nav-calendar.disabled
+			a.active(href=username) Home
+		li#nav-starred
+			a(href="#") Starred
+		li#nav-calendar
 			a(href="#") Calendar
-		li#nav-explore.disabled
-			a(href="#") Explore 
+		li#nav-follow
+			a(href="#") Follow
+		li#nav-discover
+			a(href="#") Discover
 
 	ul.nav.navbar-nav.navbar-right
 		li#nav-username

@@ -3,17 +3,24 @@
  * Module dependencies.
  */
 
+//Http modules
 var express = require('express');
 var routes = require('./routes');
-var user = require('./routes/user');
 var http = require('http');
 var path = require('path');
+
+//Authentication
 var passport = require('passport');
 var flash = require('connect-flash');
 var LocalStrategy = require('passport-local').Strategy;
-var lessMiddleware = require('less-middleware');
 
-var usr = require('./models/user');
+var lessMiddleware = require('less-middleware'); //Used for less file compilation
+
+//Session storage
+var db = require('./models/db');
+var PGStore = require('connect-pg');
+var sessionStore = new PGStore(db.pgConnect);
+//var sessionStore = new express.session.MemoryStore();
 
 // Passport session setup.
 // To support persistent login sessions, Passport needs to be able to
@@ -31,6 +38,7 @@ passport.deserializeUser(function(id, done) {
 	.done();
 });
 
+var usr = require('./models/user'); // used for authentication method
 passport.use(new LocalStrategy(
 	function(username, password, done) {
 		process.nextTick(function () {
@@ -45,10 +53,14 @@ passport.use(new LocalStrategy(
 	})
 );
 
+/***************************************
+ * Express configuration
+ **************************************/
+
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 8080);
+app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(express.favicon());
@@ -56,7 +68,12 @@ app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(express.bodyParser());
 app.use(express.methodOverride());
-app.use(express.session({ secret: 'keyboard cat' }));
+app.use(express.session({ 
+	store : sessionStore,
+	key : 'express.sid',
+	secret: 'keyboard cat', 
+	//cookie: { httpOnly: false}
+}));
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
@@ -88,30 +105,64 @@ var server = http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
 
-/*
+/***************************************
  *Socket-io configuration
- */
+ **************************************/
 
 var io = require('socket.io').listen(server);
+var passportSocketIo = require('passport.socketio');
 var home = require('./models/home');
+	
+io.set('authorization', passportSocketIo.authorize({
+	cookieParser: express.cookieParser,
+	key:    'express.sid',  //the cookie where express (or connect) stores its session id.
+	secret: 'keyboard cat', //the session secret to parse the cookie
+	store:   sessionStore,  //the session store that express uses
+	fail: function(data, message, error, accept) {
+		console.log('failed with message ' + message);
+		console.log('error : ' + error);
+		console.log(data);
+		accept(null, false); 
+	},
+	success: function(data, accept) {
+		console.log('success socket.io auth');
+		console.log(data);
+		accept(null, true);
+	}
+}));
 
 io.sockets.on('connection', function(socket) {
 	socket.on('createFile', function(file){
 		file.type = (file.type == 'folder' ? 1 : 2);
-		home.createFileWithParentId(file.ownerId, file.filename, file.type, file.parentId)
+		home.createFileWithParentId(socket.handshake.user.id, file.filename, file.type, file.parentId)
 		.then(function(val){
 			socket.emit('fileCreated', {
 				typeId: file.type,
 				name: file.filename,
-				//ownerId: file.ownerId Take id from session
+				ownerId: socket.handshake.user.id
 			});
 		}).catch(function(err){
 			console.log(err);
 		}).done();
 	});
 
+	socket.on('renameFile', function(data){
+		console.log('renameFile ' + data.fileId + ' to \'' + data.newName + '\'');
+		home.renameFile(socket.handshake.user.id, data.fileId, data.newName)
+		.then(function(val){
+			socket.emit('fileRenamed', {
+				fileId : data.fileId,	
+				newName : data.newName
+			});
+		})
+		.catch(function(err){
+			socket.emit('renameFileError', err.message); /* check err.message */
+		})
+		.done();
+	});
+
 	socket.on('deleteFile', function(file){
-		home.deleteFile(123, file.id).then(function(){
+		home.deleteFile(socket.handshake.user.id, file.id).then(function(){
 			socket.emit('fileDeleted');
 		})
 		.catch(function(err){
@@ -121,6 +172,22 @@ io.sockets.on('connection', function(socket) {
 			});
 		}).done();
 	});
+
+	socket.on('getFileTree', function(data){
+		// data.root is the root folder name
+		home.getFileTree(socket.handshake.user.id, data.root).then(function(tree){
+			socket.emit('fileTree', {
+				tree : tree
+			});
+		})
+		.catch(function(err){
+			socket.emit('getFileTreeError', {
+				message: err.message //check message property
+			});
+		})
+		.done();
+	});
+
 });
 
 

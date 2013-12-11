@@ -109,10 +109,11 @@ append content
 		});
 
 		socket.on('fileCreated', function(file){
+			console.log('file.type = ' + file.type);
 			fileList.find('tbody').prepend(
 				'<tr class="file-row">' +
 					'<td class="file-type">' +
-						(file.typeId == 1 ? '<span class="glyphicon glyphicon-folder-open"></span>' : '<span class="glyphicon glyphicon-file"></span>') + 
+						(file.type === 'folder' ? '<span class="glyphicon glyphicon-folder-open"></span>' : '<span class="glyphicon glyphicon-file"></span>') + 
 					'</td>' +
 					'<td class="filename">' +
 						'<a href="' + '#{path}' + '/' + file.name + '">' + file.name + '</a>' +

@@ -1,4 +1,4 @@
-create or replace function create_user(_username_display text, _real_username text, _password text, _email text) returns record as $$
+create or replace function create_user(_username text, _password text, _email text) returns record as $$
 declare
 	res			record;
 	username_already_exists	boolean;
@@ -6,7 +6,7 @@ declare
 begin 
 	select exists (
 		select 1 from users
-		where username = _real_username
+		where username = _username
 	), exists (
 		select 1 from users
 		where email = _email
@@ -14,8 +14,8 @@ begin
 
 	
 	if not (username_already_exists or email_already_exists) then
-		insert into users (username, username_display, password, email, enabled)
-			values( _real_username, _username_display, _password, _email, false);
+		insert into users (username, password, email, enabled)
+			values( _username, _password, _email, false);
 		res := (found, username_already_exists, email_already_exists); -- Arguments order must NOT be changed
 	else
 		res := (false, username_already_exists, email_already_exists);
@@ -43,9 +43,9 @@ begin
 	update users
 	set enabled = true
 	where id = _user_id
-	returning username, username_display into _user_record;
+	returning username into _user_record;
 
-	perform add_file(_user_id, _user_record.username, _user_record.username_display, 1, 0);
+	perform create_file(_user_id, _user_record.username, 'folder', 0);
 end;
 $$ language plpgsql;
 

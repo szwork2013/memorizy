@@ -7,7 +7,7 @@ function home(){}
 var singleton = new home(); 
 
 home.prototype.getFileByPath = function(path){
-	if(typeof path != 'string'){
+	if(typeof path !== 'string'){
 		return q.reject('path = ' + path + ' (expected a string)');	
 	}
 
@@ -16,7 +16,7 @@ home.prototype.getFileByPath = function(path){
 	return db.executePreparedStatement({
 		name : 'getFolderByPath',
 		text : 'select * from get_folder(string_to_array($1, \'/\')) as ' +
-			'(id integer, owner_id integer, name text, n_cards integer, type_id integer)',
+			'(id integer, owner_id integer, name text, size integer, type text)',
 		values : [ path ]
 	}).then(function(results){
 		if (results.rows.length <= 0) {
@@ -27,17 +27,17 @@ home.prototype.getFileByPath = function(path){
 };
 
 home.prototype.getFolderContentById = function(userId, folderId){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if(typeof folderId != 'number'){
+	if(typeof folderId !== 'number'){
 		return q.reject('folderId = ' + folderId + ' (expected a number)');	
 	}
 	
 	return db.executePreparedStatement({
 		name : 'getFolderContentById',
 		text : 'select * from get_folder_content($1::INTEGER, $2::INTEGER) as ' +
-			'(id integer, owner_id integer, name text, n_cards integer, type_id integer, percentage integer)',
+			'(id integer, owner_id integer, name text, size integer, type text, percentage integer)',
 		values : [ userId, folderId ]
 	}).then(function(results){
 		return results.rows;	
@@ -45,14 +45,14 @@ home.prototype.getFolderContentById = function(userId, folderId){
 };
 
 home.prototype.getFolderContentByPath = function(userId, path){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
 	/*
 	 *path should be a string corresponding to the path section
 	 *of the url ('/test/a/b' in 'www.example.com/test/a/b')
 	 */
-	if (typeof path != 'string') {
+	if (typeof path !== 'string') {
 		return q.reject('path = ' + path + ' (expected a string)');	
 	}
 	
@@ -61,7 +61,7 @@ home.prototype.getFolderContentByPath = function(userId, path){
 	return db.executePreparedStatement({
 		name : 'getFolderContentByPath',
 		text : 'select * from get_folder_content($1::INTEGER, string_to_array($2, \'/\')) as ' +
-			'(id integer, owner_id integer, name text, n_cards integer, type_id integer, percentage integer)',
+			'(id integer, owner_id integer, name text, size integer, type text, percentage integer)',
 		values : [ userId, path ]
 	}).then(function(results){
 		return results.rows;	
@@ -70,16 +70,16 @@ home.prototype.getFolderContentByPath = function(userId, path){
 
 home.prototype.getArrayablePGPath = function(path){
 	path = path.replace(/\/{2,}/, '/');
-	var firstChar = path.charAt(0),
-	    lastChar = path.charAt(path.length - 1);
+	var firstChar = path.charAt(0);
+	var lastChar = path.charAt(path.length - 1);
 
-	if (firstChar == '/' && lastChar == '/' ) {
+	if (firstChar === '/' && lastChar === '/' ) {
 		path = path.substring(1, path.length - 1);
 	}
-	else if(firstChar == '/'){
+	else if(firstChar === '/'){
 		path = path.substring(1);
 	}
-	else if(lastChar == '/'){
+	else if(lastChar === '/'){
 		path = path.substring(0, path.length - 1);
 	}
 
@@ -87,10 +87,10 @@ home.prototype.getArrayablePGPath = function(path){
 };
 
 home.prototype.getFileTree = function(userId, rootFolder){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if (typeof rootFolder != 'string') {
+	if (typeof rootFolder !== 'string') {
 		return q.reject('rootFolder = ' + rootFolder + ' (expected a string)');	
 	}
 
@@ -114,23 +114,23 @@ home.prototype.getFileTree = function(userId, rootFolder){
 };
 
 home.prototype.createFileWithPath = function(userId, filename, type, path){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if (typeof filename != 'string') {
+	if (typeof filename !== 'string') {
 		return q.reject('filename = ' + filename + ' (expected a string)');	
 	}
-	if (typeof type != 'string') {
+	if (typeof type !== 'string') {
 		return q.reject('filename = ' + filename + ' (expected a string)');	
 	}
-	if (typeof path != 'string') {
+	if (typeof path !== 'string') {
 		return q.reject('path = ' + path + ' (expected a string)');	
 	}
 
 	path = this.getArrayablePGPath(path);
 	return db.executePreparedStatement({
 		name: 'createFileWithPath',
-		text: 'select create_file($1::INTEGER, $2::TEXT, $3::INTEGER, string_to_array($5, \'/\'))',
+		text: 'select create_file($1::INTEGER, $2::TEXT, $3::TEXT, string_to_array($5, \'/\'))',
 		values: [ userId, filename, type, db.stringToPGPath(path)]
 	}).then(function(result){
 		return result.value.row[0].id;	
@@ -138,22 +138,22 @@ home.prototype.createFileWithPath = function(userId, filename, type, path){
 };
 
 home.prototype.createFileWithParentId = function(userId, filename, type, parentId){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if (typeof filename != 'string') {
+	if (typeof filename !== 'string') {
 		return q.reject('filename = ' + filename + ' (expected a string)');	
 	}
-	if (typeof type != 'number') {
-		return q.reject('type = ' + type + ' (expected a number)');	
+	if (typeof type !== 'string') {
+		return q.reject('type = ' + type + ' (expected a string)');	
 	}
-	if (typeof parentId != 'number') {
+	if (typeof parentId !== 'number') {
 		return q.reject('parentId = ' + parentId + ' (expected a number)');	
 	}
 	
 	return db.executePreparedStatement({
 		name: 'createFileWithParendId',
-		text: 'select create_file($1::INTEGER, $2::TEXT, $3::INTEGER, $4::INTEGER)',
+		text: 'select create_file($1::INTEGER, $2::TEXT, $3::TEXT, $4::INTEGER)',
 		values: [ userId, filename, type, parentId]
 	}).then(function(result){
 		console.log(result);
@@ -162,17 +162,17 @@ home.prototype.createFileWithParentId = function(userId, filename, type, parentI
 };
 
 home.prototype.renameFile = function(userId, fileId, newName){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if(typeof fileId != 'number'){
+	if(typeof fileId !== 'number'){
 		return q.reject('fileId must be a number');
 	}
-	if(typeof newName != 'string'){
+	if(typeof newName !== 'string'){
 		return q.reject('fileId must be a number');
 	}
 
-	if(dv.validateFilename(newName) == false){
+	if(dv.validateFilename(newName) === false){
 		return q.reject('filename must contain a-Z0-9_ characters only');
 	}
 
@@ -184,10 +184,10 @@ home.prototype.renameFile = function(userId, fileId, newName){
 };
 
 home.prototype.deleteFile = function(userId, fileId){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if(typeof fileId != 'number'){
+	if(typeof fileId !== 'number'){
 		return q.reject('fileId = ' + fileId  + ' (expected a number)');
 	}
 
@@ -195,19 +195,17 @@ home.prototype.deleteFile = function(userId, fileId){
 		name: 'deleteFile',
 		text: 'select delete_file($1, $2)',
 		values: [ userId, fileId ]
-	}).then(function(result){
-		/* TODO */
 	});
 };
 
 home.prototype.moveFile = function(userId, from, to){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if(typeof from != 'number'){
+	if(typeof from !== 'number'){
 		return q.reject('from must be a number');
 	}
-	if(typeof to != 'number'){
+	if(typeof to !== 'number'){
 		return q.reject('to must be a number');
 	}
 
@@ -219,13 +217,13 @@ home.prototype.moveFile = function(userId, from, to){
 };
 
 home.prototype.copyFile = function(userId, src, dest){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if(typeof src != 'number'){
+	if(typeof src !== 'number'){
 		return q.reject('src must be a number');
 	}
-	if(typeof dest != 'number'){
+	if(typeof dest !== 'number'){
 		return q.reject('dest must be a number');
 	}
 
@@ -237,13 +235,13 @@ home.prototype.copyFile = function(userId, src, dest){
 };
 
 home.prototype.createSymLink = function(userId, src, dest){
-	if (typeof userId != 'number') {
+	if (typeof userId !== 'number') {
 		return q.reject('userId = ' + userId + ' (expected a number)');	
 	}
-	if(typeof src != 'number'){
+	if(typeof src !== 'number'){
 		return q.reject('src must be a number');
 	}
-	if(typeof dest != 'number'){
+	if(typeof dest !== 'number'){
 		return q.reject('dest must be a number');
 	}
 
@@ -254,28 +252,28 @@ home.prototype.createSymLink = function(userId, src, dest){
 	});
 };
 
-home.prototype.exportFile = function(userId, path){
+//home.prototype.exportFile = function(userId, path){
 
-};
+//};
 
-home.prototype.importFile = function(userId, data, path){
+//home.prototype.importFile = function(userId, data, path){
 
-};
+//};
 
-home.prototype.shareFile = function(userId, path){
+//home.prototype.shareFile = function(userId, path){
 
-};
+//};
 
-home.prototype.setStudyMode = function(userId, path, studyMode){
+//home.prototype.setStudyMode = function(userId, path, studyMode){
 
-};
+//};
 
-home.prototype.setPrivacy = function(userId, path, privacy){
+//home.prototype.setPrivacy = function(userId, path, privacy){
 
-};
+//};
 
-home.prototype.resetStats = function(userId, path){
+//home.prototype.resetStats = function(userId, path){
 
-};
+//};
 
 module.exports = singleton;

@@ -1,7 +1,7 @@
 mixin file-row(file)
 	tr.file-row
 		td.file-type
-			if(file.type_id == 1)
+			if(file.type === 'folder')
 					span.glyphicon.glyphicon-folder-open
 			else
 					span.glyphicon.glyphicon-file

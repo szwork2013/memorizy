@@ -5,7 +5,7 @@
 
 //Http modules
 var express = require('express');
-var routes = require('./routes');
+//var routes = require('./routes');
 var http = require('http');
 var path = require('path');
 
@@ -27,6 +27,7 @@ var sessionStore = new PGStore(db.pgConnect);
 // serialize users into and deserialize users out of the session. Typically,
 // this will be as simple as storing the user ID when serializing, and finding
 // the user by ID when deserializing.
+var usr = require('./models/user'); // used for authentication method
 passport.serializeUser(function(user, done) {
 	done(null, user.id);
 });
@@ -38,14 +39,13 @@ passport.deserializeUser(function(id, done) {
 	.done();
 });
 
-var usr = require('./models/user'); // used for authentication method
 passport.use(new LocalStrategy(
 	function(username, password, done) {
 		process.nextTick(function () {
 			usr.authenticateUser(username, password).then(function(val){
 				done(null, val);
 			})
-			.catch(function(err){
+			.catch(function(){
 				done(null, false);
 			})
 			.done();
@@ -79,7 +79,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(app.router);
 app.use(lessMiddleware({
-    	src : __dirname + "/public",
+	src : __dirname + '/public',
 	/*
          *compress : true
 	 */
@@ -97,12 +97,12 @@ require('./routes/home')(app);
 
 
 // development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
+if ('development' === app.get('env')) {
+	app.use(express.errorHandler());
 }
 
 var server = http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
+	console.log('Express server listening on port ' + app.get('port'));
 });
 
 /***************************************
@@ -133,11 +133,11 @@ io.set('authorization', passportSocketIo.authorize({
 
 io.sockets.on('connection', function(socket) {
 	socket.on('createFile', function(file){
-		file.type = (file.type == 'folder' ? 1 : 2);
 		home.createFileWithParentId(socket.handshake.user.id, file.filename, file.type, file.parentId)
 		.then(function(val){
 			socket.emit('fileCreated', {
-				typeId: file.type,
+				fileId: val,
+				type: file.type,
 				name: file.filename,
 				ownerId: socket.handshake.user.id
 			});
@@ -149,7 +149,7 @@ io.sockets.on('connection', function(socket) {
 	socket.on('renameFile', function(data){
 		console.log('renameFile ' + data.fileId + ' to \'' + data.newName + '\'');
 		home.renameFile(socket.handshake.user.id, data.fileId, data.newName)
-		.then(function(val){
+		.then(function(){
 			socket.emit('fileRenamed', {
 				fileId : data.fileId,	
 				newName : data.newName

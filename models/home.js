@@ -96,19 +96,21 @@ home.prototype.getFileTree = function(userId, rootFolder){
 
 	return db.executePreparedStatement({
 		name: 'getFileTree',
-		text: 'select * from files f join files_tree ft on f.id = ft.descendant_id' +
+		text: 'select f.id, f.filename, f.type, ft.ancestor_id' +
+			' from files f join file_tree ft on f.id = ft.descendant_id' +
 			' where f.id in (' +
-				'select descendant_id from files_tree ft2' +
+				'select descendant_id from file_tree ft2' +
 				' where ft2.ancestor_id = (' + 
 					'select f2.id from files f2' +
-					' where f2.name = $1 and f2.id in (' +
-						'select descendant_id from files_tree ft3' + 
+					' where f2.filename = $1 and f2.id in (' +
+						'select descendant_id from file_tree ft3' + 
 						' where ft3.ancestor_id = 0 and ft3.dist = 1' + 
 					')' + 
 				')' + 
 			') and dist =1 order by descendant_id asc, dist desc',
 		values: [rootFolder]
 	}).then(function(result){
+		console.log(result.rows);
 		return result.rows;
 	});
 };
@@ -133,7 +135,7 @@ home.prototype.createFileWithPath = function(userId, filename, type, path){
 		text: 'select create_file($1::INTEGER, $2::TEXT, $3::TEXT, string_to_array($5, \'/\'))',
 		values: [ userId, filename, type, db.stringToPGPath(path)]
 	}).then(function(result){
-		return result.value.row[0].id;	
+		return result.rows[0].create_file; // new file's id
 	});
 };
 

@@ -181,6 +181,8 @@ io.sockets.on('connection', function(socket) {
 			});
 		})
 		.catch(function(err){
+			console.log('ERROR:');
+			console.log(err);
 			socket.emit('getFileTreeError', {
 				message: err.message //check message property
 			});

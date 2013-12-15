@@ -1,0 +1,53 @@
+- Ajouter les fonctionnalités "move" et "copy"
+	- Ajouter l'arbre des fichiers dans le modal move
+	- Implementer une solution générique
+	- Appliquer la solution sur le modal copy
+	- Envoyer les paquets pour demander le déplacement
+	  ou la copie d'un fichier
+	- Gerer le traitement coté serveur + la réponse au client
+
+- Ajouter la possibilité de mettre des fichiers en favoris
+	- Ajouter un dossier "starred" a la creation de l'utilisateur
+	- Ajouter l'icone pour mettre un fichier en favoris dans la
+	  liste des fichiers
+	- Gerer les paquet coté client et serveur pour ajouter/supprimer
+	  un favoris
+	- Activer le lien dans la barre de navigation
+
+- Faire la page pour éditer des flashcards
+	- Faire une navigation basique sur la gauche
+	- Flashcard au centre
+	- Informations sur la flashcard courante a droite
+	- Utiliser Rangy pour la mise en forme du texte
+	- Ajout d'images et de sons
+	- Ajout du mode LaTeX
+
+- Faire la page pour étudier des flashcards
+	- Flashcard en cours d'etude au centre
+	- Ajouter la possibilité de supprimer/passer en mode edition
+	- Ajouter les boutons pour répondre bon ou faux
+	- Gerer les paquets coté client et serveur
+	- Affichage des résultats et diverses informations une fois
+	  toutes les flashcards etudiées
+	- Mettre en place les study modes
+
+- Ajouter la possibilité de suivre des fichiers/flashcards
+	- Creer la page du calendrier
+	- Ajouter les boutons pour suivre un fichier ou une flashcard
+	- Proposer le suivi d'un fichier au moment de sa création
+	
+- Implementer l'affichage d'informations à droite sur la page "home"
+	- Voir D3
+	- Ajouter une table pour l'historique des résultats de chaque
+	  utilisateur pour les fichiers qu'il a etudié
+	- Implementer un graphique avec D3
+	- Ajouter l'affichage de diverses informations sur le fichier
+	  selectionnée telle que sa date de création ou de derniere
+	  modification
+	- Implementer la possibilité d'ajouter une description sur les
+	  fichiers
+
+- Ajouter la possibilité de modifier la visibilité de ses fichiers
+
+
+

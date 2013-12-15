@@ -36,7 +36,7 @@ append content
 						th.name Name
 						th.study-mode Study mode
 						th.owner Owner
-						th.ncards Size
+						th.size Size
 						th.percentage %
 				tbody
 					each val in files
@@ -120,7 +120,7 @@ append content
 					'</td>' +
 					'<td class="study-mode"><div class="btn-group"><a id="dropdownMenu" href="#" data-toggle="dropdown" class="dropdown-toggle">Action<span class="caret"></span></a><ul role="menu" class="dropdown-menu"><a role="menuitem" href="#">Classic</a></li><li role="presentation"><a role="menuitem" href="#">Random</a></li><li role="presentation"><a role="menuitem" href="#">Hardest to easiest</a></li></ul></div></td>' +
 					'<td class="owner">' + file.ownerId + '</td>' +
-					'<td class="ncards">0</td>' +
+					'<td class="size">0</td>' +
 					'<td class="percentage">0</td>' +
 					'<td class="action"></td>' +
 				'</tr>'
@@ -171,7 +171,7 @@ append content
 				console.log('c => ' + c.html());
 				if (parseInt(c.html()) == data.fileId){
 					console.log('changing href');
-					c.parent().children('.filename').children('a').attr('href', '#{path}/' + data.newName);
+					c.parent().children('.filename').children('a').attr('href', '#{path}' + '/' + data.newName);
 					return;
 				}
 			}
@@ -203,14 +203,19 @@ append content
 
 		/* end delete */
 
-		$('*[data-target="#move-file-modal"]', '*[data-target="#move-file-modal"]').on('click', function(e){
+		//-$('[data-target="#move-file-modal"]).on('click', function(e){
+		$('#mi-move').on('click', function(e){
+			console.log('requesting file tree');
+			var root = '#{path}';
+			root = root.split('/')[1];
+			console.log('path = ' + root);
 			socket.emit('getFileTree', {
-				root : $('#path li a').first().html()
+				root : root 
 			});
 		});
 
 		socket.on('fileTree', function(tree){
-			
+			$('#move-file-modal .modal-body').append('<p>Tree received !</p>');						
 		});
 
 

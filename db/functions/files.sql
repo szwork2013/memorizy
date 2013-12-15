@@ -1,3 +1,11 @@
+create or replace function get_real_filename(_filename text) returns text as $$
+declare _real_filename text;
+begin
+	select lower(_filename) into _real_filename;
+	return _real_filename;
+end;
+$$ language plpgsql;
+
 create or replace function get_file_id(_path text[]) returns integer as $$
 declare
 	_parent_id	integer := 0;
@@ -9,8 +17,8 @@ begin
 		from file_tree ft                                                                                                         
 		where ft.ancestor_id = _parent_id                                                                                          
 		and dist = 1                                                                                                               
-		and _folder = (                                                                                                            
-			select filename                                                                                                        
+		and get_real_filename(_folder) = (                                                                                                            
+			select get_real_filename(filename)                                                                                                        
 			from files                                                                                                         
 			where id = ft.descendant_id                                                                                        
 		);                                                                                                                         
@@ -74,12 +82,12 @@ begin
 			') ' ||                                                                                                                            
 	'select f.id::INTEGER, f.owner_id::INTEGER, f.filename::TEXT'                     
 	|| ', f.size::INTEGER, f.type::TEXT'                                                                                        
-	|| ', coalesce(uf.percentage, 0) percentage::INTEGER'                                                                              
+	|| ', coalesce(uf.percentage, 0)::INTEGER percentage'                                                                              
 	|| ' from files f left join users_files'                                                                            
 	|| ' uf on f.id = uf.file_id'                                                                                            
 	|| ' where f.id in (select children_id from children_ids)'                                                                 
 	|| ' and (uf.user_id = ' || _user_id || ' or uf.user_id is null)'
-	|| ' order by type asc, filename asc';                                                                              
+	|| ' order by type desc, filename asc';                                                                              
 end;                                                                  
 $$ language plpgsql;
 
@@ -320,7 +328,7 @@ begin
 		insert into flashcards(owner_id, deck_id, index, term, definition)
 		select _user_id, c1.id, f1.index, f1.term, f1.definition
 		from file_copies c1 join flashcards f1 on c1.copy_of = f1.deck_id
-		where c1.type = 2 /* deck */
+		where c1.type = 'deck'
 	)
 	select id from file_copies where copy_of = _file_id into _new_subtree_head;
 

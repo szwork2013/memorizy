@@ -39,13 +39,15 @@ $$ language plpgsql;
 create or replace function enable_account(_user_id integer) returns void as $$
 declare
 	_user_record	record;
+	_root_folder_id integer;
 begin
 	update users
 	set enabled = true
 	where id = _user_id
 	returning username into _user_record;
 
-	perform create_file(_user_id, _user_record.username, 'folder', 0);
+	select create_file(_user_id, _user_record.username, 'folder', 0) into _root_folder_id;
+	perform create_file(_user_id, 'starred', 'folder', _root_folder_id);
 end;
 $$ language plpgsql;
 

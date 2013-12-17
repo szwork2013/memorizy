@@ -1,11 +1,3 @@
-create or replace function get_real_filename(_filename text) returns text as $$
-declare _real_filename text;
-begin
-	select lower(_filename) into _real_filename;
-	return _real_filename;
-end;
-$$ language plpgsql;
-
 create or replace function get_file_id(_path text[]) returns integer as $$
 declare
 	_parent_id	integer := 0;
@@ -17,8 +9,8 @@ begin
 		from file_tree ft                                                                                                         
 		where ft.ancestor_id = _parent_id                                                                                          
 		and dist = 1                                                                                                               
-		and get_real_filename(_folder) = (                                                                                                            
-			select get_real_filename(filename)                                                                                                        
+		and _folder = (                                                                                                            
+			select name                                                                                                        
 			from files                                                                                                         
 			where id = ft.descendant_id                                                                                        
 		);                                                                                                                         
@@ -36,14 +28,14 @@ create or replace function get_folder(_path text[]) returns setof record as $$
 	_file_id	integer := 0;
 begin
 	select get_file_id(_path) into _file_id;
-	return query execute 'select id::INTEGER, owner_id::INTEGER, filename::TEXT, size::INTEGER, type::TEXT from files where id = ' || _file_id;
+	return query execute 'select id::INTEGER, owner_id:INTEGER, name::TEXT, size::INTEGER, type::TEXT from files where id = ' || _file_id;
 end;
 $$ language plpgsql;	
 
 
 create or replace function get_folder_content(_user_id integer, _folder_id integer) returns setof record as $$
 begin                                                                                                                                      
-	if not exists(select 1 from files f where f.id = _folder_id and f.type = 'folder') then
+	if not exists(select 1 from files f where f.id = _folder_id and f.type_id = 1) then
 		raise invalid_parameter_value using message = 'Folder with id ' || _folder_id || ' not found';
 	end if;
 
@@ -55,14 +47,14 @@ begin
 			'where ancestor_id = ' || _folder_id ||                                                                                    
 			' and dist = 1 ' ||                                                                                                        
 			') ' ||                                                                                                                            
-	'select f.id::INTEGER, f.owner_id::INTEGER, f.filename::TEXT'                     
-	|| ', f.size::INTEGER, f.type::TEXT'                                                                                        
-	|| ', coalesce(uf.percentage, 0)::INTEGER percentage'                                                                              
+	'select f.id, f.owner_id, f.name::TEXT'                     
+	|| ', f.size, f.type_id'                                                                                        
+	|| ', coalesce(uf.percentage, 0) percentage'                                                                              
 	|| ' from files f left join users_files'                                                                            
 	|| ' uf on f.id = uf.file_id'                                                                                            
 	|| ' where f.id in (select children_id from children_ids)'                                                                 
 	|| ' and (uf.user_id = ' || _user_id || ' or uf.user_id is null)'
-	|| ' order by type desc, filename asc';                                                                              
+	|| ' order by type_id asc, name asc';                                                                              
 end;                                                                  
 $$ language plpgsql;
 
@@ -80,25 +72,25 @@ begin
 			'where ancestor_id = ' || _file_id ||                                                                                    
 			' and dist = 1 ' ||                                                                                                        
 			') ' ||                                                                                                                            
-	'select f.id::INTEGER, f.owner_id::INTEGER, f.filename::TEXT'                     
-	|| ', f.size::INTEGER, f.type::TEXT'                                                                                        
-	|| ', coalesce(uf.percentage, 0)::INTEGER percentage'                                                                              
+	'select f.id, f.owner_id, f.name::TEXT'                     
+	|| ', f.size, f.type_id'                                                                                        
+	|| ', coalesce(uf.percentage, 0) percentage'                                                                              
 	|| ' from files f left join users_files'                                                                            
 	|| ' uf on f.id = uf.file_id'                                                                                            
 	|| ' where f.id in (select children_id from children_ids)'                                                                 
 	|| ' and (uf.user_id = ' || _user_id || ' or uf.user_id is null)'
-	|| ' order by type desc, filename asc';                                                                              
+	|| ' order by type_id asc, name asc';                                                                              
 end;                                                                  
 $$ language plpgsql;
 
-create or replace function create_file(_owner_id integer, _name text, _type text, _path text[]) returns integer as $$
+create or replace function create_file(_owner_id integer, _name text, _type_id integer, _path text[]) returns integer as $$
 declare		
 	_owner_id	integer;
 	_parent_id 	integer;
 begin
 	select get_file_id(_path) into _parent_id;
 
-	return create_file(_owner_id, _name, _type, _parent_id);
+	return create_file(_owner_id, _name, _type_id, _parent_id);
 end;
 $$ language plpgsql;
 
@@ -164,7 +156,7 @@ begin
 			and dist = 1
 		)
 	)
-	select 1 from children where filename = _name;
+	select 1 from children where name = _name;
 
 	if found is true then
 		raise exception 'A file with filename "%" already exists', _new_filename
@@ -172,8 +164,8 @@ begin
 	end if;
 	
 	with id as (
-		insert into files (owner_id, filename, size, type, symlink_of)
-		select owner_id, filename, size, type, id
+		insert into files (owner_id, name, size, type_id, symlink_of)
+		select owner_id, name, size, type_id, id
 		from files where id = _file_id
 		returning id
 	)
@@ -190,7 +182,7 @@ create or replace function rename_file(_user_id integer, _file_id integer, _new_
 declare
 	_old_filename	text;
 begin
-	select filename from files where id = _file_id into _old_filename;
+	select name from files where id = _file_id into _old_filename;
 	if not found then
 		raise exception 'File with id % not found', _file_id
 			using errcode = '22023'; /*invalid_parameter_value*/
@@ -201,7 +193,7 @@ begin
 	end if;
 
 	perform 1 where _new_filename in (
-		select f.filename from files f
+		select f.name from files f
 		where f.id in (
 			select ft.descendant_id from file_tree ft
 			where ft.ancestor_id = (
@@ -218,7 +210,7 @@ begin
 	end if;
 
 	update files
-	set filename = _new_filename
+	set name = _new_filename
 	where id = _file_id;
 end;
 $$ language plpgsql;
@@ -244,8 +236,8 @@ begin
 
 	perform 1 from files f
 	where f.id = _file_id
-	and f.filename in (
-		select f2.filename from files f2
+	and f.name in (
+		select f2.name from files f2
 		where f2.id in (
 			select ft.descendant_id from file_tree ft
 			where ft.ancestor_id = _new_parent_id
@@ -290,8 +282,8 @@ begin
 
 	perform 1 from files
 	where id = _file_id
-	and filename in (
-		select filename from files
+	and name in (
+		select name from files
 		where id in (
 			select descendant_id from file_tree ft
 			where ft.ancestor_id = _parent_id
@@ -306,8 +298,8 @@ begin
 
 	with file_copies as(
 		-- Returns copies id
-		insert into files (owner_id, filename, size, type, copy_of)
-		select _user_id, f.filename, f.size, f.type, f.id from files f
+		insert into files (owner_id, name, size, type_id, copy_of)
+		select _user_id, f.name, f.size, f.type_id, f.id from files f
 		where f.id in(
 			select ft.descendant_id from file_tree ft
 			where ft.ancestor_id = _file_id
@@ -328,7 +320,7 @@ begin
 		insert into flashcards(owner_id, deck_id, index, term, definition)
 		select _user_id, c1.id, f1.index, f1.term, f1.definition
 		from file_copies c1 join flashcards f1 on c1.copy_of = f1.deck_id
-		where c1.type = 'deck'
+		where c1.type_id = 2 /* deck */
 	)
 	select id from file_copies where copy_of = _file_id into _new_subtree_head;
 
@@ -348,7 +340,32 @@ begin
 	delete from files
 	where id in (
 		select descendant_id from file_tree
-		where ancestor_id = _file_id
+		-- Prevent from deleting user's root folder
+		where not exists(
+			select 1 from file_tree
+			where ancestor_id = 0
+			and dist = 0
+		)
+		-- Prevent from deleting starred folder
+		-- TODO make it work
+		-- and not exists (
+			-- select 1 from file_tree
+			-- where ancestor_id = (
+				-- search user's root folder id
+				-- select f.id from files f
+				-- where name = (
+					-- select username from users
+					-- where id = _user_id
+				-- )
+				-- and exists (
+					-- select 1 from file_tree
+					-- where descendant_id = f.id
+					-- and ancestor_id = 0
+					-- and dist = 1
+				-- )
+			-- )
+		-- )
+		and ancestor_id = _file_id
 	);
 end;
 $$ language plpgsql;

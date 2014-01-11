@@ -1,14 +1,16 @@
 var pg = require('pg');
 var q = require('q');
 
-function db(){
+function Db() {
 	this.conn = 'postgres://postgres:cL1475369!@localhost:5432/study';
 }
 
-var singleton = new db();
+var singleton = new Db();
 
-db.prototype.pgConnect = function(callback){
-	pg.connect('tcp://nodepg:nodepg@localhost:5432/study', function (err, client, done) {
+var NODEPG_CONN = 'tcp://nodepg:nodepg@localhost:5432/study';
+
+Db.prototype.pgConnect = function (callback) {
+	pg.connect(NODEPG_CONN, function (err, client, done) {
 		if (err) {
 			console.log(JSON.stringify(err));
 		}
@@ -30,14 +32,14 @@ db.prototype.pgConnect = function(callback){
  * @return A Query object containing information
  * about the query executed and its results
  */
-db.prototype.executePreparedStatement = function(pstat){
+Db.prototype.executePreparedStatement = function (pstat) {
 	var deferred = q.defer();
-	pg.connect(this.conn, function(err, client, done) {
-		if(err) {
+	pg.connect(this.conn, function (err, client, done) {
+		if (err) {
 			deferred.reject(err);
 		}
 		else {
-			client.query(pstat, function(err, result) {
+			client.query(pstat, function (err, result) {
 				//call `done()` to release the client back to the pool
 				done();
 				if (err) {
@@ -52,42 +54,9 @@ db.prototype.executePreparedStatement = function(pstat){
 	return deferred.promise;
 };
 
-/**
- * NOT TESTED executeParameterizedQuery
- *
- * @param query Query with $1, $2, ... for arguments
- * @param values An array containing query arguments
- * @return A query object containing the query results 
- * and information about the query
- */
-/*
- *db.prototype.executeParameterizedQuery = function(query, values){
- *        var deferred = q.defer();
- *        pg.connect(this.conn, function(err, client, done) {
- *                if(err) {
- *                        deferred.reject(err);
- *                        done(client);
- *                }
- *                else {
- *                        client.query(query, values, function(err, result) {
- *                                //call `done()` to release the client back to the pool
- *                                done();
- *                                if (err) {
- *                                        deferred.reject(err);
- *                                }
- *                                else {
- *                                        deferred.resolve(result);
- *                                }
- *                        });
- *                }
- *        });
- *        return deferred.promise;
- *};
- */
-
-db.prototype.stringToPGPath = function(path){
+Db.prototype.stringToPGPath = function (path) {
 	if (typeof path !== 'string') {
-		throw new Error('path = ' + path + ' (expected a string)');	
+		throw new Error('path = ' + path + ' (expected a string)');
 	}
 
 	if (path.length === 0) {
@@ -99,10 +68,10 @@ db.prototype.stringToPGPath = function(path){
 	var pgArray;
 
 	// /a/b/c/ -> array['a','b','c']
-	if((tmp = regex.exec(path)) !== null){
+	if ((tmp = regex.exec(path)) !== null) {
 		pgArray = 'array[\'' + tmp[0] + '\'';
 
-		while ((tmp = regex.exec(path)) !== null){
+		while ((tmp = regex.exec(path)) !== null) {
 			pgArray += ',\'' + tmp[0] + '\'';
 		}
 		pgArray += ']';

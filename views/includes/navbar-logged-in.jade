@@ -4,9 +4,9 @@ nav.navbar.navbar-default.navbar-static-top(role="navigation")
 
 	ul.nav.navbar-nav
 		li#nav-home
-			a.active(href=username) Home
+			a.active(href="/#{user.username}") Home
 		li#nav-starred
-			a(href="#") Starred
+			a(href="/#{user.username}/starred") Starred
 		li#nav-calendar
 			a(href="#") Calendar
 		li#nav-follow

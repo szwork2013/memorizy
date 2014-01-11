@@ -18,11 +18,13 @@
 	"eqeqeq" : true,
 	"freeze" : true,
 	"immed" : true,
-	"indent" : true,
 	"latedef" : true,
 	"newcap" : true,
 	"noempty" : true,
 	"quotmark" : "single",
 	"undef" : true,
-	"unused": true
+	"unused": true,
+	"maxlen": 80,
+	"smarttabs": true
+                                                                      
 }

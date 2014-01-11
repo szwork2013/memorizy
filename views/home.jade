@@ -6,23 +6,8 @@ append head
 append content
 	#content
 		#content-left
-			ol.breadcrumb#path
-				- var psplit = path.split('/');
-				- var tmp = '';
-				- if (psplit.length > 0 && psplit[0] !== ''){
-					- tmp = psplit[0];
-					li
-						a(href=tmp)= psplit[0]
-				- }
-				- for (var i = 1; i < psplit.length - 1; i++) {
-					- if (psplit[i] !== ''){
-						- tmp += '/' + psplit[i];
-						li
-							a(href=tmp)= psplit[i]
-					- }
-				- }
-				li.active= psplit[i]
-
+			include includes/path
+			
 			#action-bar
 				button#new-folder.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-folder-modal") New folder
 				button#new-deck.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-deck-modal") New deck
@@ -32,6 +17,7 @@ append content
 			table#file-list.table.table-hover.table-condensed
 				thead
 					tr
+						th.star
 						th.file-type Type
 						th.name Name
 						th.study-mode Study mode
@@ -39,8 +25,8 @@ append content
 						th.size Size
 						th.percentage %
 				tbody
+					include includes/mixins/file-row
 					each val in files
-						include includes/mixins/file-row
 						+file-row(val)
 		#content-right
 			#file-details
@@ -69,47 +55,18 @@ append content
 	+file-tree-modal("copy-file-modal", "Copy file", "Copy")
 
 	script.
+		//-Global variables-------------------------------------------------
 		var contextMenu = $('#contextMenu');
 		var body = $('body');
 		var fileList = $('#file-list');
+		//------------------------------------------------------------------
 
-		body.on('click', function(e){
-			if(contextMenu.css('display') != 'none'){
-				contextMenu.hide();	
-			}
-		});
-
-		body.on('contextmenu', 'table tr', function(e) {
-			contextMenu.css({
-				display: 'block',
-				left: e.pageX,
-				top: e.pageY
-			});
-
-			contextMenu.row = $(this);
-			console.log('contextMenu.row set to ' + contextMenu.row);
-
-			return false; // prevent browser context menu display
-		});
-
-		contextMenu.on('click', 'a', function() {
-			contextMenu.hide();
-		});
+		//-Socket.IO configuration------------------------------------------
 
 		var socket = io.connect();
-		$('.create-file').on('click', function() {
-			var modalBody = $(this).parent().parent().find('.modal-body');
-			var filename = '' + modalBody.find('#filename-input').val();
 
-			socket.emit('createFile', {
-				filename: '' + modalBody.find('#filename-input').val(),
-				type: modalBody.find('#file-type').val(),
-				parentId: #{currentFolder.id}
-			});
-		});
-
+		//-File creation----------------------------------------------------
 		socket.on('fileCreated', function(file){
-			console.log('file.type = ' + file.type);
 			fileList.find('tbody').prepend(
 				'<tr class="file-row">' +
 					'<td class="file-type">' +
@@ -127,11 +84,21 @@ append content
 			);
 		});
 
-		socket.on('createFileError', function(err){
+		//-socket.on('createFileError', function(err){ });
 
+		$('.create-file').on('click', function () {
+			var modalBody = $(this).parent().parent().find('.modal-body');
+			var filename = '' + modalBody.find('#filename-input').val();
+
+			socket.emit('createFile', {
+				filename: '' + modalBody.find('#filename-input').val(),
+				type: modalBody.find('#file-type').val(),
+				parentId: #{currentFolder.id}
+			});
 		});
+		//------------------------------------------------------------------
 
-		/* Rename */
+		//-Rename file------------------------------------------------------
 		$('#mi-rename').on('click', function(){
 			//Select filename and allow user to change it
 			var filename = contextMenu.row.find('.filename a');
@@ -143,13 +110,22 @@ append content
 			sel.setSingleRange(range);
 		});
 
-		
-		fileList.on('keydown', '.filename a', function(e){
-			// stop editing when press ENTER or ESC
-			if(e.which == 13 || e.which == 27){
-				$(this).blur();
+		socket.on('fileRenamed', function(data){
+			var fileIds = $('.file-id');
+			for (var i = 0; i < fileIds.size(); i++){
+				var c = fileIds.eq(i);
+				if (parseInt(c.html()) == data.fileId){
+					c.parent().children('.filename')
+						.children('a')
+						.attr('href', '#{path}' + '/' + data.newName);
+					return;
+				}
 			}
 		});
+
+		//-TODO Should display an error message if the file
+		//-cannot be renamed
+		//-socket.on('renameFileError', function(reason){ });
 
 		fileList.on('blur', '.filename a', function(){
 			var newName = $(this).html();
@@ -163,59 +139,135 @@ append content
 				contentEditable: 'false',
 			});
 		});
+		//------------------------------------------------------------------
 
-		socket.on('fileRenamed', function(data){
-			var fileIds = $('.file-id');
-			for (var i = 0; i < fileIds.size(); i++){
-				var c = fileIds.eq(i);
-				console.log('c => ' + c.html());
-				if (parseInt(c.html()) == data.fileId){
-					console.log('changing href');
-					c.parent().children('.filename').children('a').attr('href', '#{path}' + '/' + data.newName);
-					return;
-				}
-			}
-		});
+		//-Delete file------------------------------------------------------
+		//-TODO Should display a message at the top of the page
+		//-to confirm that the file has correctly been deleted
+		//-or if an error occured
 
-		socket.on('renameFileError', function(reason){
-
-		});
-
-		/* end rename */
-
-		/* Delete */
+		//-socket.on('fileDeleted', function(file){ });
+		//-socket.on('deleteFileError', function(){ });
 
 		$('#mi-delete').on('click', function(){
 			socket.emit('deleteFile', {
-				id: parseInt(contextMenu.row.find('.file-id').html())
+				id: parseInt(contextMenu.row
+					.find('.file-id')
+					.html())
 			});
 
 			contextMenu.row.remove();
 		});
+		//------------------------------------------------------------------
 
-		socket.on('fileDeleted', function(file){
-			console.log('file deleted');
+		$('#mi-move, #mi-copy').on('click', function (e) {
+			//-TODO shouldn't need to send root folder
+			var root = '#{path}'.split('/')[1];
+			socket.emit('getFileTree', { root : root });
 		});
 
-		socket.on('deleteFileError', function(){
+		socket.on('fileTree', function (data) {
+			//-TODO should set element to move OR copy
+			//-not move and copy
+			var element = $('#move-file-modal .modal-body,' +
+					'#copy-file-modal .modal-body');
 
+			element.empty();
+			displayTree(element, data.tree);
 		});
 
-		/* end delete */
+		function displayTree (element, tree) {
+			//-TODO Should display a tree instead of
+			//-a simple list
+			var list = '<div class="list-group">';
+			//-<a href="#" class="list-group-item active">
+				//-Cras justo odio
+			//-</a>
+			for (var i in tree) {
+				var obj = tree[i];
+				list += '<a href="#" class="list-group-item tree-folder" ' + 
+						'data-file-id=' + obj.id + '>' 
+						+ obj.filename + '</a>';
+			}
+			list += '</div>';
 
-		//-$('[data-target="#move-file-modal"]).on('click', function(e){
-		$('#mi-move').on('click', function(e){
-			console.log('requesting file tree');
-			var root = '#{path}';
-			root = root.split('/')[1];
-			console.log('path = ' + root);
-			socket.emit('getFileTree', {
-				root : root 
+			element.append(list);
+		}
+		
+		$('.btn-action').on('click', function (e) {
+			//- Assume that action can only be move or copy
+			var action = ($(this).data('action') === 'Move') ? 
+					'moveFile' : 'copyFile';
+
+			var selected = parseInt($(this).parent().parent()
+						.parent().parent()
+						.data('selected'));
+			console.log('File ' + selected + ' selected');
+			socket.emit(action, { 
+				src : parseInt(contextMenu.row
+					.find('.file-id')
+					.html()),
+				dest : selected 
 			});
 		});
 
-		socket.on('fileTree', function(tree){
-			$('#move-file-modal .modal-body').append('<p>Tree received !</p>');						
+		$('body').on('click', '.tree-folder', function (e) {
+			console.log($(this).parent().parent().parent()
+				.parent().parent()
+				.attr('class'));
+
+			$(this).parent().parent().parent()
+				.parent().parent()
+				.data('selected', $(this).data('file-id'));
+
+			console.log('File ' + $(this).data('file-id') + ' selected');
+		});
+
+		fileList.on('click', 'span.star', function(e) {
+			var fileId = parseInt($(this).parent().parent()
+							.find('.file-id')
+							.html());
+
+			if ($(this).hasClass('starred')) {
+				$(this).removeClass('starred');
+				socket.emit('unstar', { fileId: fileId });
+			}
+			else {
+				$(this).addClass('starred');
+				socket.emit('star', { fileId: fileId });
+			}
+		});
+
+		//------------------------------------------------------------------
+
+		//-GUI--------------------------------------------------------------
+		body.on('click', function (e) {
+			if(contextMenu.css('display') !== 'none'){
+				contextMenu.hide();	
+			}
+		});
+
+		body.on('contextmenu', 'table tr', function (e) {
+			contextMenu.css({
+				display: 'block',
+				left: e.pageX,
+				top: e.pageY
+			});
+
+			contextMenu.row = $(this);
+			return false; // prevent browser context menu display
+		});
+
+		contextMenu.on('click', 'a', function() {
+			contextMenu.hide();
 		});
 
 
+		fileList.on('keydown', '.filename a', function(e){
+			// stop editing when press ENTER or ESC
+			if(e.which == 13 || e.which == 27){
+				$(this).blur();
+			}
+		});
+
+		//------------------------------------------------------------------

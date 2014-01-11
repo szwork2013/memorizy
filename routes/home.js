@@ -1,5 +1,5 @@
 var home = require('../models/home');
-var rk = require('../middlewares/reserved_keywords');
+var rk = require('../middlewares/reservedkeywords');
 var auth = require('../middlewares/auth');
 
 module.exports = function(app){
@@ -12,8 +12,9 @@ module.exports = function(app){
 	};
 
 	var display = function(req, res){
-		home.getFileByPath(req.path).then(function(folder){
-			home.getFolderContentById(req.user.id, folder.id)
+		home.getFileByPath(req.path).then(function (folder) {
+			home.getFolderContentById(req.user.id, 
+						  folder.id)
 			.then(function(rows){
 				res.render(views.home, {
 					title : req.path,
@@ -25,28 +26,25 @@ module.exports = function(app){
 			}).catch(function(err){
 				console.log(err);
 				res.render('index', {
-					title : 'Page not found - Study',
+					title: 'Page not found',
 					error : err
 				});
 			})
 			.done();
-		}).catch(function(err){
+		})
+    .catch(function(err){
 			console.log(err);	
-		});
+		})
+    .done();
 	};
 
-	app.get(uri.home, rk.isNotReservedKeyword, auth.ensureAuthenticated, function(req, res){
-		display(req, res);
-	});
-	app.get(uri.folder, rk.isNotReservedKeyword, auth.ensureAuthenticated, function(req, res){
-		display(req, res);
-	});
+	app.get(uri.home, rk.isNotReservedKeyword, 
+		auth.ensureAuthenticated, 
+		function (req, res) { display(req, res); }
+	);
 
-	app.post(uri.home, auth.ensureAuthenticated, function(req, res){
-		var ret = home.createFileWithParentId(req.user.id, 
-						req.body.filename,
-						req.body.type,
-						req.body.parentId);
-
-	});
+	app.get(uri.folder, rk.isNotReservedKeyword, 
+		auth.ensureAuthenticated, 
+		function(req, res){ display(req, res); }
+	);
 };

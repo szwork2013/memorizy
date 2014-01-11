@@ -1,0 +1,17 @@
+ol.breadcrumb#path
+	- var psplit = path.split('/');
+	- var tmp = '';
+	- if (psplit.length > 0 && psplit[0] !== ''){
+		- tmp = psplit[0];
+		li
+			a(href=tmp)= psplit[0]
+	- }
+	- for (var i = 1; i < psplit.length - 1; i++) {
+		- if (psplit[i] !== ''){
+			- tmp += '/' + psplit[i];
+			li
+				a(href=tmp)= psplit[i]
+		- }
+	- }
+	li.active= psplit[i]
+

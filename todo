@@ -1,18 +1,6 @@
-- Ajouter les fonctionnalités "move" et "copy"
-	- Ajouter l'arbre des fichiers dans le modal move
-	- Implementer une solution générique
-	- Appliquer la solution sur le modal copy
-	- Envoyer les paquets pour demander le déplacement
-	  ou la copie d'un fichier
-	- Gerer le traitement coté serveur + la réponse au client
-
 - Ajouter la possibilité de mettre des fichiers en favoris
-	- Ajouter un dossier "starred" a la creation de l'utilisateur
-	- Ajouter l'icone pour mettre un fichier en favoris dans la
-	  liste des fichiers
-	- Gerer les paquet coté client et serveur pour ajouter/supprimer
-	  un favoris
-	- Activer le lien dans la barre de navigation
+	- autoriser les noms en doublons dans le dossier starred
+	- gerer les star dans le dossier starred
 
 - Faire la page pour éditer des flashcards
 	- Faire une navigation basique sur la gauche
@@ -48,6 +36,3 @@
 	  fichiers
 
 - Ajouter la possibilité de modifier la visibilité de ses fichiers
-
-
-

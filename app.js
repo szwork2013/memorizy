@@ -14,7 +14,8 @@ var passport = require('passport');
 var flash = require('connect-flash');
 var LocalStrategy = require('passport-local').Strategy;
 
-var lessMiddleware = require('less-middleware'); //Used for less file compilation
+//Used for less file compilation 
+var lessMiddleware = require('less-middleware');
 
 //Session storage
 var db = require('./models/db');
@@ -24,9 +25,9 @@ var sessionStore = new PGStore(db.pgConnect);
 
 // Passport session setup.
 // To support persistent login sessions, Passport needs to be able to
-// serialize users into and deserialize users out of the session. Typically,
-// this will be as simple as storing the user ID when serializing, and finding
-// the user by ID when deserializing.
+// serialize users into and deserialize users out of the session. 
+// Typically, this will be as simple as storing the user ID when 
+// serializing, and finding the user by ID when deserializing.
 var usr = require('./models/user'); // used for authentication method
 passport.serializeUser(function(user, done) {
 	done(null, user.id);
@@ -42,7 +43,8 @@ passport.deserializeUser(function(id, done) {
 passport.use(new LocalStrategy(
 	function(username, password, done) {
 		process.nextTick(function () {
-			usr.authenticateUser(username, password).then(function(val){
+			usr.authenticateUser(username, password)
+            .then(function(val){
 				done(null, val);
 			})
 			.catch(function(){
@@ -94,6 +96,7 @@ require('./routes/register')(app);
 require('./routes/login')(app);
 
 require('./routes/home')(app);
+require('./routes/deck_edit')(app);
 
 
 // development only
@@ -101,7 +104,7 @@ if ('development' === app.get('env')) {
 	app.use(express.errorHandler());
 }
 
-var server = http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app).listen(app.get('port'), function() {
 	console.log('Express server listening on port ' + app.get('port'));
 });
 
@@ -115,9 +118,9 @@ var home = require('./models/home');
 	
 io.set('authorization', passportSocketIo.authorize({
 	cookieParser: express.cookieParser,
-	key:    'express.sid',  //the cookie where express (or connect) stores its session id.
-	secret: 'keyboard cat', //the session secret to parse the cookie
-	store:   sessionStore,  //the session store that express uses
+	key:    'express.sid',  
+	secret: 'keyboard cat', 
+	store:   sessionStore,  
 	fail: function(data, message, error, accept) {
 		console.log('failed with message ' + message);
 		console.log('error : ' + error);
@@ -133,8 +136,12 @@ io.set('authorization', passportSocketIo.authorize({
 
 io.sockets.on('connection', function(socket) {
 	socket.on('createFile', function(file){
-		home.createFileWithParentId(socket.handshake.user.id, file.filename, file.type, file.parentId)
-		.then(function(val){
+		home.createFileWithParentId(
+      socket.handshake.user.id, 
+      file.filename, 
+      file.type, 
+      file.parentId
+    ).then(function(val){
 			socket.emit('fileCreated', {
 				fileId: val,
 				type: file.type,
@@ -147,9 +154,9 @@ io.sockets.on('connection', function(socket) {
 	});
 
 	socket.on('renameFile', function(data){
-		console.log('renameFile ' + data.fileId + ' to \'' + data.newName + '\'');
+    console.log('renameFile ' + data.fileId + ' to \'' + data.newName + '\'');
 		home.renameFile(socket.handshake.user.id, data.fileId, data.newName)
-		.then(function(){
+    .then(function () {
 			socket.emit('fileRenamed', {
 				fileId : data.fileId,	
 				newName : data.newName
@@ -173,16 +180,46 @@ io.sockets.on('connection', function(socket) {
 		}).done();
 	});
 
-	socket.on('getFileTree', function(data){
+	socket.on('moveFile', function (data) {
+		console.log('Move file ' + data.src + ' under ' + data.dest);
+		home.moveFile(socket.handshake.user.id, data.src, data.dest)
+    .then(function () {
+			console.log('File ' + data.src + ' has correctly been moved');
+			socket.emit('fileMoved');
+		})
+		.catch(function () {
+			console.log('An error occured while moving file ' + data.src +
+					        ' under ' + data.dest);
+			//-TODO should send an error message
+			socket.emit('moveFileError', data); 
+		}).done();
+	});
+
+	socket.on('copyFile', function (data) {
+		console.log('Copy file ' + data.src + ' under ' + data.dest);
+		home.copyFile(socket.handshake.user.id, data.src, data.dest)
+    .then(function () {
+			console.log('File ' + data.src + ' has correctly been copied');
+			socket.emit('fileCopied');
+		})
+		.catch(function (err) {
+			console.log('An error occured while copying file ' + data.src +
+					' under ' + data.dest);
+			console.log(err);
+			//-TODO should send an error message
+			socket.emit('copyFileError', data); 
+		}).done();
+	});
+
+	socket.on('getFileTree', function (data) {
 		// data.root is the root folder name
-		home.getFileTree(socket.handshake.user.id, data.root).then(function(tree){
+		home.getFileTree(socket.handshake.user.id, data.root)
+    .then( function (tree) {
 			socket.emit('fileTree', {
 				tree : tree
 			});
 		})
 		.catch(function(err){
-			console.log('ERROR:');
-			console.log(err);
 			socket.emit('getFileTreeError', {
 				message: err.message //check message property
 			});
@@ -190,6 +227,38 @@ io.sockets.on('connection', function(socket) {
 		.done();
 	});
 
+	socket.on('star', function (data) {
+		home.star(socket.handshake.user.id, data.fileId)
+		.then(function (symlinkId) {
+			socket.emit('fileStarred', {
+				src : data.fileId,
+				dest : symlinkId
+			});
+		})
+		.catch(function (err) {
+			socket.emit('fileStarredError', {
+				src : data.fileId,
+				msg : err.message
+			});
+		})
+		.done();
+	});
+
+	socket.on('unstar', function (data) {
+		home.unstar(socket.handshake.user.id, data.fileId)
+		.then(function () {
+			socket.emit('fileUnstarred', {
+				fileId : data.fileId,
+			});
+		})
+		.catch(function (err) {
+			socket.emit('fileUnstarredError', {
+				fileId : data.fileId,
+				msg : err.message
+			});
+		})
+		.done();
+	});
 });
 
 

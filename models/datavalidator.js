@@ -16,8 +16,7 @@ var singleton = new DataValidator();
  * @return an object containing two arrays called missingProperties 
  * and invalidProperties
  */
-DataValidator.prototype.validate = function (data, propertyValidators)
-{
+DataValidator.prototype.validate = function (data, propertyValidators) {
     if (Object.prototype.toString.call(data) !== '[object Object]' ||
         Object.prototype.toString
         .call(propertyValidators) !== '[object Object]') {
@@ -71,8 +70,8 @@ DataValidator.prototype.validate = function (data, propertyValidators)
  * validateUsername checks that the username contains between 
  * 3 and 25 alphanumeric characters including the underscore
  *
- * @param username The username to test
- * @return true is the username is valid, false otherwise
+ * @param {string} username The username to test
+ * @return {boolean} true is the username is valid, false otherwise
  */
 DataValidator.prototype.validateUsername = function (username) {
     var reg = /^\w{3,25}$/;
@@ -87,8 +86,8 @@ DataValidator.prototype.validateUsername = function (username) {
  * least 8 characters. All characters allowed, except 
  * newline or line terminator
  *
- * @param password The password to test
- * @return true is the password is valid, false otherwise
+ * @param {string} password The password to test
+ * @return {boolean} true is the password is valid, false otherwise
  */
 DataValidator.prototype.validatePassword = function (password) {
     var reg = /^.{8,}$/;

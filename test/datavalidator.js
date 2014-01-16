@@ -1,5 +1,5 @@
-var should = require('should');
-var sinon = require('sinon');
+require('should');
+require('sinon');
 var util = require('util');
 var assert = require('assert');
 var dv = require('../models/datavalidator');
@@ -31,7 +31,7 @@ describe('DataValidator.validate', function(){
         }, {
           prop : function(){ return 1; }
         });
-      })().should.throw();
+      }).should.throw();
 
       (function(){
         dv.validate({
@@ -39,7 +39,7 @@ describe('DataValidator.validate', function(){
         }, {
           prop : ''
         });
-      })().should.throw();
+      }).should.throw();
   });
 
 describe('DataValidator.validateUsername', function(){

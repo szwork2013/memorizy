@@ -1,22 +1,22 @@
-var home = require('../models/home');
+var filenavigation = require('../models/filenavigation');
 var rk = require('../middlewares/reservedkeywords');
 var auth = require('../middlewares/auth');
 
 module.exports = function(app){
 	var uri = {
-		home : '/:username',
+		filenavigation : '/:username',
 		folder : '/:username/*'
 	};
 	var views = {
-		home : 'home'
+		filenavigation : 'filenavigation'
 	};
 
 	var display = function(req, res){
-		home.getFileByPath(req.path).then(function (folder) {
-			home.getFolderContentById(req.user.id, 
+		filenavigation.getFileByPath(req.path).then(function (folder) {
+			filenavigation.getFolderContentById(req.user.id, 
 						  folder.id)
 			.then(function(rows){
-				res.render(views.home, {
+				res.render(views.filenavigation, {
 					title : req.path,
 					path : req.path,
 					user : req.user,
@@ -38,7 +38,7 @@ module.exports = function(app){
     .done();
 	};
 
-	app.get(uri.home, rk.isNotReservedKeyword, 
+	app.get(uri.filenavigation, rk.isNotReservedKeyword, 
 		auth.ensureAuthenticated, 
 		function (req, res) { display(req, res); }
 	);

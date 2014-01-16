@@ -2,12 +2,12 @@ var q = require('q');
 var db = require('./db');
 var dv = require('./datavalidator');
 
-function Home() {}
+function FileNavigation() {}
 
-var singleton = new Home(); 
+var singleton = new FileNavigation(); 
 
 // TODO Ajouter l'userId en argument
-Home.prototype.getFileByPath = function (path) {
+FileNavigation.prototype.getFileByPath = function (path) {
   if (typeof path !== 'string') {
     return q.reject('path = ' + path + ' (expected a string)');
   }
@@ -36,7 +36,7 @@ Home.prototype.getFileByPath = function (path) {
  * @param {number} folderId
  * @return {Array.<Object>}
  */
-Home.prototype.getFolderContentById = function (userId, folderId) {
+FileNavigation.prototype.getFolderContentById = function (userId, folderId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');
   }
@@ -63,7 +63,7 @@ Home.prototype.getFolderContentById = function (userId, folderId) {
  * @param {string} path
  * @return {Array.<Object>}
  */
-Home.prototype.getFolderContentByPath = function (userId, path) {
+FileNavigation.prototype.getFolderContentByPath = function (userId, path) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');
   }
@@ -97,7 +97,7 @@ Home.prototype.getFolderContentByPath = function (userId, path) {
  * @param {string} path A uri pointing to the file's location
  * @return {string} The path without slashes at its extremities
  */
-Home.prototype.getArrayablePGPath = function (path) {
+FileNavigation.prototype.getArrayablePGPath = function (path) {
   path = path.replace(/\/{2,}/, '/');
   var firstChar = path.charAt(0);
   var lastChar = path.charAt(path.length - 1);
@@ -122,7 +122,7 @@ Home.prototype.getArrayablePGPath = function (path) {
  * @param {string} rootFolder
  * @return {Array.<Object>}
  */
-Home.prototype.getFileTree = function (userId, rootFolder) {
+FileNavigation.prototype.getFileTree = function (userId, rootFolder) {
   // TODO Use pl/pgsql function instead
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
@@ -167,7 +167,8 @@ Home.prototype.getFileTree = function (userId, rootFolder) {
  * @param {string} path
  * @return {number} The id of the new file
  */
-Home.prototype.createFileWithPath = function (userId, filename, type, path) {
+FileNavigation.prototype.createFileWithPath = function (userId, filename, 
+                                                     type, path) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');
   }
@@ -201,7 +202,7 @@ Home.prototype.createFileWithPath = function (userId, filename, type, path) {
  * @param {number} parentId
  * @return {number} The id of the new file
  */
-Home.prototype.createFileWithParentId = function (userId, filename, 
+FileNavigation.prototype.createFileWithParentId = function (userId, filename, 
                                                   type, parentId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
@@ -236,7 +237,7 @@ Home.prototype.createFileWithParentId = function (userId, filename,
  * @return {Promise} A fulfilled/rejected promise depending on whether
  *    the file has been renamed or not
  */
-Home.prototype.renameFile = function (userId, fileId, newName) {
+FileNavigation.prototype.renameFile = function (userId, fileId, newName) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
@@ -266,7 +267,7 @@ Home.prototype.renameFile = function (userId, fileId, newName) {
  * @return {Promise} A fulfilled/rejected promise depending on whether
  *    the file has been deleted or not
  */
-Home.prototype.deleteFile = function (userId, fileId) {
+FileNavigation.prototype.deleteFile = function (userId, fileId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
@@ -290,7 +291,7 @@ Home.prototype.deleteFile = function (userId, fileId) {
  * @return {Promise} A fulfilled/rejected promise depending on whether
  *    the file has been moved or not
  */
-Home.prototype.moveFile = function (userId, from, to) {
+FileNavigation.prototype.moveFile = function (userId, from, to) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
@@ -318,7 +319,7 @@ Home.prototype.moveFile = function (userId, from, to) {
  *    the file has been copied or not. If the promise is fulfilled,
  *    its value is the copy id
  */
-Home.prototype.copyFile = function (userId, src, dest) {
+FileNavigation.prototype.copyFile = function (userId, src, dest) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
@@ -347,7 +348,7 @@ Home.prototype.copyFile = function (userId, src, dest) {
  *    the symlink has been created or not. If the promise is fulfilled,
  *    its value is the symlink id
  */
-Home.prototype.createSymLink = function (userId, src, dest) {
+FileNavigation.prototype.createSymLink = function (userId, src, dest) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
@@ -374,7 +375,7 @@ Home.prototype.createSymLink = function (userId, src, dest) {
  *    the file has been starred or not. If the promise is fulfilled,
  *    its value is the corresponding symlink id
  */
-Home.prototype.star = function (userId, fileId) {
+FileNavigation.prototype.star = function (userId, fileId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
@@ -399,7 +400,7 @@ Home.prototype.star = function (userId, fileId) {
  * @return {Promise} A fulfilled/rejected promise depending on whether
  *    the file has been unstarred or not
  */
-Home.prototype.unstar = function (userId, fileId) {
+FileNavigation.prototype.unstar = function (userId, fileId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
@@ -414,27 +415,27 @@ Home.prototype.unstar = function (userId, fileId) {
   });
 };
 
-//Home.prototype.exportFile = function (userId, path) {
+//FileNavigation.prototype.exportFile = function (userId, path) {
 
 //};
 
-//Home.prototype.importFile = function (userId, data, path) {
+//FileNavigation.prototype.importFile = function (userId, data, path) {
 
 //};
 
-//Home.prototype.shareFile = function (userId, path) {
+//FileNavigation.prototype.shareFile = function (userId, path) {
 
 //};
 
-//Home.prototype.setStudyMode = function (userId, path, studyMode) {
+//FileNavigation.prototype.setStudyMode = function (userId, path, studyMode) {
 
 //};
 
-//Home.prototype.setPrivacy = function (userId, path, privacy) {
+//FileNavigation.prototype.setPrivacy = function (userId, path, privacy) {
 
 //};
 
-//Home.prototype.resetStats = function (userId, path) {
+//FileNavigation.prototype.resetStats = function (userId, path) {
 
 //};
 

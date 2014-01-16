@@ -1,5 +1,7 @@
 {
 	"globals"   : {
+    "should"     : false,
+    "sinon"      : false,
 		/* MOCHA */
 		"describe"   : false,
 		"it"         : false,

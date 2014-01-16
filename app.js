@@ -95,8 +95,7 @@ require('./routes/index')(app);
 require('./routes/register')(app);
 require('./routes/login')(app);
 
-require('./routes/home')(app);
-require('./routes/deck_edit')(app);
+require('./routes/file')(app);
 
 
 // development only
@@ -114,7 +113,7 @@ var server = http.createServer(app).listen(app.get('port'), function() {
 
 var io = require('socket.io').listen(server);
 var passportSocketIo = require('passport.socketio');
-var home = require('./models/home');
+var filenavigation = require('./models/filenavigation');
 	
 io.set('authorization', passportSocketIo.authorize({
 	cookieParser: express.cookieParser,
@@ -136,7 +135,7 @@ io.set('authorization', passportSocketIo.authorize({
 
 io.sockets.on('connection', function(socket) {
 	socket.on('createFile', function(file){
-		home.createFileWithParentId(
+		filenavigation.createFileWithParentId(
       socket.handshake.user.id, 
       file.filename, 
       file.type, 
@@ -155,7 +154,8 @@ io.sockets.on('connection', function(socket) {
 
 	socket.on('renameFile', function(data){
     console.log('renameFile ' + data.fileId + ' to \'' + data.newName + '\'');
-		home.renameFile(socket.handshake.user.id, data.fileId, data.newName)
+		filenavigation.renameFile(socket.handshake.user.id, 
+                              data.fileId, data.newName)
     .then(function () {
 			socket.emit('fileRenamed', {
 				fileId : data.fileId,	
@@ -169,7 +169,8 @@ io.sockets.on('connection', function(socket) {
 	});
 
 	socket.on('deleteFile', function(file){
-		home.deleteFile(socket.handshake.user.id, file.id).then(function(){
+		filenavigation.deleteFile(socket.handshake.user.id, file.id)
+    .then(function(){
 			socket.emit('fileDeleted');
 		})
 		.catch(function(err){
@@ -182,7 +183,7 @@ io.sockets.on('connection', function(socket) {
 
 	socket.on('moveFile', function (data) {
 		console.log('Move file ' + data.src + ' under ' + data.dest);
-		home.moveFile(socket.handshake.user.id, data.src, data.dest)
+		filenavigation.moveFile(socket.handshake.user.id, data.src, data.dest)
     .then(function () {
 			console.log('File ' + data.src + ' has correctly been moved');
 			socket.emit('fileMoved');
@@ -197,7 +198,7 @@ io.sockets.on('connection', function(socket) {
 
 	socket.on('copyFile', function (data) {
 		console.log('Copy file ' + data.src + ' under ' + data.dest);
-		home.copyFile(socket.handshake.user.id, data.src, data.dest)
+		filenavigation.copyFile(socket.handshake.user.id, data.src, data.dest)
     .then(function () {
 			console.log('File ' + data.src + ' has correctly been copied');
 			socket.emit('fileCopied');
@@ -213,7 +214,7 @@ io.sockets.on('connection', function(socket) {
 
 	socket.on('getFileTree', function (data) {
 		// data.root is the root folder name
-		home.getFileTree(socket.handshake.user.id, data.root)
+		filenavigation.getFileTree(socket.handshake.user.id, data.root)
     .then( function (tree) {
 			socket.emit('fileTree', {
 				tree : tree
@@ -228,7 +229,7 @@ io.sockets.on('connection', function(socket) {
 	});
 
 	socket.on('star', function (data) {
-		home.star(socket.handshake.user.id, data.fileId)
+		filenavigation.star(socket.handshake.user.id, data.fileId)
 		.then(function (symlinkId) {
 			socket.emit('fileStarred', {
 				src : data.fileId,
@@ -245,7 +246,7 @@ io.sockets.on('connection', function(socket) {
 	});
 
 	socket.on('unstar', function (data) {
-		home.unstar(socket.handshake.user.id, data.fileId)
+		filenavigation.unstar(socket.handshake.user.id, data.fileId)
 		.then(function () {
 			socket.emit('fileUnstarred', {
 				fileId : data.fileId,

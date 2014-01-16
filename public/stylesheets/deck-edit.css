@@ -1,0 +1,26 @@
+#content {
+  height: 80%;
+}
+#content-left {
+  display: inline-block;
+  width: 20%;
+  box-sizing: border-box;
+}
+.list-flashcards {
+  width: 100%;
+}
+#content-center {
+  display: inline-block;
+  height: 100%;
+  width: 60%;
+  background-color: red;
+  box-sizing: border-box;
+}
+#content-right {
+  height: 100%;
+  width: 20%;
+  padding: 0 5% 0 5%;
+  background-color: green;
+  box-sizing: border-box;
+  color: white;
+}

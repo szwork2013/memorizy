@@ -1,7 +1,34 @@
 extends layout
 
-append content
-	#content
-		#content-left
-			include includes/path
+append head
+  link(rel='stylesheet', href='/stylesheets/deck-edit.css')
 
+append content
+  #content
+    #path
+      include includes/path
+
+    br
+
+    #content-left
+      //- List of flashcards
+      .list-flashcards.list-group
+        a.list-group-item.active(href="#")
+          h6.list-group-item-heading
+            List group item heading
+          p.list-group-item-text
+            ...
+        a.list-group-item(href="#")
+          h6.list-group-item-heading
+            List group item heading
+          p.list-group-item-text
+            ...
+
+    #content-center
+      #flashcard
+        #term
+        #definition
+
+    #content-right
+      p test
+      #flashcard-info 

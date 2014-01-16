@@ -15,9 +15,9 @@ FileNavigation.prototype.getFileByPath = function (path) {
   path = this.getArrayablePGPath(path);
 
   return db.executePreparedStatement({
-    name : 'getFolderByPath',
+    name : 'getFileByPath',
     text : 'select * ' +
-      'from get_folder(string_to_array($1, \'/\')) as ' +
+      'from get_file(string_to_array($1, \'/\')) as ' +
       '(id integer, owner_id integer, name text,' +
       'size integer, type text)',
     values : [path]
@@ -405,13 +405,31 @@ FileNavigation.prototype.unstar = function (userId, fileId) {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
   if (typeof fileId !== 'number') {
-    return q.reject('fileId = ' + fileId + ' (expected a number');
+    return q.reject('fileId = ' + fileId + ' (expected a number)');
   }
 
   return db.executePreparedStatement({
     name: 'unstar',
     text: 'select unstar($1, $2)',
     values: [ userId, fileId ]
+  });
+};
+
+FileNavigation.prototype.getFileFlashcards = function (userId, fileId) {
+  if (typeof userId !== 'number') {
+    return q.reject('userId = ' + userId + ' (expected a number)');	
+  }
+  if (typeof fileId !== 'number') {
+    return q.reject('fileId = ' + fileId + ' (expected a number)');
+  }
+
+  return db.executePreparedStatement({
+    name: 'getFileFlashcards',
+    text: 'select * from get_flashcards($1, $2)',
+    values: [ userId, fileId ]
+  })
+  .then(function (res) {
+    return res.rows;
   });
 };
 

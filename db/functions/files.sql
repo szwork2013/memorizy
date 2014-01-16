@@ -43,7 +43,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function get_folder(_path text[]) returns setof record as $$
+create or replace function get_file(_path text[]) returns setof record as $$
 	declare
 	_file_id	integer := 0;
 begin
@@ -344,10 +344,8 @@ begin
 	);
 
 	if found then
-		raise exception 'A file with filename "%" ' || 
-				'already exists', _new_filename
-				-- duplicate_object
-				using errcode = '42710'; 
+		raise exception 'A file with filename "%" already exists', _new_filename
+		using errcode = '42710'; -- duplicate_object
 	end if;
 
 	update files
@@ -394,11 +392,9 @@ begin
 	);
 
 	if found is true then
-		raise exception 'A file with the same filename ' ||
-				'and parent id(=%) already exists', 
-				_new_parent_id
-				-- Duplicate object
-				using errcode = '42710'; 
+		raise exception 'A file with the same filename and parent id(=%) already exists', 
+		_new_parent_id
+	  using errcode = '42710'; -- Duplicate object
 	end if;
 
 	-- Update file hierarchy
@@ -446,9 +442,9 @@ begin
 	);
 
 	if found then
-		raise exception 'A file with the same filename ' ||
-				'and parent id(=%) already exists', _parent_id
-				using errcode = '42710'; /*duplicate_object*/
+		raise exception 'A file with the same filename and parent id(=%) already exists', 
+    _parent_id
+		using errcode = '42710'; /*duplicate_object*/
 	end if;
 
 	with file_copies as(
@@ -530,7 +526,7 @@ $$ language plpgsql;
 create or replace
 function get_file_tree (_user_id integer, 
                         _excluded_folder_id integer)
-returns setof records as $$
+returns setof record as $$
 begin
      return query execute
         'select f.id, f.filename, f.type, ft.ancestor_id,' +
@@ -555,7 +551,36 @@ begin
                 'where ft3.descendant_id = ft2.descendant_id ' +
                 'and ft3.ancestor_id = _excluded_folder_id' +
             ')' +
-        ') and dist = 1 and type = \'folder\'',
+        ') and dist = 1 and type = ''folder''';
+end;
+$$ language plpgsql;
+
+-- TODO return flashcards of all file decks if the file
+-- provided as arguments isn't a deck
+create or replace
+function get_flashcards (_user_id integer, _file_id integer)
+returns table(id integer, owner_id integer, deck_id integer,
+              term text, definition text, index integer, state_history text)
+as $$
+begin
+  return query
+     select    
+       f.id,   
+       f.owner_id,   
+       f.deck_id,   
+       f.term::TEXT,   
+       f.definition::TEXT,   
+       f.index,   
+       coalesce(   
+         uf.state_history,    
+         '00000'    
+       )::TEXT   
+     from   
+       flashcards f left join users_flashcards uf   
+       on f.id = uf.flashcard_id   
+       and _user_id = uf.user_id   
+     order by   
+       f.index asc ;
 end;
 $$ language plpgsql;
 

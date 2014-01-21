@@ -555,132 +555,6 @@ begin
 end;
 $$ language plpgsql;
 
--- TODO return flashcards of all file decks if the file
--- provided as arguments isn't a deck
-create or replace
-function get_flashcards (_user_id integer, _file_id integer)
-returns table(id integer, owner_id integer, deck_id integer,
-              term text, definition text, index integer, state_history text)
-as $$
-begin
-  return query
-     select    
-       f.id,   
-       f.owner_id,   
-       f.deck_id,   
-       f.term::TEXT,   
-       f.definition::TEXT,   
-       f.index,   
-       coalesce(   
-         uf.state_history,    
-         '00000'    
-       )::TEXT   
-     from   
-       flashcards f left join users_flashcards uf   
-       on f.id = uf.flashcard_id   
-       and _user_id = uf.user_id   
-     order by   
-       f.index asc ;
-end;
-$$ language plpgsql;
-
-create or replace function add_flashcard(_owner_id integer, _deck_id integer, _term char(2048), _definition char(2048), _insert_before_id integer) returns integer as $$
-declare
-	_range	record;
-	_id	integer;
-begin
-	if _insert_before_id is null then
-		with max as (
-			select coalesce(max(position), 0) pos
-			from flashcards
-		)
-		insert into flashcards (owner_id, deck_id, term, definition, position) values(
-			_owner_id, _deck_id, _term, _definition, (select pos + 100 from max))
-			returning id into _id;
-	else
-		loop
-			with before_position as (
-				select position insert_before
-				from flashcards
-				where id = _insert_before_id
-			), after_position as (
-				select coalesce(max(position), 0) insert_after
-				from flashcards
-				where position < (select insert_before from before_position)
-			)
-			select * from before_position before, after_position after into _range;
-
-			if _range.insert_before - 1 = _range.insert_after then
-				update flashcards
-				set position = position + 100
-				where position >= _range.insert_before;
-			else
-				exit;
-			end if;
-		end loop;
-
-		insert into flashcards (owner_id, deck_id, term, definition, position) values(
-			_owner_id, _deck_id, _term, _definition, _range.insert_after + (_range.insert_before - _range.insert_after) / 2)
-			returning id into _id;
-	end if;
-
-	return _id;
-end;
-$$ language plpgsql;
-
-create or replace function add_flashcard(_owner_id integer, _deck_id integer, _term char(2048), _definition char(2048), _insert_before_id integer) returns integer as $$
-declare
-	_range	record;
-	_id	integer;
-begin
-	if _insert_before_id is null then
-		with max as (
-			select coalesce(max(position), 0) pos
-			from flashcards
-	    	)
-		insert into flashcards (owner_id, deck_id, term, definition, position) values(
-			_owner_id, _deck_id, _term, _definition, (select pos + 100 from max))
-		returning id into _id;
-	else
-		loop
-			with before_position as (
-				select position insert_before
-				from flashcards
-				where id = _insert_before_id
-			), after_position as (
-				select coalesce(max(position), 0) insert_after
-				from flashcards
-				where position < (select insert_before from before_position)
-			)
-			select * from before_position before, after_position after into _range;
-
-			if _range.insert_before - 1 = _range.insert_after then
-				update flashcards
-				set position = position + 100
-				where position >= _range.insert_before;
-			else
-				exit;
-			end if;
-		end loop;
-
-		insert into flashcards (owner_id, deck_id, term, definition, position) values(
-			_owner_id, _deck_id, _term, _definition, _range.insert_after + (_range.insert_before - _range.insert_after) / 2)
-			returning id into _id;
-	end if;
-
-	return _id;
-end;
-$$ language plpgsql;
-
-create or replace function delete_flashcard(flashcard_id integer, deck_id integer) returns void as $$
-begin
-	perform dec_number_of_cards(flashcard_id, deck_id);
-	execute 'delete from flashcards where id = ' || flashcard_id;
-
-	-- Update next and previous flashcard instead of index
-end;
-$$ language plpgsql;
-
 create or replace function inc_number_of_cards(file_id integer) returns void as $$
 begin
 	-- Increment number of cards
@@ -704,7 +578,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function dec_number_of_cards(deleted_flashcard_id integer, deck_id integer) returns void as $$
+create or replace function dec_number_of_cards(deck_id integer, deleted_flashcard_id integer) returns void as $$
 begin
 	-- Decrement number of cards
 	execute 'with parents as ('
@@ -731,22 +605,6 @@ begin
 			|| '(select coalesce((select percentage from percentages p where p.user_id = ufi.user_id), 0))) % size'
 		|| ' from files f'
 		|| ' where f.id = ufi.file_id and ufi.file_id in parents';
-end;
-$$ language plpgsql;
-
-create or replace function update_flashcard_status (user_id integer, flashcard_id integer, last_state char) returns void as $$
-declare
-	state_histories	record;
-begin
-	execute 'select update_flashcard_state_history(' 
-		|| user_id || ',' 
-		|| flashcard_id || ',' 
-		|| quote_literal(last_state) || ')' into state_histories;
-
-
-	perform update_file_status(user_id, tmp_status.deck_id, 
-		(select percentage from state_hist_to_percentage where state_hist = state_histories.new) -
-		(select percentage from state_hist_to_percentage where state_hist = state_histories.old));
 end;
 $$ language plpgsql;
 

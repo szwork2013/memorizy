@@ -106,3 +106,7 @@ button#new-folder {
   position: absolute;
   display: none;
 }
+/* Remove border around focused text/input boxes */
+*:focus {
+  outline: none;
+}

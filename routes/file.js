@@ -3,7 +3,6 @@ var rk = require('../middlewares/reservedkeywords');
 var auth = require('../middlewares/auth');
 
 var URI = '/:username/:subfolder?*';
-//var URI = '/:username/:subfolder?/*?';
 var VIEWS = {
   FILE_NAVIGATION : 'file-navigation',
   DECK_EDIT : 'deck-edit'

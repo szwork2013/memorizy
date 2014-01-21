@@ -1,9 +1,11 @@
 #content {
-  height: 80%;
+  height: auto !important;
+  box-sizing: border-box;
 }
 #content-left {
   display: inline-block;
   width: 20%;
+  padding: 0;
   box-sizing: border-box;
 }
 .list-flashcards {
@@ -13,8 +15,26 @@
   display: inline-block;
   height: 100%;
   width: 60%;
-  background-color: red;
   box-sizing: border-box;
+}
+#flashcard {
+  width: 450px;
+  height: 450px;
+  margin: auto;
+  box-sizing: border-box;
+  box-shadow: 0 0 8px black;
+}
+#flashcard > .term,
+#flashcard > .definition {
+  height: 50%;
+  width: 100%;
+  margin: 0;
+  padding: 20px;
+  font-size: 1.3em;
+  box-sizing: border-box;
+}
+#flashcard > .term {
+  border-bottom: 1px solid black;
 }
 #content-right {
   height: 100%;

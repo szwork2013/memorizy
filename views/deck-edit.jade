@@ -5,30 +5,171 @@ append head
 
 append content
   #content
-    #path
-      include includes/path
+    include includes/path
 
     br
 
     #content-left
       //- List of flashcards
-      .list-flashcards.list-group
-        a.list-group-item.active(href="#")
-          h6.list-group-item-heading
-            List group item heading
-          p.list-group-item-text
-            ...
-        a.list-group-item(href="#")
-          h6.list-group-item-heading
-            List group item heading
-          p.list-group-item-text
-            ...
+      #list-flashcards.list-group
+        - if (flashcards) {
+            each f in flashcards
+              a.list-group-item(href="#" data-flashcard-id=f.id)
+                h5.list-group-item-heading.term= f.term
+                p.list-group-item-text.definition= f.definition
+        - }
 
     #content-center
       #flashcard
-        #term
-        #definition
+        .term(contenteditable=true)
+        .definition(contenteditable=true)
 
     #content-right
       p test
       #flashcard-info 
+
+  script.
+    var flashcardList = $('#list-flashcards'),
+        selectedFlashcard = null,
+        term = $('#flashcard > .term'),
+        definition = $('#flashcard > .definition'),
+        arrowPrevious = $('#arrow-previous'),
+        arrowNext = $('#arrow-next');
+
+    var socket = io.connect();
+
+    var deck = {
+      saveFlashcard: function (flashcard) {
+        if (!flashcard || (typeof flashcard.data('flashcard-id') !== 'number' &&
+          typeof flashcard.prev('a.list-group-item') === 'undefined')) {
+          console.error('The flashcard you\'re trying to save is invalid');
+          return;
+        }
+
+        //- No modification to send
+        if (flashcard.children('.term').html() === term.html() &&
+          flashcard.children('.definition').html() === definition.html()) {
+          return;
+        }
+
+        //- TODO Send only fields that have been changed
+        var obj = {
+          term: flashcard.children('.term').html(),
+          definition: flashcard.children('.definition').html()
+        };
+
+        if (typeof flashcard.data('flashcard-id') === 'number') {
+          obj.flashcardId = flashcard.data('flashcard-id');
+        }
+        else {
+          obj.previousFlashcardId = flashcard.prev('a.list-group-item')
+                                             .data('flashcard-id');
+        }
+      
+        socket.emit('saveFlashcard', obj);
+      },
+
+      moveFlashcard: function (id, beforeId) {
+        if (typeof id !== 'number' || typeof afterId !== 'number') {
+          return;
+        }
+
+        socket.emit('moveFlashcard', {
+          flashcardId: id,
+          beforeId: beforeId
+        });
+      },
+
+      deleteFlashcard: function (id) {
+        if (typeof id !== 'number') {
+          return;
+        }
+
+        socket.emit('deleteFlashcard', {flashcardId: id});
+      },
+
+      goTo: function (flashcard) {
+        //- Nothing to save if there's no flashcard
+        //- in the deck or if no flashcard has been
+        //- selected yet
+        if (selectedFlashcard) {
+          this.saveFlashcard(selectedFlashcard);
+        }
+        this.displayFlashcard(flashcard);
+      },
+
+      createFlashcard: function () {
+          var item = '' +
+            '<a class="list-group-item" href="#">' +
+              '<h5 class="list-group-item-heading term"><i>Term</i></h5>' +
+              '<p class="list-group-item-text definition"><i>Definition</i></p>' +
+            '</a>';
+
+          return $(item);
+      },
+
+      displayFlashcard: function (flashcard) {
+        if (selectedFlashcard) {
+          selectedFlashcard.removeClass('active');
+        }
+
+        if (typeof flashcard !== 'undefined' && flashcard.length > 0) {
+          term.html(flashcard.children('.term').html());
+          definition.html(flashcard.children('.definition').html());
+
+          flashcard.addClass('active');
+          selectedFlashcard = flashcard;
+        }
+        else {
+          var createdFlashcard = this.createFlashcard(); 
+          
+          if (selectedFlashcard.get(0) === flashcardList.children().first().get(0)) {
+            createdFlashcard.insertBefore(selectedFlashcard);
+          }
+          else {
+            createdFlashcard.insertAfter(selectedFlashcard);
+          }
+
+          term.html('');
+          definition.html('');
+
+          createdFlashcard.addClass('active');
+          selectedFlashcard = createdFlashcard;
+        }
+
+        term.focus();
+      },
+
+      goToPreviousFlashcard: function () {
+        this.goTo(selectedFlashcard.prev('a.list-group-item'));
+      },
+
+      goToNextFlashcard: function () {
+        this.goTo(selectedFlashcard.next('a.list-group-item'));
+      }
+    };
+
+    deck.goTo(flashcardList.find('a.list-group-item').first());
+
+    term.keydown(function (e) {
+      if (e.shiftKey && e.which === 9) {
+        deck.goToPreviousFlashcard();
+        e.preventDefault(); 
+      }
+    });
+
+    definition.keydown(function (e) {
+      if (!e.shiftKey && e.which === 9) {
+        deck.goToNextFlashcard();
+        e.preventDefault(); // prevent from focusing URL bar
+      }
+    });
+
+    arrowPrevious.click(deck.goToPreviousFlashcard);
+    arrowNext.click(deck.goToNextFlashcard);
+
+    flashcardList.on('click', 'a.list-group-item', function (e) {
+      deck.goTo($(this));
+    });
+
+

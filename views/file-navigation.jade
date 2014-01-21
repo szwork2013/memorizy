@@ -1,273 +1,273 @@
 extends layout
 
 append head
-	//- used for text selection 
-	script(src='/javascripts/rangy/uncompressed/rangy-core.js') 
+  //- used for text selection 
+  script(src='/javascripts/rangy/uncompressed/rangy-core.js') 
 append content
-	#content
-		#content-left
-			include includes/path
-			
-			#action-bar
-				button#new-folder.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-folder-modal") New folder
-				button#new-deck.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-deck-modal") New deck
+  #content
+    #content-left
+      include includes/path
+      
+      #action-bar
+        button#new-folder.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-folder-modal") New folder
+        button#new-deck.btn.btn-primary.btn-sm(data-toggle="modal" data-target="#new-deck-modal") New deck
 
-			br
+      br
 
-			table#file-list.table.table-hover.table-condensed
-				thead
-					tr
-						th.star
-						th.file-type Type
-						th.name Name
-						th.study-mode Study mode
-						th.owner Owner
-						th.size Size
-						th.percentage %
-				tbody
-					include includes/mixins/file-row
-					each val in files
-						+file-row(val)
-		#content-right
-			#file-details
+      table#file-list.table.table-hover.table-condensed
+        thead
+          tr
+            th.star
+            th.file-type Type
+            th.name Name
+            th.study-mode Study mode
+            th.owner Owner
+            th.size Size
+            th.percentage %
+        tbody
+          include includes/mixins/file-row
+          each val in files
+            +file-row(val)
+    #content-right
+      #file-details
 
-	#contextMenu.dropdown.clearfix
-		ul.dropdown-menu(role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;")
-			li
-				a#mi-study(tabindex="-1" href="#") Study
-			li
-				a#mi-edit(tabindex="-1" href="#") Edit	
-			li
-				a#mi-rename(tabindex="-1" href="#") Rename
-			li
-				a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal") Move 
-			li
-				a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal") Copy
-			li
-				a#mi-delete(tabindex="-1" href="#") Delete
-	
-	//- Modal
-	include includes/mixins/create-file-modal
-	+create-file-modal("new-folder-modal", "Create a new folder", "folder")
-	+create-file-modal("new-deck-modal", "Create a new deck", "deck")
-	include includes/mixins/file-tree-modal.jade
-	+file-tree-modal("move-file-modal", "Move file", "Move")
-	+file-tree-modal("copy-file-modal", "Copy file", "Copy")
+  #contextMenu.dropdown.clearfix
+    ul.dropdown-menu(role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;")
+      li
+        a#mi-study(tabindex="-1" href="#") Study
+      li
+        a#mi-edit(tabindex="-1" href="#") Edit  
+      li
+        a#mi-rename(tabindex="-1" href="#") Rename
+      li
+        a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal") Move 
+      li
+        a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal") Copy
+      li
+        a#mi-delete(tabindex="-1" href="#") Delete
+  
+  //- Modal
+  include includes/mixins/create-file-modal
+  +create-file-modal("new-folder-modal", "Create a new folder", "folder")
+  +create-file-modal("new-deck-modal", "Create a new deck", "deck")
+  include includes/mixins/file-tree-modal.jade
+  +file-tree-modal("move-file-modal", "Move file", "Move")
+  +file-tree-modal("copy-file-modal", "Copy file", "Copy")
 
-	script.
-		//-Global variables-------------------------------------------------
-		var contextMenu = $('#contextMenu');
-		var body = $('body');
-		var fileList = $('#file-list');
-		//------------------------------------------------------------------
+  script.
+    //-Global variables-------------------------------------------------
+    var contextMenu = $('#contextMenu');
+    var body = $('body');
+    var fileList = $('#file-list');
+    //------------------------------------------------------------------
 
-		//-Socket.IO configuration------------------------------------------
+    //-Socket.IO configuration------------------------------------------
 
-		var socket = io.connect();
+    var socket = io.connect();
 
-		//-File creation----------------------------------------------------
-		socket.on('fileCreated', function(file){
-			fileList.find('tbody').prepend(
-				'<tr class="file-row">' +
-					'<td class="file-type">' +
-						(file.type === 'folder' ? '<span class="glyphicon glyphicon-folder-open"></span>' : '<span class="glyphicon glyphicon-file"></span>') + 
-					'</td>' +
-					'<td class="filename">' +
-						'<a href="' + '#{path}' + '/' + file.name + '">' + file.name + '</a>' +
-					'</td>' +
-					'<td class="study-mode"><div class="btn-group"><a id="dropdownMenu" href="#" data-toggle="dropdown" class="dropdown-toggle">Action<span class="caret"></span></a><ul role="menu" class="dropdown-menu"><a role="menuitem" href="#">Classic</a></li><li role="presentation"><a role="menuitem" href="#">Random</a></li><li role="presentation"><a role="menuitem" href="#">Hardest to easiest</a></li></ul></div></td>' +
-					'<td class="owner">' + file.ownerId + '</td>' +
-					'<td class="size">0</td>' +
-					'<td class="percentage">0</td>' +
-					'<td class="action"></td>' +
-				'</tr>'
-			);
-		});
+    //-File creation----------------------------------------------------
+    socket.on('fileCreated', function(file){
+      fileList.find('tbody').prepend(
+        '<tr class="file-row">' +
+          '<td class="file-type">' +
+            (file.type === 'folder' ? '<span class="glyphicon glyphicon-folder-open"></span>' : '<span class="glyphicon glyphicon-file"></span>') + 
+          '</td>' +
+          '<td class="filename">' +
+            '<a href="' + '#{path}' + '/' + file.name + '">' + file.name + '</a>' +
+          '</td>' +
+          '<td class="study-mode"><div class="btn-group"><a id="dropdownMenu" href="#" data-toggle="dropdown" class="dropdown-toggle">Action<span class="caret"></span></a><ul role="menu" class="dropdown-menu"><a role="menuitem" href="#">Classic</a></li><li role="presentation"><a role="menuitem" href="#">Random</a></li><li role="presentation"><a role="menuitem" href="#">Hardest to easiest</a></li></ul></div></td>' +
+          '<td class="owner">' + file.ownerId + '</td>' +
+          '<td class="size">0</td>' +
+          '<td class="percentage">0</td>' +
+          '<td class="action"></td>' +
+        '</tr>'
+      );
+    });
 
-		//-socket.on('createFileError', function(err){ });
+    //-socket.on('createFileError', function(err){ });
 
-		$('.create-file').on('click', function () {
-			var modalBody = $(this).parent().parent().find('.modal-body');
-			var filename = '' + modalBody.find('#filename-input').val();
+    $('.create-file').on('click', function () {
+      var modalBody = $(this).parent().parent().find('.modal-body');
+      var filename = '' + modalBody.find('#filename-input').val();
 
-			socket.emit('createFile', {
-				filename: '' + modalBody.find('#filename-input').val(),
-				type: modalBody.find('#file-type').val(),
-				parentId: #{currentFolder.id}
-			});
-		});
-		//------------------------------------------------------------------
+      socket.emit('createFile', {
+        filename: '' + modalBody.find('#filename-input').val(),
+        type: modalBody.find('#file-type').val(),
+        parentId: #{currentFolder.id}
+      });
+    });
+    //------------------------------------------------------------------
 
-		//-Rename file------------------------------------------------------
-		$('#mi-rename').on('click', function(){
-			//Select filename and allow user to change it
-			var filename = contextMenu.row.find('.filename a');
-			filename.attr('contentEditable', 'true');
+    //-Rename file------------------------------------------------------
+    $('#mi-rename').on('click', function(){
+      //Select filename and allow user to change it
+      var filename = contextMenu.row.find('.filename a');
+      filename.attr('contentEditable', 'true');
 
-			var range = rangy.createRange();
-			range.selectNodeContents(filename.get(0));
-			var sel = rangy.getSelection();
-			sel.setSingleRange(range);
-		});
+      var range = rangy.createRange();
+      range.selectNodeContents(filename.get(0));
+      var sel = rangy.getSelection();
+      sel.setSingleRange(range);
+    });
 
-		socket.on('fileRenamed', function(data){
-			var fileIds = $('.file-id');
-			for (var i = 0; i < fileIds.size(); i++){
-				var c = fileIds.eq(i);
-				if (parseInt(c.html()) == data.fileId){
-					c.parent().children('.filename')
-						.children('a')
-						.attr('href', '#{path}' + '/' + data.newName);
-					return;
-				}
-			}
-		});
+    socket.on('fileRenamed', function(data){
+      var fileIds = $('.file-id');
+      for (var i = 0; i < fileIds.size(); i++){
+        var c = fileIds.eq(i);
+        if (parseInt(c.html()) == data.fileId){
+          c.parent().children('.filename')
+            .children('a')
+            .attr('href', '#{path}' + '/' + data.newName);
+          return;
+        }
+      }
+    });
 
-		//-TODO Should display an error message if the file
-		//-cannot be renamed
-		//-socket.on('renameFileError', function(reason){ });
+    //-TODO Should display an error message if the file
+    //-cannot be renamed
+    //-socket.on('renameFileError', function(reason){ });
 
-		fileList.on('blur', '.filename a', function(){
-			var newName = $(this).html();
+    fileList.on('blur', '.filename a', function(){
+      var newName = $(this).html();
 
-			socket.emit('renameFile', {
-				fileId: parseInt($(this).parent().parent().find('.file-id').html()),
-				newName: newName
-			});
+      socket.emit('renameFile', {
+        fileId: parseInt($(this).parent().parent().find('.file-id').html()),
+        newName: newName
+      });
 
-			$(this).attr({
-				contentEditable: 'false',
-			});
-		});
-		//------------------------------------------------------------------
+      $(this).attr({
+        contentEditable: 'false',
+      });
+    });
+    //------------------------------------------------------------------
 
-		//-Delete file------------------------------------------------------
-		//-TODO Should display a message at the top of the page
-		//-to confirm that the file has correctly been deleted
-		//-or if an error occured
+    //-Delete file------------------------------------------------------
+    //-TODO Should display a message at the top of the page
+    //-to confirm that the file has correctly been deleted
+    //-or if an error occured
 
-		//-socket.on('fileDeleted', function(file){ });
-		//-socket.on('deleteFileError', function(){ });
+    //-socket.on('fileDeleted', function(file){ });
+    //-socket.on('deleteFileError', function(){ });
 
-		$('#mi-delete').on('click', function(){
-			socket.emit('deleteFile', {
-				id: parseInt(contextMenu.row
-					.find('.file-id')
-					.html())
-			});
+    $('#mi-delete').on('click', function(){
+      socket.emit('deleteFile', {
+        id: parseInt(contextMenu.row
+          .find('.file-id')
+          .html())
+      });
 
-			contextMenu.row.remove();
-		});
-		//------------------------------------------------------------------
+      contextMenu.row.remove();
+    });
+    //------------------------------------------------------------------
 
-		$('#mi-move, #mi-copy').on('click', function (e) {
-			//-TODO shouldn't need to send root folder
-			var root = '#{path}'.split('/')[1];
-			socket.emit('getFileTree', { root : root });
-		});
+    $('#mi-move, #mi-copy').on('click', function (e) {
+      //-TODO shouldn't need to send root folder
+      var root = '#{path}'.split('/')[1];
+      socket.emit('getFileTree', { root : root });
+    });
 
-		socket.on('fileTree', function (data) {
-			//-TODO should set element to move OR copy
-			//-not move and copy
-			var element = $('#move-file-modal .modal-body,' +
-					'#copy-file-modal .modal-body');
+    socket.on('fileTree', function (data) {
+      //-TODO should set element to move OR copy
+      //-not move and copy
+      var element = $('#move-file-modal .modal-body,' +
+          '#copy-file-modal .modal-body');
 
-			element.empty();
-			displayTree(element, data.tree);
-		});
+      element.empty();
+      displayTree(element, data.tree);
+    });
 
-		function displayTree (element, tree) {
-			//-TODO Should display a tree instead of
-			//-a simple list
-			var list = '<div class="list-group">';
-			//-<a href="#" class="list-group-item active">
-				//-Cras justo odio
-			//-</a>
-			for (var i in tree) {
-				var obj = tree[i];
-				list += '<a href="#" class="list-group-item tree-folder" ' + 
-						'data-file-id=' + obj.id + '>' 
-						+ obj.filename + '</a>';
-			}
-			list += '</div>';
+    function displayTree (element, tree) {
+      //-TODO Should display a tree instead of
+      //-a simple list
+      var list = '<div class="list-group">';
+      //-<a href="#" class="list-group-item active">
+        //-Cras justo odio
+      //-</a>
+      for (var i in tree) {
+        var obj = tree[i];
+        list += '<a href="#" class="list-group-item tree-folder" ' + 
+            'data-file-id=' + obj.id + '>' 
+            + obj.filename + '</a>';
+      }
+      list += '</div>';
 
-			element.append(list);
-		}
-		
-		$('.btn-action').on('click', function (e) {
-			//- Assume that action can only be move or copy
-			var action = ($(this).data('action') === 'Move') ? 
-					'moveFile' : 'copyFile';
+      element.append(list);
+    }
+    
+    $('.btn-action').on('click', function (e) {
+      //- Assume that action can only be move or copy
+      var action = ($(this).data('action') === 'Move') ? 
+          'moveFile' : 'copyFile';
 
-			var selected = parseInt($(this).parent().parent()
-						.parent().parent()
-						.data('selected'));
-			console.log('File ' + selected + ' selected');
-			socket.emit(action, { 
-				src : parseInt(contextMenu.row
-					.find('.file-id')
-					.html()),
-				dest : selected 
-			});
-		});
+      var selected = parseInt($(this).parent().parent()
+            .parent().parent()
+            .data('selected'));
+      console.log('File ' + selected + ' selected');
+      socket.emit(action, { 
+        src : parseInt(contextMenu.row
+          .find('.file-id')
+          .html()),
+        dest : selected 
+      });
+    });
 
-		$('body').on('click', '.tree-folder', function (e) {
-			console.log($(this).parent().parent().parent()
-				.parent().parent()
-				.attr('class'));
+    $('body').on('click', '.tree-folder', function (e) {
+      console.log($(this).parent().parent().parent()
+        .parent().parent()
+        .attr('class'));
 
-			$(this).parent().parent().parent()
-				.parent().parent()
-				.data('selected', $(this).data('file-id'));
+      $(this).parent().parent().parent()
+        .parent().parent()
+        .data('selected', $(this).data('file-id'));
 
-			console.log('File ' + $(this).data('file-id') + ' selected');
-		});
+      console.log('File ' + $(this).data('file-id') + ' selected');
+    });
 
-		fileList.on('click', 'span.star', function(e) {
-			var fileId = parseInt($(this).parent().parent()
-							.find('.file-id')
-							.html());
+    fileList.on('click', 'span.star', function(e) {
+      var fileId = parseInt($(this).parent().parent()
+              .find('.file-id')
+              .html());
 
-			if ($(this).hasClass('starred')) {
-				$(this).removeClass('starred');
-				socket.emit('unstar', { fileId: fileId });
-			}
-			else {
-				$(this).addClass('starred');
-				socket.emit('star', { fileId: fileId });
-			}
-		});
+      if ($(this).hasClass('starred')) {
+        $(this).removeClass('starred');
+        socket.emit('unstar', { fileId: fileId });
+      }
+      else {
+        $(this).addClass('starred');
+        socket.emit('star', { fileId: fileId });
+      }
+    });
 
-		//------------------------------------------------------------------
+    //------------------------------------------------------------------
 
-		//-GUI--------------------------------------------------------------
-		body.on('click', function (e) {
-			if(contextMenu.css('display') !== 'none'){
-				contextMenu.hide();	
-			}
-		});
+    //-GUI--------------------------------------------------------------
+    body.on('click', function (e) {
+      if(contextMenu.css('display') !== 'none'){
+        contextMenu.hide();  
+      }
+    });
 
-		body.on('contextmenu', 'table tr', function (e) {
-			contextMenu.css({
-				display: 'block',
-				left: e.pageX,
-				top: e.pageY
-			});
+    body.on('contextmenu', 'table tr', function (e) {
+      contextMenu.css({
+        display: 'block',
+        left: e.pageX,
+        top: e.pageY
+      });
 
-			contextMenu.row = $(this);
-			return false; // prevent browser context menu display
-		});
+      contextMenu.row = $(this);
+      return false; // prevent browser context menu display
+    });
 
-		contextMenu.on('click', 'a', function() {
-			contextMenu.hide();
-		});
+    contextMenu.on('click', 'a', function() {
+      contextMenu.hide();
+    });
 
 
-		fileList.on('keydown', '.filename a', function(e){
-			// stop editing when press ENTER or ESC
-			if(e.which == 13 || e.which == 27){
-				$(this).blur();
-			}
-		});
+    fileList.on('keydown', '.filename a', function(e){
+      // stop editing when press ENTER or ESC
+      if(e.which == 13 || e.which == 27){
+        $(this).blur();
+      }
+    });
 
-		//------------------------------------------------------------------
+    //------------------------------------------------------------------

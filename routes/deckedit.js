@@ -18,13 +18,14 @@ module.exports = function (app) {
     function (req, res) {
       deckEdit.getFlashcardsWithFilePath(req.user.id, req.path)
       .then(function (flashcards) {
+        console.log('rendering deck editing page');
         res.render(
           views.DECK_EDIT,
           {
             title: req.path,
             path: req.path,
-            user: req.user,
-            flashcards: flashcards
+            user: req.user
+            //flashcards: flashcards
           }
         );
       })

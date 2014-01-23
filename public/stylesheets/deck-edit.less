@@ -10,9 +10,19 @@
   box-sizing: border-box;
 }
 
-.list-flashcards {
+#list-flashcards {
   width: 100%; 
 }  
+
+#list-flashcards .term,
+#list-flashcards .definition {
+  height: 1em;
+  width: 95%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1em
+}
 
 #content-center {
   display: inline-block;
@@ -37,6 +47,10 @@
   padding: 20px;
   font-size: 1.3em;
   box-sizing: border-box; 
+  word-wrap: break-word;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  hyphens: auto;
 }
 
 #flashcard > .term {

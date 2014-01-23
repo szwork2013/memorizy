@@ -15,11 +15,12 @@ var FILE_TYPES = {
 function displayDeckFlashcards (req, res, deck) {
   fileNavigation.getFileFlashcards(req.user.id, deck.id)
   .then(function (flashcards) {
+    res.charset = 'utf-8';
     res.render(VIEWS.DECK_EDIT, {
       title : req.path,
       path : req.path,
       user : req.user,
-      currentDeck: deck,
+      deck : deck,
       flashcards : flashcards
     });
   })

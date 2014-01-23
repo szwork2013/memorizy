@@ -19,17 +19,48 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');
   }
-  if (Object.prototype.toString.call(flashcard) === '[object Object]') {
+  if (Object.prototype.toString.call(flashcard) !== '[object Object]') {
     return q.reject('flashcard = ' + flashcard + ' (expected an object)');
   }
 
-  return db.executePreparedStatement({
-    name : 'saveFlashcard',
-    text : '',
-    values : []
-  }).then(function (result) {
-    return result.flashcardId;	
-  });
+  // If term/definition is undefined, 'undefined'
+  // is inserted in the database, however,
+  // plpgsql function will consider term and 
+  // definition as null if they are
+  if (typeof flashcard.term === 'undefined') {
+    flashcard.term = null;
+  }
+  if (typeof flashcard.definition === 'undefined') {
+    flashcard.definition = null;
+  }
+
+  if (typeof flashcard.id === 'number') {
+    return db.executePreparedStatement({
+      name : 'saveFlashcard',
+      text : 'select update_flashcard($1::INTEGER, $2::INTEGER,' +
+                                     '$3::TEXT, $4::TEXT)',
+      values : [
+        userId, flashcard.id, 
+        flashcard.term, 
+        flashcard.definition
+      ]
+    });
+  }
+  if (typeof flashcard.deckId === 'number') {
+    return db.executePreparedStatement({
+      name : 'appendFlashcard',
+      text : 'select append_flashcard($1::INTEGER, $2::INTEGER,' +
+                                     '$3::TEXT, $4::TEXT)',
+      values : [
+        userId, flashcard.deckId, 
+        flashcard.term, 
+        flashcard.definition
+      ]
+    });
+  }
+
+  return q.reject('Flashcard must have either an id ' +
+                  'or the id of its deck');
 };
 
 /**

@@ -7,89 +7,79 @@ returns table(id integer, owner_id integer, deck_id integer,
 as $$
 begin
   return query
-     select    
-       f.id,   
-       f.owner_id,   
-       f.deck_id,   
-       f.term::TEXT,   
-       f.definition::TEXT,   
-       f.index,   
-       coalesce(   
-         uf.state_history,    
-         '00000'    
-       )::TEXT   
-     from   
-       flashcards f left join users_flashcards uf   
-       on f.id = uf.flashcard_id   
-       and _user_id = uf.user_id   
-     order by   
-       f.index asc ;
+    select    
+      f.id,   
+      f.owner_id,   
+      f.deck_id,   
+      f.term::TEXT,   
+      f.definition::TEXT,   
+      f.index,   
+      coalesce(   
+        uf.state_history,    
+        '00000'    
+      )::TEXT   
+    from   
+      flashcards f left join users_flashcards uf   
+      on f.id = uf.flashcard_id   
+      and _user_id = uf.user_id   
+    where f.deck_id in (
+      select ft.descendant_id
+      from file_tree ft
+      where ft.ancestor_id = _file_id
+    )
+    order by   
+      f.index asc ;
 end;
 $$ language plpgsql;
 
 create or replace 
-function create_flashcard(_owner_id integer, _deck_id integer, 
-                       _term text, _definition text, 
-                       _insert_before_id integer) 
+function append_flashcard(_owner_id integer, _deck_id integer,
+                          _term text, _definition text) 
 returns integer as $$
-declare
+declare 
   INITIAL_DISTANCE  integer := 100;
-	_id	              integer;
-  _range	          record;
+  _id   integer;
 begin
-  -- If _insert_before_id, we assume that the flashcard
-  -- must be added after the last flashcard, or at the
-  -- index 0 if there is no flashcard yet
-	if _insert_before_id is null then
-		with max as (
-			select coalesce(max(index), 0) pos
-			from flashcards
-		)
-		insert into 
-      flashcards (owner_id, deck_id, term, definition, index) 
-    values(
-			_owner_id, _deck_id, _term, _definition, (select pos + INITIAL_DISTANCE from max)
-	  )	
-    returning id into _id;
-	else
-		loop
-			with before_index as (
-				select index insert_before
-				from flashcards
-				where id = _insert_before_id
-			), after_index as (
-				select coalesce(max(index), 0) insert_after
-				from flashcards
-				where index < (select insert_before from before_index)
-			)
-			select * 
-      from 
-        before_index before, 
-        after_index after 
-      into _range;
-
-			if _range.insert_before - 1 = _range.insert_after then
-				update flashcards
-				set index = index + INITIAL_DISTANCE
-				where index >= _range.insert_before;
-			else
-				exit;
-			end if;
-		end loop;
-
-		insert into 
-      flashcards (owner_id, deck_id, term, definition, index) 
-    values(
-			_owner_id, 
-      _deck_id, 
-      _term, 
-      _definition, 
-      _range.insert_after + (_range.insert_before - _range.insert_after) / 2
+  insert into
+    flashcards (owner_id, deck_id, term, definition, index) 
+  values (
+    _owner_id, _deck_id, coalesce(_term, ''), coalesce(_definition, ''),
+    (
+      select coalesce(max(index), 0) + INITIAL_DISTANCE
+      from flashcards
+      where deck_id = _deck_id
     )
-    returning id into _id;
-	end if;
+  )
+  returning id into _id;
 
-	return _id;
+  return _id;
+end;
+$$ language plpgsql;
+
+create or replace
+function update_flashcard (_user_id integer, _flashcard_id integer,
+                           _term text, _definition text)
+returns void as $$
+begin
+  raise notice 'user_id = %, flashcard_id = %, term = %, definition = %',
+                _user_id, _flashcard_id, _term, _definition;
+
+  if _term is not null and _definition is not null then
+    update flashcards
+    set term = _term, definition = _definition
+    where id = _flashcard_id;
+  elsif _term is not null then
+    update flashcards
+    set term = _term
+    where id = _flashcard_id;
+  elsif _definition is not null then
+    update flashcards
+    set definition = _definition
+    where id = _flashcard_id;
+  else
+		raise exception 'At least _term or _definition must be different from null'
+		using errcode = '22023'; /*invalid_parameter_value*/
+  end if;
 end;
 $$ language plpgsql;
 

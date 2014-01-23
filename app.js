@@ -133,8 +133,8 @@ io.set('authorization', passportSocketIo.authorize({
 }));
 
 io.sockets.on('connection', function(socket) {
-  require('socket-io/filenavigation')(socket);
-  require('socket-io/deckedit')(socket);
+  require('./socket-io/filenavigation')(socket);
+  require('./socket-io/deckedit')(socket);
 });
 
 

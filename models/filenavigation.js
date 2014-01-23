@@ -189,7 +189,7 @@ FileNavigation.prototype.createFileWithPath = function (userId, filename,
       'string_to_array($5, \'/\'))',
     values: [ userId, filename, type, db.stringToPGPath(path)]
   }).then(function (result) {
-    return result.id; // new file's id
+    return result.rows[0].create_file; // new file's id
   });
 };
 
@@ -223,8 +223,8 @@ FileNavigation.prototype.createFileWithParentId = function (userId, filename,
       ',$3::TEXT, $4::INTEGER)',
     values: [userId, filename, type, parentId]
   }).then(function (result) {
-    console.log(result);
-    return result.id; // new file's id
+    console.log('result ' + result.rows[0].create_file);
+    return result.rows[0].create_file; // new file's id
   });
 };
 

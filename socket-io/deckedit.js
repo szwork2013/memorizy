@@ -2,11 +2,15 @@ var deckEdit = require('../models/deckedit');
 
 module.exports = function (socket) {
   socket.on('saveFlashcard', function (flashcard) {
+    console.log('Received saveFlashcard event');
     deckEdit.saveFlashcard(socket.handshake.user.id, flashcard)
-    .then(function (flashcardId) {
-      socket.emit('flashcardSaved', {flashcardId: flashcardId});
+    .then(function (flashcard) {
+      console.log(flashcard);
+      socket.emit('flashcardSaved', {flashcardId: flashcard});
     })
-    .catch(function () {
+    .catch(function (err) {
+      console.log('Failed to save');
+      console.log(err);
       socket.emit('saveFlashcardError');
     })
     .done();

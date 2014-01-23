@@ -15,14 +15,26 @@ append content
         - if (flashcards) {
             each f in flashcards
               a.list-group-item(href="#" data-flashcard-id=f.id)
-                h5.list-group-item-heading.term= f.term
-                p.list-group-item-text.definition= f.definition
+                - if (f.term) {
+                    h5.list-group-item-heading.term= f.term
+                - }
+                - else {
+                    h5.list-group-item-heading.term
+                      i Term
+                - }
+                - if (f.definition) {  
+                    p.list-group-item-text.definition= f.definition
+                - }
+                - else {
+                    p.list-group-item-text.definition
+                      i Definition
+                - }
         - }
 
     #content-center
       #flashcard
-        .term(contenteditable=true)
-        .definition(contenteditable=true)
+        .term(contenteditable=true spellcheck="false" data-placeholder="Term")
+        .definition(contenteditable=true spellcheck="false" data-placeholder="Definition")
 
     #content-right
       p test
@@ -46,26 +58,44 @@ append content
           return;
         }
 
+        var obj = {};
+        if (flashcard.children('.term').text() !== term.text()) {
+          obj.term = (term.html() !== '<i>'+term.data('placeholder')+'</i>') ?
+                      term.text() : '';
+          if (obj.term !== '') {
+            flashcard.children('.term').text(obj.term); 
+          }
+          else {
+            flashcard.children('.term')
+                     .html('<i>'+term.data('placeholder')+'</i>'); 
+          }
+        }
+
+        if (flashcard.children('.definition').text() !== definition.text()) {
+          obj.definition = 
+            (definition.html() !== '<i>'+definition.data('placeholder')+'</i>') ?
+             definition.text() : '';
+          flashcard.children('.definition').text(obj.definition); 
+          if (obj.definition !== '') {
+            flashcard.children('.definition').text(obj.definition); 
+          }
+          else {
+            flashcard.children('.definition')
+                     .html('<i>'+definition.data('placeholder')+'</i>'); 
+          }
+        }
+
         //- No modification to send
-        if (flashcard.children('.term').html() === term.html() &&
-          flashcard.children('.definition').html() === definition.html()) {
+        if (typeof obj.term === 'undefined' 
+          && typeof obj.definition === 'undefined') {
           return;
         }
 
-        //- TODO Send only fields that have been changed
-        var obj = {
-          term: flashcard.children('.term').html(),
-          definition: flashcard.children('.definition').html()
-        };
-
         if (typeof flashcard.data('flashcard-id') === 'number') {
-          obj.flashcardId = flashcard.data('flashcard-id');
+          obj.id = flashcard.data('flashcard-id');
         }
-        else {
-          obj.previousFlashcardId = flashcard.prev('a.list-group-item')
-                                             .data('flashcard-id');
-        }
-      
+        obj.deckId = #{deck.id};
+
         socket.emit('saveFlashcard', obj);
       },
 
@@ -89,6 +119,10 @@ append content
       },
 
       goTo: function (flashcard) {
+
+        term.blur();
+        definition.blur();
+
         //- Nothing to save if there's no flashcard
         //- in the deck or if no flashcard has been
         //- selected yet
@@ -101,34 +135,48 @@ append content
       createFlashcard: function () {
           var item = '' +
             '<a class="list-group-item" href="#">' +
-              '<h5 class="list-group-item-heading term"><i>Term</i></h5>' +
-              '<p class="list-group-item-text definition"><i>Definition</i></p>' +
+              '<h5 class="list-group-item-heading term">' +
+                '<i>' + term.data('placeholder') + '</i>' +
+              '</h5>' +
+              '<p class="list-group-item-text definition">' +
+                '<i>' + definition.data('placeholder') + '</i>' +
+              '</p>' +
             '</a>';
 
           return $(item);
       },
 
       displayFlashcard: function (flashcard) {
-        if (selectedFlashcard) {
-          selectedFlashcard.removeClass('active');
-        }
-
+        //- If the flashcard already exists
+        //- flashcard.length correspond to the number of node
+        //- contained in the flashcard jquery object
         if (typeof flashcard !== 'undefined' && flashcard.length > 0) {
+          if (selectedFlashcard) {
+            selectedFlashcard.removeClass('active');
+          }
+
           term.html(flashcard.children('.term').html());
           definition.html(flashcard.children('.definition').html());
 
           flashcard.addClass('active');
           selectedFlashcard = flashcard;
         }
-        else {
+        //- If the flashcard does not exist yet, there's
+        //- two possibilities: the deck is empty, or
+        //- we want to display the flashcard after the
+        //- deck's last flashcard
+        //- In the first case, selectedFlashcart isn't set
+        //- and in the second case it is set to the last
+        //- flashcard
+        else if (!selectedFlashcard ||
+          selectedFlashcard.get(0) === flashcardList.children().last().get(0)) {
+
+          if (selectedFlashcard) {
+            selectedFlashcard.removeClass('active');
+          }
+
           var createdFlashcard = this.createFlashcard(); 
-          
-          if (selectedFlashcard.get(0) === flashcardList.children().first().get(0)) {
-            createdFlashcard.insertBefore(selectedFlashcard);
-          }
-          else {
-            createdFlashcard.insertAfter(selectedFlashcard);
-          }
+          createdFlashcard.appendTo(flashcardList);
 
           term.html('');
           definition.html('');
@@ -137,6 +185,7 @@ append content
           selectedFlashcard = createdFlashcard;
         }
 
+        definition.blur(); // show the placeholder if definition is empty
         term.focus();
       },
 
@@ -172,4 +221,21 @@ append content
       deck.goTo($(this));
     });
 
+    //- Simulate a placeholder on flashcard term and
+    //- definition which show 'Term' and 'Definition'
+    //- if the term or the definition is empty
+    $('[data-placeholder]').focus(function() {
+      var input = $(this);
+      if (input.html() === '<i>' + input.data('placeholder') + '</i>') {
+        input.html('');
+        input.removeClass('placeholder');
+      }
+    }).blur(function() {
+      var input = $(this);
+      if (input.text() === '' || 
+        input.html() === '<i>' + input.data('placeholder') + '</i>') {
 
+        input.addClass('placeholder');
+        input.html('<i>' + input.data('placeholder') + '</i>');
+      }
+    }).blur();

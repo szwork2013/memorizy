@@ -7,8 +7,9 @@ module.exports = function (socket) {
       file.type, 
       file.parentId
     ).then(function(val){
+      console.log('then: ' + val);
 			socket.emit('fileCreated', {
-				fileId: val,
+				id: val,
 				type: file.type,
 				name: file.filename,
 				ownerId: socket.handshake.user.id

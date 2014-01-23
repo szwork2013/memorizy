@@ -67,8 +67,12 @@ append content
 
     //-File creation----------------------------------------------------
     socket.on('fileCreated', function(file){
+      console.log('file.fileId = ' + file.id);
       fileList.find('tbody').prepend(
         '<tr class="file-row">' +
+          '<td class="star">' +
+            '<span class="star glyphicon glyphicon-star-empty"></span>' +
+          '</td>' +
           '<td class="file-type">' +
             (file.type === 'folder' ? '<span class="glyphicon glyphicon-folder-open"></span>' : '<span class="glyphicon glyphicon-file"></span>') + 
           '</td>' +
@@ -78,8 +82,8 @@ append content
           '<td class="study-mode"><div class="btn-group"><a id="dropdownMenu" href="#" data-toggle="dropdown" class="dropdown-toggle">Action<span class="caret"></span></a><ul role="menu" class="dropdown-menu"><a role="menuitem" href="#">Classic</a></li><li role="presentation"><a role="menuitem" href="#">Random</a></li><li role="presentation"><a role="menuitem" href="#">Hardest to easiest</a></li></ul></div></td>' +
           '<td class="owner">' + file.ownerId + '</td>' +
           '<td class="size">0</td>' +
-          '<td class="percentage">0</td>' +
-          '<td class="action"></td>' +
+          '<td class="percentage">0%</td>' +
+          '<td class="file-id">' + file.id + '</td>' +
         '</tr>'
       );
     });

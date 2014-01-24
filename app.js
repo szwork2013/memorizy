@@ -86,6 +86,10 @@ app.use(lessMiddleware({
          *compress : true
 	 */
 }));
+// does not compress html files
+app.configure('development', function () { 
+  app.locals.pretty = true; 
+}); 
 app.use(express.static(path.join(__dirname, 'public')));
 
 /*

@@ -1,22 +1,22 @@
 nav.navbar.navbar-default.navbar-static-top(role="navigation")
-	div.navbar-header
-		a.navbar-brand(href="#") Study
+  div.navbar-header
+    a.navbar-brand(href="#") Study
 
-	ul.nav.navbar-nav
-		li#nav-home
-			a.active(href="/#{user.username}") Home
-		li#nav-starred
-			a(href="/#{user.username}/starred") Starred
-		li#nav-calendar
-			a(href="#") Calendar
-		li#nav-follow
-			a(href="#") Follow
-		li#nav-discover
-			a(href="#") Discover
+  ul.nav.navbar-nav
+    li#nav-home
+      a.active(href="/#{user.username}") Home
+    li#nav-starred
+      a(href="/#{user.username}/starred") Starred
+    li#nav-calendar
+      a(href="#") Calendar
+    li#nav-follow
+      a(href="#") Follow
+    li#nav-discover
+      a(href="#") Discover
 
-	ul.nav.navbar-nav.navbar-right
-		li#nav-username
-			a(href="#" class="navbar-link")= user.username 
-		li#nav-logout
-			a(href="/logout") Logout
+  ul.nav.navbar-nav.navbar-right
+    li#nav-username
+      a(href="#" class="navbar-link")= user.username 
+    li#nav-logout
+      a(href="/logout") Logout
 

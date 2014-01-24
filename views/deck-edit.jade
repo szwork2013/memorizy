@@ -1,45 +1,57 @@
 extends layout
 
 append head
-  link(rel='stylesheet', href='/stylesheets/deck-edit.css')
+  link(rel="stylesheet", href="/stylesheets/deck-edit.css")
+  script(src="/javascripts/rangy-core.js")
+  script(src="/javascripts/rangy-cssclassapplier.js")
+  script.
+    var cssApplier;
+    window.onload = function() {
+      rangy.init();
+      boldApplier = rangy.createCssClassApplier("bold", {normalize: true});
+      italicApplier = rangy.createCssClassApplier("italic", {normalize: true});
+    };
 
 append content
   #content
     include includes/path
 
-    br
+    #flashcard-editor
+      #content-left
+        //- List of flashcards
+        #list-flashcards.list-group
+          - if (flashcards) {
+              each f in flashcards
+                a.list-group-item(href="#" data-flashcard-id=f.id)
+                  - if (f.term) {
+                      h5.list-group-item-heading.term= f.term
+                  - }
+                  - else {
+                      h5.list-group-item-heading.term
+                        i Term
+                  - }
+                  - if (f.definition) {  
+                      p.list-group-item-text.definition= f.definition
+                  - }
+                  - else {
+                      p.list-group-item-text.definition
+                        i Definition
+                  - }
+          - }
 
-    #content-left
-      //- List of flashcards
-      #list-flashcards.list-group
-        - if (flashcards) {
-            each f in flashcards
-              a.list-group-item(href="#" data-flashcard-id=f.id)
-                - if (f.term) {
-                    h5.list-group-item-heading.term= f.term
-                - }
-                - else {
-                    h5.list-group-item-heading.term
-                      i Term
-                - }
-                - if (f.definition) {  
-                    p.list-group-item-text.definition= f.definition
-                - }
-                - else {
-                    p.list-group-item-text.definition
-                      i Definition
-                - }
-        - }
+      #content-center
+        nav#edit-tools
+          a(href="#" onclick="boldApplier.toggleSelection();") Bold 
+          a(href="#" onclick="italicApplier.toggleSelection();") Italic
+        #flashcard
+          .term(contenteditable=true spellcheck="false" data-placeholder="Term")
+          .definition(contenteditable=true spellcheck="false" data-placeholder="Definition")
 
-    #content-center
-      #flashcard
-        .term(contenteditable=true spellcheck="false" data-placeholder="Term")
-        .definition(contenteditable=true spellcheck="false" data-placeholder="Definition")
+      #content-right
+        p test
+        #flashcard-info 
 
-    #content-right
-      p test
-      #flashcard-info 
-
+  br
   script.
     var flashcardList = $('#list-flashcards'),
         selectedFlashcard = null,
@@ -49,6 +61,9 @@ append content
         arrowNext = $('#arrow-next');
 
     var socket = io.connect();
+    $(".nano").nanoScroller({ // display scrollbars
+      alwaysVisible: true
+    }); 
 
     var deck = {
       saveFlashcard: function (flashcard) {

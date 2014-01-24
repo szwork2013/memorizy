@@ -1,74 +1,135 @@
 #content {
-  height: auto !important;
+  height    : ~"calc(100% - 80px)";
+  width     : 90%;
+  margin    : auto;
   box-sizing: border-box;
 }
 
+/* Block dimensions */
+@flashcard-editor-height: 500px;
+
+@content-left-height : 100%;
+@content-left-width  : 20%;
+@content-left-margin : 0 -4px 0 0;
+
+@edit-tools-height        : 2em;
+@flashcard-height         : 450px;
+@flashcard-width          : 450px;
+@content-center-height    : 100%;
+@content-center-width     : @flashcard-width;
+@content-center-margin-bottom: (@flashcard-editor-height - @flashcard-height)/2;
+@content-center-margin-top: @content-center-margin-bottom - @edit-tools-height;
+@content-center-margin-x  : ~"calc((60% - 450px) / 2)";
+@content-center-margin    : @content-center-margin-top
+                            @content-center-margin-x
+                            @content-center-margin-bottom
+                            @content-center-margin-x;
+
+@content-right-height : 100%;
+@content-right-width  : 20%;
+@content-right-margin : 0 -4px 0 0;
+
+#flashcard-editor {
+  height: @flashcard-editor-height;
+}
+
+
+#flashcard-editor > div {
+  min-height: @flashcard-height;
+}
+
 #content-left {
-  display: inline-block;
-  width: 20%;
-  padding: 0;
+  display   : inline-block;
+  vertical-align: top;
+  height    : @content-left-height;
+  width     : @content-left-width;
+  padding   : 0;
+  margin    : @content-left-margin;
+  overflow  : auto;
   box-sizing: border-box;
 }
 
 #list-flashcards {
-  width: 100%; 
+  height    : 100%;
+  width     : 100%; 
+  overflow  : auto;
 }  
+
+.list-group {
+  margin-bottom: 0;
+}
 
 #list-flashcards .term,
 #list-flashcards .definition {
-  height: 1em;
+  height  : 1em;
+  width   : 95%;
+  line-height   : 1em;
+  white-space   : nowrap;
+  overflow      : hidden;
+  text-overflow : ellipsis;
+}
+
+.flashcard-item{
   width: 95%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1em
 }
 
 #content-center {
-  display: inline-block;
-  height: 100%; 
-  width: 60%;
+  display   : inline-block;
+  height    : @content-center-height; 
+  width     : @content-center-width;
+  padding   : 0;
+  /* the flashcard is aligned vertically */
+  margin    : @content-center-margin;
   box-sizing: border-box;
 }
 
+@edit-tools-font-size: 1.0em;
+
+/*
+ * Assume that @edit-tools-height = 2em
+ * and @edit-tools-font-size = 1.0em
+ */
+@edit-tools-padding-y: ~"calc((2em - 1.0em) / 2)"; 
+#edit-tools {
+  height    : @edit-tools-height;
+  margin    : 0;
+  padding   : @edit-tools-padding-y 0;
+  font-size : @edit-tools-font-size;
+}
+
 #flashcard {
-  width: 450px;
-  height: 450px;
-  margin: auto;
+  width     : @flashcard-width;
+  height    : @flashcard-height;
+  margin    : 0; 
   box-sizing: border-box;
   box-shadow: 0 0 8px black;
 }
 
 #flashcard > .term,
 #flashcard > .definition {
-  height: 50%;
-  width: 100%;
-  margin: 0;
-  padding: 20px;
-  font-size: 1.3em;
-  box-sizing: border-box; 
-  word-wrap: break-word;
-  -webkit-hyphens: auto;
-  -moz-hyphens: auto;
-  hyphens: auto;
+  height  : 50%;
+  width   : 100%;
+  margin  : 0;
+  padding : 20px;
+  font-size   : 1.3em;
+  box-sizing  : border-box; 
+  word-wrap   : break-word;
+  -webkit-hyphens : auto;
+  -moz-hyphens    : auto;
+  hyphens         : auto;
 }
 
 #flashcard > .term {
   border-bottom: 1px solid black; 
 }
 
-#flashcard > .definition {
-
-}
-
 #content-right {
-  height: 100%;
-  width: 20%;
-  padding: 0 5% 0 5%;
-  background-color: green;
+  display : inline-block;
+  vertical-align: top;
+  height  : @content-right-height;
+  width   : @content-right-width;
+  padding : 0 5% 0 5%;
+  margin  : @content-right-margin;
+  border  : 1px solid black;
   box-sizing: border-box;
-  color: white;
-}
-
-#flashcard-info {
 }

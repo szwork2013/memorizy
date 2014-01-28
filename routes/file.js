@@ -21,7 +21,7 @@ function displayDeckFlashcards (req, res, deck) {
       path : req.path,
       user : req.user,
       deck : deck,
-      flashcards : flashcards
+      flashcards : JSON.stringify(flashcards)
     });
   })
   .catch(function (err) {

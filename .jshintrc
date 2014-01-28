@@ -25,7 +25,6 @@
 	"noempty" : true,
 	"quotmark" : "single",
 	"undef" : true,
-	"unused": true,
 	"maxlen": 80,
 	"smarttabs": true
                                                                       

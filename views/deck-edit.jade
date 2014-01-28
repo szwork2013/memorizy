@@ -2,6 +2,7 @@ extends layout
 
 append head
   link(rel="stylesheet", href="/stylesheets/deck-edit.css")
+  script(src="/javascripts/html-sanitizer.js")
   script(src="/javascripts/rangy-core.js")
   script(src="/javascripts/rangy-cssclassapplier.js")
   script.
@@ -20,24 +21,6 @@ append content
       #content-left
         //- List of flashcards
         #list-flashcards.list-group
-          - if (flashcards) {
-              each f in flashcards
-                a.list-group-item(href="#" data-flashcard-id=f.id)
-                  - if (f.term) {
-                      h5.list-group-item-heading.term= f.term
-                  - }
-                  - else {
-                      h5.list-group-item-heading.term
-                        i Term
-                  - }
-                  - if (f.definition) {  
-                      p.list-group-item-text.definition= f.definition
-                  - }
-                  - else {
-                      p.list-group-item-text.definition
-                        i Definition
-                  - }
-          - }
 
       #content-center
         nav#edit-tools
@@ -51,7 +34,7 @@ append content
         p test
         #flashcard-info 
 
-  br
+      #test
   script.
     var flashcardList = $('#list-flashcards'),
         selectedFlashcard = null,
@@ -59,11 +42,33 @@ append content
         definition = $('#flashcard > .definition'),
         arrowPrevious = $('#arrow-previous'),
         arrowNext = $('#arrow-next');
-
+    
     var socket = io.connect();
-    $(".nano").nanoScroller({ // display scrollbars
-      alwaysVisible: true
-    }); 
+
+    function initializeFlashcardList (flashcards) {
+      if (!flashcards) {
+        return;
+      }
+
+      var node = '';
+      flashcards.forEach(function (flashcard, index, array) {
+        flashcard.term = flashcard.term ? 
+          sanitize(flashcard.term) :
+          '<i>' + term.data('placeholder') + '</i>';
+        flashcard.definition = flashcard.definition ? 
+          sanitize(flashcard.definition) :
+          '<i>' + definition.data('placeholder') + '</i>';
+        
+        console.log(flashcard.term + ' / ' + flashcard.definition);
+        node += '<a class="list-group-item" href="#" data-flashcard-id="' + flashcard.id + '">' +
+                '<h5 class="list-group-item-heading term">' + flashcard.term + '</h5>' +
+                '<p class="list-group-item-text definition">' + flashcard.definition + '</p>' +
+                '</a>';
+      });
+      flashcardList.append(node);
+    }  
+
+    initializeFlashcardList(!{flashcards});
 
     var deck = {
       saveFlashcard: function (flashcard) {
@@ -74,35 +79,26 @@ append content
         }
 
         var obj = {};
-        if (flashcard.children('.term').text() !== term.text()) {
+        if (flashcard.children('.term').html() !== term.html()) {
+          //- use innerHTML because $.html() encode special characters
+          //- and strips out <script> tags which is useless since it's 
+          //- encoded anyway on page load and only used within div tags 
           obj.term = (term.html() !== '<i>'+term.data('placeholder')+'</i>') ?
-                      term.text() : '';
-          if (obj.term !== '') {
-            flashcard.children('.term').text(obj.term); 
-          }
-          else {
-            flashcard.children('.term')
-                     .html('<i>'+term.data('placeholder')+'</i>'); 
-          }
+            unescapeHtml(term.html()) : ''; 
+          flashcard.children('.term').html(this.displayableValue(obj.term, '<i>'+term.data('placeholder')+'</i>'));
         }
 
-        if (flashcard.children('.definition').text() !== definition.text()) {
+        if (flashcard.children('.definition').html() !== definition.html()) {
           obj.definition = 
             (definition.html() !== '<i>'+definition.data('placeholder')+'</i>') ?
-             definition.text() : '';
-          flashcard.children('.definition').text(obj.definition); 
-          if (obj.definition !== '') {
-            flashcard.children('.definition').text(obj.definition); 
-          }
-          else {
-            flashcard.children('.definition')
-                     .html('<i>'+definition.data('placeholder')+'</i>'); 
-          }
+              unescapeHtml(definition.html()) : '';
+          flashcard.children('.definition').html(this.displayableValue(obj.definition, '<i>'+definition.data('placeholder')+'</i>'));
         }
 
+
         //- No modification to send
-        if (typeof obj.term === 'undefined' 
-          && typeof obj.definition === 'undefined') {
+        if (typeof obj.term === 'undefined' &&
+          typeof obj.definition === 'undefined') {
           return;
         }
 
@@ -112,6 +108,20 @@ append content
         obj.deckId = #{deck.id};
 
         socket.emit('saveFlashcard', obj);
+      },
+
+      displayableValue : function (value, placeholder) {
+        if (typeof value === 'string' && value) {
+          //- sanitize is used here to prevent users from xss-ing
+          //- themselves... and also be able to write html
+          //- tags in their flashcards without messing up
+          //- the rendering of their page
+          console.log('displayableValue: sanitize ' + value)
+          return sanitize(value); 
+        }
+        else {
+          return placeholder; 
+        }
       },
 
       moveFlashcard: function (id, beforeId) {
@@ -252,5 +262,10 @@ append content
 
         input.addClass('placeholder');
         input.html('<i>' + input.data('placeholder') + '</i>');
+      }
+      // Remove <br> tag added by firefox more or less randomly
+      // (see https://bugzilla.mozilla.org/show_bug.cgi?id=930432)
+      else {
+        $(this).find('br').remove();
       }
     }).blur();

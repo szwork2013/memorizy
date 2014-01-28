@@ -115,7 +115,7 @@ var server = http.createServer(app).listen(app.get('port'), function() {
  *Socket-io configuration
  **************************************/
 
-var io = require('socket.io').listen(server);
+var io = require('socket.io').listen(server, { log: false });
 var passportSocketIo = require('passport.socketio');
 	
 io.set('authorization', passportSocketIo.authorize({

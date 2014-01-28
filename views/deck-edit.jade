@@ -2,16 +2,6 @@ extends layout
 
 append head
   link(rel="stylesheet", href="/stylesheets/deck-edit.css")
-  script(src="/javascripts/html-sanitizer.js")
-  script(src="/javascripts/rangy-core.js")
-  script(src="/javascripts/rangy-cssclassapplier.js")
-  script.
-    var cssApplier;
-    window.onload = function() {
-      rangy.init();
-      boldApplier = rangy.createCssClassApplier("bold", {normalize: true});
-      italicApplier = rangy.createCssClassApplier("italic", {normalize: true});
-    };
 
 append content
   #content
@@ -24,8 +14,8 @@ append content
 
       #content-center
         nav#edit-tools
-          a(href="#" onclick="boldApplier.toggleSelection();") Bold 
-          a(href="#" onclick="italicApplier.toggleSelection();") Italic
+          a#btn-bold(href="#") Bold 
+          a#btn-italic(href="#") Italic
         #flashcard
           .term(contenteditable=true spellcheck="false" data-placeholder="Term")
           .definition(contenteditable=true spellcheck="false" data-placeholder="Definition")
@@ -35,237 +25,25 @@ append content
         #flashcard-info 
 
       #test
+
+  script(src="/javascripts/html-sanitizer.js")
+
+  //- Needs to be after the HTML code since it caches
+  //- jQuery selectors
+  script(src="/javascripts/deckedit.js")
+
+  //- Configure the UI
   script.
-    var flashcardList = $('#list-flashcards'),
-        selectedFlashcard = null,
-        term = $('#flashcard > .term'),
-        definition = $('#flashcard > .definition'),
-        arrowPrevious = $('#arrow-previous'),
-        arrowNext = $('#arrow-next');
-    
-    var socket = io.connect();
-
-    function initializeFlashcardList (flashcards) {
-      if (!flashcards) {
-        return;
-      }
-
-      var node = '';
-      flashcards.forEach(function (flashcard, index, array) {
-        flashcard.term = flashcard.term ? 
-          sanitize(flashcard.term) :
-          '<i>' + term.data('placeholder') + '</i>';
-        flashcard.definition = flashcard.definition ? 
-          sanitize(flashcard.definition) :
-          '<i>' + definition.data('placeholder') + '</i>';
-        
-        console.log(flashcard.term + ' / ' + flashcard.definition);
-        node += '<a class="list-group-item" href="#" data-flashcard-id="' + flashcard.id + '">' +
-                '<h5 class="list-group-item-heading term">' + flashcard.term + '</h5>' +
-                '<p class="list-group-item-text definition">' + flashcard.definition + '</p>' +
-                '</a>';
-      });
-      flashcardList.append(node);
-    }  
-
     initializeFlashcardList(!{flashcards});
+    editingEnv.setDeckEditor(new DeckEditor(#{deckId}));
 
-    var deck = {
-      saveFlashcard: function (flashcard) {
-        if (!flashcard || (typeof flashcard.data('flashcard-id') !== 'number' &&
-          typeof flashcard.prev('a.list-group-item') === 'undefined')) {
-          console.error('The flashcard you\'re trying to save is invalid');
-          return;
-        }
-
-        var obj = {};
-        if (flashcard.children('.term').html() !== term.html()) {
-          //- use innerHTML because $.html() encode special characters
-          //- and strips out <script> tags which is useless since it's 
-          //- encoded anyway on page load and only used within div tags 
-          obj.term = (term.html() !== '<i>'+term.data('placeholder')+'</i>') ?
-            unescapeHtml(term.html()) : ''; 
-          flashcard.children('.term').html(this.displayableValue(obj.term, '<i>'+term.data('placeholder')+'</i>'));
-        }
-
-        if (flashcard.children('.definition').html() !== definition.html()) {
-          obj.definition = 
-            (definition.html() !== '<i>'+definition.data('placeholder')+'</i>') ?
-              unescapeHtml(definition.html()) : '';
-          flashcard.children('.definition').html(this.displayableValue(obj.definition, '<i>'+definition.data('placeholder')+'</i>'));
-        }
-
-
-        //- No modification to send
-        if (typeof obj.term === 'undefined' &&
-          typeof obj.definition === 'undefined') {
-          return;
-        }
-
-        if (typeof flashcard.data('flashcard-id') === 'number') {
-          obj.id = flashcard.data('flashcard-id');
-        }
-        obj.deckId = #{deck.id};
-
-        socket.emit('saveFlashcard', obj);
-      },
-
-      displayableValue : function (value, placeholder) {
-        if (typeof value === 'string' && value) {
-          //- sanitize is used here to prevent users from xss-ing
-          //- themselves... and also be able to write html
-          //- tags in their flashcards without messing up
-          //- the rendering of their page
-          console.log('displayableValue: sanitize ' + value)
-          return sanitize(value); 
-        }
-        else {
-          return placeholder; 
-        }
-      },
-
-      moveFlashcard: function (id, beforeId) {
-        if (typeof id !== 'number' || typeof afterId !== 'number') {
-          return;
-        }
-
-        socket.emit('moveFlashcard', {
-          flashcardId: id,
-          beforeId: beforeId
-        });
-      },
-
-      deleteFlashcard: function (id) {
-        if (typeof id !== 'number') {
-          return;
-        }
-
-        socket.emit('deleteFlashcard', {flashcardId: id});
-      },
-
-      goTo: function (flashcard) {
-
-        term.blur();
-        definition.blur();
-
-        //- Nothing to save if there's no flashcard
-        //- in the deck or if no flashcard has been
-        //- selected yet
-        if (selectedFlashcard) {
-          this.saveFlashcard(selectedFlashcard);
-        }
-        this.displayFlashcard(flashcard);
-      },
-
-      createFlashcard: function () {
-          var item = '' +
-            '<a class="list-group-item" href="#">' +
-              '<h5 class="list-group-item-heading term">' +
-                '<i>' + term.data('placeholder') + '</i>' +
-              '</h5>' +
-              '<p class="list-group-item-text definition">' +
-                '<i>' + definition.data('placeholder') + '</i>' +
-              '</p>' +
-            '</a>';
-
-          return $(item);
-      },
-
-      displayFlashcard: function (flashcard) {
-        //- If the flashcard already exists
-        //- flashcard.length correspond to the number of node
-        //- contained in the flashcard jquery object
-        if (typeof flashcard !== 'undefined' && flashcard.length > 0) {
-          if (selectedFlashcard) {
-            selectedFlashcard.removeClass('active');
-          }
-
-          term.html(flashcard.children('.term').html());
-          definition.html(flashcard.children('.definition').html());
-
-          flashcard.addClass('active');
-          selectedFlashcard = flashcard;
-        }
-        //- If the flashcard does not exist yet, there's
-        //- two possibilities: the deck is empty, or
-        //- we want to display the flashcard after the
-        //- deck's last flashcard
-        //- In the first case, selectedFlashcart isn't set
-        //- and in the second case it is set to the last
-        //- flashcard
-        else if (!selectedFlashcard ||
-          selectedFlashcard.get(0) === flashcardList.children().last().get(0)) {
-
-          if (selectedFlashcard) {
-            selectedFlashcard.removeClass('active');
-          }
-
-          var createdFlashcard = this.createFlashcard(); 
-          createdFlashcard.appendTo(flashcardList);
-
-          term.html('');
-          definition.html('');
-
-          createdFlashcard.addClass('active');
-          selectedFlashcard = createdFlashcard;
-        }
-
-        definition.blur(); // show the placeholder if definition is empty
-        term.focus();
-      },
-
-      goToPreviousFlashcard: function () {
-        this.goTo(selectedFlashcard.prev('a.list-group-item'));
-      },
-
-      goToNextFlashcard: function () {
-        this.goTo(selectedFlashcard.next('a.list-group-item'));
-      }
+  //- Used for text style
+  script(src="/javascripts/rangy-core.js")
+  script(src="/javascripts/rangy-cssclassapplier.js")
+  script.
+    var cssApplier;
+    window.onload = function() {
+      rangy.init();
+      boldApplier = rangy.createCssClassApplier("bold", {normalize: true});
+      italicApplier = rangy.createCssClassApplier("italic", {normalize: true});
     };
-
-    deck.goTo(flashcardList.find('a.list-group-item').first());
-
-    term.keydown(function (e) {
-      if (e.shiftKey && e.which === 9) {
-        deck.goToPreviousFlashcard();
-        e.preventDefault(); 
-      }
-    });
-
-    definition.keydown(function (e) {
-      if (!e.shiftKey && e.which === 9) {
-        deck.goToNextFlashcard();
-        e.preventDefault(); // prevent from focusing URL bar
-      }
-    });
-
-    arrowPrevious.click(deck.goToPreviousFlashcard);
-    arrowNext.click(deck.goToNextFlashcard);
-
-    flashcardList.on('click', 'a.list-group-item', function (e) {
-      deck.goTo($(this));
-    });
-
-    //- Simulate a placeholder on flashcard term and
-    //- definition which show 'Term' and 'Definition'
-    //- if the term or the definition is empty
-    $('[data-placeholder]').focus(function() {
-      var input = $(this);
-      if (input.html() === '<i>' + input.data('placeholder') + '</i>') {
-        input.html('');
-        input.removeClass('placeholder');
-      }
-    }).blur(function() {
-      var input = $(this);
-      if (input.text() === '' || 
-        input.html() === '<i>' + input.data('placeholder') + '</i>') {
-
-        input.addClass('placeholder');
-        input.html('<i>' + input.data('placeholder') + '</i>');
-      }
-      // Remove <br> tag added by firefox more or less randomly
-      // (see https://bugzilla.mozilla.org/show_bug.cgi?id=930432)
-      else {
-        $(this).find('br').remove();
-      }
-    }).blur();

@@ -28,6 +28,12 @@ function unescapeHtml(string) {
   });
 }
 
+/**
+ * unescapeAllowedTags allows a few html tags for text-style
+ *
+ * @param {string} string the string to be unescaped
+ * @return {string} the string with the allowed tags unescaped
+ */
 function unescapeAllowedTags (string) {
   string = 
     string.replace(/&lt;span class=&quot;[\s]*italic[\s]*&quot;&gt;(.*?)&lt;&#x2F;span&gt;/g, '<span class="italic">\$1</span>')
@@ -37,6 +43,13 @@ function unescapeAllowedTags (string) {
   return string;
 }
 
+/**
+ * sanitize escape all html tags except
+ * allowed ones
+ *
+ * @param {string} string the string to be sanitized
+ * @return {string} the sanitized string
+ */
 function sanitize (string) {
   return unescapeAllowedTags(escapeHtml(string));
 }

@@ -18,7 +18,8 @@
 @content-center-height    : 100%;
 @content-center-width     : @flashcard-width;
 @content-center-margin-bottom: (@flashcard-editor-height - @flashcard-height)/2;
-@content-center-margin-top: @content-center-margin-bottom - @edit-tools-height;
+/*@content-center-margin-top: @content-center-margin-bottom - @edit-tools-height;*/
+@content-center-margin-top: 0;
 @content-center-margin-x  : ~"calc((60% - 450px) / 2)";
 @content-center-margin    : @content-center-margin-top
                             @content-center-margin-x
@@ -69,8 +70,21 @@
   text-overflow : ellipsis;
 }
 
+.btn-delete {
+  position: absolute;
+  visibility: hidden;
+  top: 5%;
+  right: 2%;
+  width: 0.8em;
+  font-size: 0.8em;
+}
+
+.btn-delete:hover {
+  color: red;
+}
+
 .flashcard-item{
-  width: 95%;
+  /*width: 95%;*/
 }
 
 #content-center {
@@ -83,18 +97,36 @@
   box-sizing: border-box;
 }
 
-@edit-tools-font-size: 1.0em;
+@edit-tools-font-size: 1.2em;
 
 /*
  * Assume that @edit-tools-height = 2em
- * and @edit-tools-font-size = 1.0em
+ * and @edit-tools-font-size = 1.2em
  */
-@edit-tools-padding-y: ~"calc((2em - 1.0em) / 2)"; 
+@edit-tools-padding-y: ~"calc((2em - 1.2em) / 2)"; 
 #edit-tools {
   height    : @edit-tools-height;
   margin    : 0;
   padding   : @edit-tools-padding-y 0;
   font-size : @edit-tools-font-size;
+  text-align: right;
+}
+
+.btn-style {
+  margin: 0 5px;
+  color: rgb(51, 51, 51);
+}
+
+.btn-style:hover {
+  color: black;
+}
+
+#btn-bold > span {
+  font-weight: bold;
+}
+
+#btn-italic > span {
+  font-style: italic;
 }
 
 #flashcard {

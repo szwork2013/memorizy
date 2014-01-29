@@ -9,13 +9,14 @@ append content
 
     #flashcard-editor
       #content-left
-        //- List of flashcards
         #list-flashcards.list-group
 
       #content-center
         nav#edit-tools
-          a#btn-bold(href="#") Bold 
-          a#btn-italic(href="#") Italic
+          a#btn-bold.btn-style(href="#")
+            span.glyphicon.glyphicon-bold
+          a#btn-italic.btn-style(href="#")
+            span.glyphicon.glyphicon-italic
         #flashcard
           .term(contenteditable=true spellcheck="false" data-placeholder="Term")
           .definition(contenteditable=true spellcheck="false" data-placeholder="Definition")
@@ -23,8 +24,6 @@ append content
       #content-right
         p test
         #flashcard-info 
-
-      #test
 
   script(src="/javascripts/html-sanitizer.js")
 
@@ -35,7 +34,7 @@ append content
   //- Configure the UI
   script.
     initializeFlashcardList(!{flashcards});
-    editingEnv.setDeckEditor(new DeckEditor(#{deckId}));
+    editingEnv.setDeckEditor(new DeckEditor(#{deck.id}));
 
   //- Used for text style
   script(src="/javascripts/rangy-core.js")

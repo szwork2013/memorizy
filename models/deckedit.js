@@ -10,10 +10,10 @@ var singleton = new DeckEdit();
  *
  * @param {number} userId
  * @param {object} flashcard contains the information to identify
- *  the flashcard, and its fields to update
+ *    the flashcard, and its fields to update
  * @return {Promise} A promise resolved with the flashcard id
- *  if the flashcard has been saved, a promise rejected with
- *  the error otherwise
+ *    if the flashcard has been saved, a promise rejected with
+ *    the error otherwise
  */
 DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
   if (typeof userId !== 'number') {
@@ -25,8 +25,9 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
 
   // If term/definition is undefined, 'undefined'
   // is inserted in the database, however,
-  // plpgsql function will consider term and 
-  // definition as null if they are
+  // plpgsql functions will consider term and 
+  // definition as null if they are null as
+  // javascript variables
   if (typeof flashcard.term === 'undefined') {
     flashcard.term = null;
   }
@@ -70,7 +71,7 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
  * @param {number} flashcardId
  * @param {number} beforeId
  * @return {Promise} A resolved promise if the flashcard has been moved, 
- * a promise rejected with the error otherwise
+ *    a promise rejected with the error otherwise
  */
 DeckEdit.prototype.moveFlashcard = function (userId, flashcardId, beforeId) {
   if (typeof userId !== 'number') {
@@ -96,7 +97,7 @@ DeckEdit.prototype.moveFlashcard = function (userId, flashcardId, beforeId) {
  * @param {number} userId
  * @param {number} flashcardId
  * @return {Promise} A resolved promise if the flashcard has been deleted, 
- * a promise rejected with the error otherwise
+ *    a promise rejected with the error otherwise
  */
 DeckEdit.prototype.deleteFlashcard = function (userId, flashcardId) {
   if (typeof userId !== 'number') {
@@ -108,8 +109,8 @@ DeckEdit.prototype.deleteFlashcard = function (userId, flashcardId) {
 
   return db.executePreparedStatement({
     name : 'deleteFlashcard',
-    text : '',
-    values : []
+    text : 'select delete_flashcard($1, $2)',
+    values : [userId, flashcardId]
   });
 };
 

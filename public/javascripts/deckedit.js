@@ -45,7 +45,7 @@ function initializeFlashcardList (flashcards) {
     // TODO: Find a way to add dynamic HTML without having
     // to write an ugly code like the one below
     node += '' + 
-      '<a class="list-group-item" href="#"' +  
+      '<a class="flashcard-item list-group-item" href="#"' +  
       'data-flashcard-id="' + flashcard.id + '">' +
         '<h5 class="list-group-item-heading term">' + 
           flashcard.term + 
@@ -53,6 +53,7 @@ function initializeFlashcardList (flashcards) {
         '<p class="list-group-item-text definition">' + 
           flashcard.definition + 
         '</p>' +
+        '<span class="btn-delete glyphicon glyphicon-remove"></span>' +
       '</a>';
   });
   flashcardList.append(node);
@@ -103,7 +104,7 @@ DeckEditor.prototype.saveFlashcard = function (flashcard) {
 
   obj.deckId = this.id;
 
-  // Update on remote server
+  // Update remote server
   socket.emit('saveFlashcard', obj);
 };
 
@@ -126,7 +127,7 @@ DeckEditor.prototype.displayableValue = function (value, placeholder) {
     return sanitize(value); 
   }
   else {
-    return placeholder; 
+    return '<i>' + placeholder + '</i>'; 
   }
 };
 
@@ -207,7 +208,7 @@ DeckEditor.prototype.createFlashcard = function () {
   // TODO: Find a prettier way to add dynamic HTML
   // than the ugly thing below
   var item = '' +
-    '<a class="list-group-item" href="#">' +
+    '<a class="flashcard-item list-group-item" href="#">' +
       '<h5 class="list-group-item-heading term">' +
         '<i>' + term.data('placeholder') + '</i>' +
       '</h5>' +
@@ -227,7 +228,7 @@ DeckEditor.prototype.createFlashcard = function () {
  */
 DeckEditor.prototype.displayFlashcard = function (flashcard) {
   //- If the flashcard already exists
-  //- flashcard.length correspond to the number of node
+  //- flashcard.length corresponds to the number of node
   //- contained in the flashcard jquery object
   if (typeof flashcard !== 'undefined' && flashcard.length > 0) {
     if (selectedFlashcard) {
@@ -272,14 +273,14 @@ DeckEditor.prototype.displayFlashcard = function (flashcard) {
  * goToPreviousFlashcard
  */
 DeckEditor.prototype.goToPreviousFlashcard = function () {
-  this.goTo(selectedFlashcard.prev('a.list-group-item'));
+  this.goTo(selectedFlashcard.prev('.flashcard-item'));
 };
 
 /**
  * goToNextFlashcard
  */
 DeckEditor.prototype.goToNextFlashcard = function () {
-  this.goTo(selectedFlashcard.next('a.list-group-item'));
+  this.goTo(selectedFlashcard.next('.flashcard-item'));
 };
 
 var editingEnv = {
@@ -320,8 +321,31 @@ var editingEnv = {
 
     // Display a flashcard when a user click on it on the
     // flashcard list
-    flashcardList.on('click', 'a.list-group-item', function (e) {
+    flashcardList.on('click', '.flashcard-item', function (e) {
       deckEditor.goTo($(this));
+    });
+
+    flashcardList.on('mouseenter', '.flashcard-item', function (e) {
+      $(this).children('.btn-delete').css('visibility', 'visible');
+    });
+
+    flashcardList.on('mouseleave', '.flashcard-item', function (e) {
+      $(this).children('.btn-delete').css('visibility', 'hidden');
+    });
+
+    flashcardList.on('click', '.btn-delete', function (e) {
+      var parent = $(this).parent();
+      socket.emit('deleteFlashcard', { 
+        id: parent.data('flashcard-id')
+      });
+
+      if (parent.hasClass('active')) {
+        deckEditor.displayFlashcard(parent.next('.flashcard-item'));
+      }
+
+      parent.remove();
+
+      return false;
     });
 
     //- Simulate a placeholder on flashcard term and
@@ -346,6 +370,6 @@ var editingEnv = {
       else {
         $(this).find('br').remove();
       }
-    }).blur();
+    });
   }
 };

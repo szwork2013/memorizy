@@ -3,10 +3,7 @@
 	- gerer les star dans le dossier starred
 
 - Faire la page pour éditer des flashcards
-	- Faire une navigation basique sur la gauche
-	- Flashcard au centre
 	- Informations sur la flashcard courante a droite
-	- Utiliser Rangy pour la mise en forme du texte
 	- Ajout d'images et de sons
 	- Ajout du mode LaTeX
 

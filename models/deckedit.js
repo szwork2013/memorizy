@@ -28,13 +28,15 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
   // plpgsql functions will consider term and 
   // definition as null if they are null as
   // javascript variables
-  if (typeof flashcard.term === 'undefined') {
-    flashcard.term = null;
+  if (typeof flashcard.term.text === 'undefined') {
+    flashcard.term.text = null;
   }
-  if (typeof flashcard.definition === 'undefined') {
-    flashcard.definition = null;
+  if (typeof flashcard.definition.text === 'undefined') {
+    flashcard.definition.text = null;
   }
 
+  console.log('Save ' + flashcard.term.text + ' / ' +
+              flashcard.definition.text);
   if (typeof flashcard.id === 'number') {
     return db.executePreparedStatement({
       name : 'saveFlashcard',
@@ -42,9 +44,11 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
                                      '$3::TEXT, $4::TEXT)',
       values : [
         userId, flashcard.id, 
-        flashcard.term, 
-        flashcard.definition
+        flashcard.term.text, 
+        flashcard.definition.text
       ]
+    }).then(function (res) {
+      return res.rows[0].update_flashcard;
     });
   }
   if (typeof flashcard.deckId === 'number') {
@@ -54,9 +58,11 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
                                      '$3::TEXT, $4::TEXT)',
       values : [
         userId, flashcard.deckId, 
-        flashcard.term, 
-        flashcard.definition
+        flashcard.term.text, 
+        flashcard.definition.text
       ]
+    }).then(function (res) {
+      return res.rows[0].append_flashcard;
     });
   }
 

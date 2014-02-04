@@ -59,7 +59,7 @@ $$ language plpgsql;
 create or replace
 function update_flashcard (_user_id integer, _flashcard_id integer,
                            _term text, _definition text)
-returns void as $$
+returns integer as $$
 begin
   raise notice 'user_id = %, flashcard_id = %, term = %, definition = %',
                 _user_id, _flashcard_id, _term, _definition;
@@ -80,6 +80,8 @@ begin
 		raise exception 'At least _term or _definition must be different from null'
 		using errcode = '22023'; /*invalid_parameter_value*/
   end if;
+
+  return _flashcard_id;
 end;
 $$ language plpgsql;
 

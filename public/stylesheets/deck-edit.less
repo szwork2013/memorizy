@@ -155,6 +155,21 @@
   border-bottom: 1px solid black; 
 }
 
+#flashcard .text {
+  height : 100%;
+  width  : 100%;
+}
+
+.upload-image-form,
+.image {
+  display : none;
+  height  : 100%;
+  width   : 50%;
+  margin  : 0 auto 0 0;
+  background-color: red;
+}
+
+
 #content-right {
   display : inline-block;
   vertical-align: top;
@@ -164,4 +179,8 @@
   margin  : @content-right-margin;
   border  : 1px solid black;
   box-sizing: border-box;
+}
+
+*:focus {
+  outline: none;
 }

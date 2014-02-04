@@ -13,13 +13,18 @@ append content
 
       #content-center
         nav#edit-tools
+          a#btn-image.btn-style(href="#")
+            span.glyphicon.glyphicon-picture
           a#btn-bold.btn-style(href="#")
             span.glyphicon.glyphicon-bold
           a#btn-italic.btn-style(href="#")
             span.glyphicon.glyphicon-italic
         #flashcard
-          .term(contenteditable=true spellcheck="false" data-placeholder="Term")
-          .definition(contenteditable=true spellcheck="false" data-placeholder="Definition")
+          .term
+            .text(contenteditable=true spellcheck="false" data-placeholder="Term")
+          .definition
+            .text(contenteditable=true spellcheck="false" data-placeholder="Definition")
+
 
       #content-right
         p test
@@ -31,10 +36,11 @@ append content
   //- jQuery selectors
   script(src="/javascripts/deckedit.js")
 
-  //- Configure the UI
+  //- Configures the UI
   script.
-    initializeFlashcardList(!{flashcards});
-    editingEnv.setDeckEditor(new DeckEditor(#{deck.id}));
+    var deck = new DeckEditor(#{deck.id});
+    deck.initializeFlashcardList(!{flashcards});
+    editingEnv.setDeckEditor(deck);
 
   //- Used for text style
   script(src="/javascripts/rangy-core.js")

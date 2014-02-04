@@ -3,12 +3,17 @@ var deckEdit = require('../models/deckedit');
 module.exports = function (socket) {
   socket.on('saveFlashcard', function (flashcard) {
     deckEdit.saveFlashcard(socket.handshake.user.id, flashcard)
-    .then(function (flashcard) {
-      socket.emit('flashcardSaved', {flashcardId: flashcard});
+    .then(function (flashcardId) {
+      console.log('emit flashcardSaved with localId=' + flashcard.localId +
+                  ' and id=' + flashcardId);
+      socket.emit('flashcardSaved', {
+        localId: flashcard.localId, 
+        id     : flashcardId
+      });
     })
     .catch(function (err) {
       console.log(err);
-      socket.emit('saveFlashcardError');
+      socket.emit('saveFlashcardError', flashcard);
     })
     .done();
   });
@@ -18,10 +23,10 @@ module.exports = function (socket) {
                            data.flashcardId,
                            data.beforeId)
     .then(function () {
-      socket.emit('flashcardMoved', {flashcardId: data.flashcardId});
+      socket.emit('flashcardMoved', data);
     })
     .catch(function () {
-      socket.emit('moveFlashcardError', {flashcardId: data.flashcardId});
+      socket.emit('moveFlashcardError', data);
     })
     .done();
   });
@@ -29,13 +34,11 @@ module.exports = function (socket) {
   socket.on('deleteFlashcard', function (flashcard) {
     deckEdit.deleteFlashcard(socket.handshake.user.id, flashcard.id)
     .then(function () {
-      socket.emit('flashcardDeleted', {flashcardId: flashcard.id});
+      socket.emit('flashcardDeleted', flashcard);
     })
     .catch(function (err) {
       console.log(err);
-      socket.emit('deleteFlashcardError', {
-        flashcardId: flashcard.id
-      });
+      socket.emit('deleteFlashcardError', flashcard);
     })
     .done();
   });

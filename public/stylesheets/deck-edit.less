@@ -129,6 +129,13 @@
   font-style: italic;
 }
 
+.btn-image {
+  position  : absolute; 
+  visibility: hidden;
+  top       : 0px;
+  right     : 0px;
+}
+
 #flashcard {
   width     : @flashcard-width;
   height    : @flashcard-height;
@@ -139,6 +146,7 @@
 
 #flashcard > .term,
 #flashcard > .definition {
+  position: relative;
   height  : 50%;
   width   : 100%;
   margin  : 0;

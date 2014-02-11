@@ -13,22 +13,26 @@ append content
 
       #content-center
         nav#edit-tools
-          a#btn-image.btn-style(href="#")
-            span.glyphicon.glyphicon-picture
-          a#btn-bold.btn-style(href="#")
+          a#btn-bold.btn-style(href="#" title="Bold")
             span.glyphicon.glyphicon-bold
-          a#btn-italic.btn-style(href="#")
+          a#btn-italic.btn-style(href="#" title="Italic")
             span.glyphicon.glyphicon-italic
         #flashcard
           .term
             .text(contenteditable=true spellcheck="false" data-placeholder="Term")
+            a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#upload-img-modal" title="Upload an image")
+              span.glyphicon.glyphicon-picture
           .definition
             .text(contenteditable=true spellcheck="false" data-placeholder="Definition")
+            a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#upload-img-modal" title="Upload an image")
+              span.glyphicon.glyphicon-picture
 
 
       #content-right
         p test
         #flashcard-info 
+
+    include includes/upload-image-modal
 
   script(src="/javascripts/html-sanitizer.js")
 

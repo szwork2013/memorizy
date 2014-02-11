@@ -1,0 +1,31 @@
+.modal.fade(id="upload-img-modal" role="dialog" aria-labelledby='Upload an image' aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
+        h4.modal-title#id='Upload an image'
+      .modal-body
+        form(role="form" method="post" action="/upload-image" enctype="multipart/form-data")
+          .form-group
+            h5 Select an image to upload
+            input#image-box(type="file" name="image")
+            h5 Where would you like to put it ?
+            input(type="radio" id="left" name="position" value="left" checked)
+            label(for="left") Left
+            input(type="radio" id="right" name="position" value="right")
+            label(for="right") Right
+            input(type="radio" id="top" name="position" value="top")
+            label(for="top") Top
+            input(type="radio" id="bottom" name="position" value="bottom")
+            label(for="bottom") Bottom
+            input(type="radio" id="full" name="position" value="full")
+            label(for="full") Full 
+            #upload-area
+              #percent
+              #MB
+
+      .modal-footer
+        button(type="button" class="btn btn-default" data-dismiss="modal") Close
+        //-button#btn-upload-img(type="button" class="btn btn-primary" data-dismiss="modal") Upload
+        button#btn-upload-img(type="button" class="btn btn-primary") Upload
+

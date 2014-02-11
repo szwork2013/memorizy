@@ -533,10 +533,6 @@ var editingEnv = {
      * Event handlers configuration
      */
 
-    $('#btn-image').click(function () {
-      $('.upload-image-form').css('display', '');  
-    });
-
     $('#btn-bold').click(function () {
       boldApplier.toggleSelection();
     });
@@ -617,6 +613,15 @@ var editingEnv = {
         input.find('br').remove();
       }
     });
+
+    var termAndDefinition = term.selector.add(definition.selector);
+    termAndDefinition.mouseenter(function () {
+      $(this).children('.btn-image').css('visibility', 'visible');
+    });
+    termAndDefinition.mouseleave(function () {
+      $(this).children('.btn-image').css('visibility', 'hidden');
+    });
+
   }
 };
 
@@ -685,6 +690,104 @@ socket.on(_Event.FLASHCARD_SAVED, function (flashcard) {
   }
 });
 
+/*
+ * Image upload
+ */
 
+var selectedFile;
+function fileChosen(event) {
+  selectedFile = event.target.files[0];
+}
 
+var $fileBox = $('file-box');
+
+var fReader;
+var name;
+function startUpload () {
+  if (selectedFile.name !== '') {
+    fReader = new FileReader();
+    var content = '<span id="name-area">Uploading ' + 
+      selectedFile.name + '</span>';
+    content += '' + 
+      '<div id="progress-container">' +
+        '<div id="progress-bar"></div>' +
+      '</div>' +
+      '<span id="percent">0%</span>';
+    content += '<span id="uploaded"> - <span id="MB">0</span>/' + 
+      Math.round(selectedFile.size / 1048576) + 'MB</span>';
+
+    document.getElementById('upload-area').innerHTML = content;
+    fReader.onload = function(event){
+      console.log('emit upload-img');
+      socket.emit('upload-img', {
+        name: selectedFile.name, 
+        data : event.target.result
+      });
+    };
+    console.log('emit start: name: ' + selectedFile.name + 
+                '\tsize: ' + selectedFile.size);
+    socket.emit('start', {
+      name: selectedFile.name, 
+      size: selectedFile.size
+    });
+  }
+  else {
+    alert('Please Select A File');
+  }
+}
+
+function updateBar(percent){
+  document.getElementById('percent').innerHTML = 
+    (Math.round(percent*100)/100) + '%';
+  var MBDone = Math.round(((percent/100.0) * selectedFile.size) / 1048576);
+  document.getElementById('MB').innerHTML = MBDone;
+}
+
+socket.on('moreData', function (data) {
+  console.log('received moreData');
+  updateBar(data.percent);
+
+  var place = data.place * 524288; //The Next Blocks Starting Position
+  var newFile; //The Variable that will hold the new Block of Data
+  if(selectedFile.webkitSlice) {
+    newFile = selectedFile.webkitSlice(place, 
+      place + Math.min(524288, (selectedFile.size - place)));
+  }
+  else {
+    console.log(selectedFile.slice);
+    newFile = selectedFile.slice(place, 
+      place + Math.min(524288, (selectedFile.size - place)));
+  }
+
+  console.log(newFile);
+  fReader.readAsBinaryString(newFile);
+});
+
+var path = 'http://localhost/';
+
+socket.on('done', function (data){
+  console.log('received done');
+  var content = 'Image Successfully Uploaded !!';
+  content += '<img id="thumb" src="' + path + data.image + 
+    '" alt="' + name + '"><br>';
+  content += '<button type="button" name="upload" value=""' +
+    'id="restart" class="button">upload Another</button>';
+  document.getElementById('upload-area').innerHTML = content;
+});
+
+var $uploadButton = $('#btn-upload-img');
+
+function ready() {
+  if (window.File && window.FileReader) { 
+    $uploadButton.on('click', startUpload);
+    document.getElementById('image-box').addEventListener('change', fileChosen);
+  }
+  else {
+    $('#upload-img-modal .modal-body')
+      .html('Your Browser Doesn\'t Support ' +
+            'The File API Please Update Your Browser');
+  }
+}
+
+window.addEventListener('load', ready);
 

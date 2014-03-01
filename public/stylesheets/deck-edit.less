@@ -163,20 +163,62 @@
   border-bottom: 1px solid black; 
 }
 
-#flashcard .text {
+.media {
+  display: none;
+  height : 100%;
+}
+
+.upload-form {
+  display: none;
   height : 100%;
   width  : 100%;
+  background-color: black;
+  margin: auto;
+  text-align: center;
 }
 
-.upload-image-form,
-.image {
-  display : none;
-  height  : 100%;
-  width   : 50%;
-  margin  : 0 auto 0 0;
-  background-color: red;
+.image-box {
+  opacity: 0;
 }
 
+.media-thumbnail, 
+.media-halfsize, 
+.media-fullsize {
+  display : inline-block;
+  max-height  : 100%;
+  overflow: hidden;
+}
+
+.media-thumbnail {
+  max-width: 50%;
+}
+
+.media-halfsize {
+  width: 50%;
+}
+
+.media-fullsize {
+  width: 100%;
+}
+
+.text {
+  display       : inline-block;
+  vertical-align: top;
+  height        : 100%;
+  width         : auto;
+  box-sizing    : border-box;
+}
+
+/*
+ *.upload-image-form,
+ *.image {
+ *  display : none;
+ *  height  : 100%;
+ *  width   : 50%;
+ *  margin  : 0 auto 0 0;
+ *  background-color: red;
+ *}
+ */
 
 #content-right {
   display : inline-block;

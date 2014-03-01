@@ -100,6 +100,7 @@ require('./routes/register')(app);
 require('./routes/login')(app);
 
 require('./routes/file')(app);
+require('./routes/media')(app);
 
 
 // development only

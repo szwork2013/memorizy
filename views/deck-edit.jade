@@ -20,11 +20,19 @@ append content
         #flashcard
           .term
             .text(contenteditable=true spellcheck="false" data-placeholder="Term")
-            a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#upload-img-modal" title="Upload an image")
+            a.btn-image.btn-style(href="#")
               span.glyphicon.glyphicon-picture
           .definition
+            .media.media-halfsize
+              .upload-form
+                button.btn-browse.btn.btn-primary(type="button" data-target="definition") Browse
+              .upload-progress
+                .percent
+                .MB
+              canvas.media-canvas
+
             .text(contenteditable=true spellcheck="false" data-placeholder="Definition")
-            a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#upload-img-modal" title="Upload an image")
+            a.btn-image.btn-style(href="#")
               span.glyphicon.glyphicon-picture
 
 
@@ -39,6 +47,7 @@ append content
   //- Needs to be after the HTML code since it caches
   //- jQuery selectors
   script(src="/javascripts/deckedit.js")
+  script(src="/javascripts/socketiouploader.js")
 
   //- Configures the UI
   script.

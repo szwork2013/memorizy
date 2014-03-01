@@ -24,7 +24,6 @@
 	"newcap" : true,
 	"noempty" : true,
 	"quotmark" : "single",
-	"maxlen": 80,
 	"smarttabs": true
                                                                       
 }

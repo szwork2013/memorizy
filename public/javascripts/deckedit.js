@@ -8,6 +8,19 @@
 
 var socket = io.connect();
 
+function showUploadForm () {
+  this.media.children('.upload-form').show();
+}
+function hideUploadForm () {
+  this.media.children('.upload-form').hide();
+}
+function showMediaCanvas () {
+  this.media.children('.media-canvas').show();
+}
+function hideMediaCanvas () {
+  this.media.children('.media-canvas').hide();
+}
+
 /*
  * Caches main jQuery selectors
  */
@@ -16,12 +29,38 @@ var flashcardList = $('#list-flashcards'),
     term = {
       selector: $('#flashcard > .term'),
       text    : $('#flashcard > .term > .text'),
-      media   : $('#flashcard > .term > .media')
+      media   : $('#flashcard > .term > .media'),
+      mediaInput: $('<input type="file">'),
+      showUploadForm: function () {
+        showUploadForm.call(this);
+      },
+      hideUploadForm: function () {
+        hideUploadForm.call(this);
+      },
+      showMediaCanvas: function () {
+        showMediaCanvas.call(this);
+      },
+      hideMediaCanvas: function () {
+        showMediaCanvas.call(this);
+      }
     },
     definition = {
       selector: $('#flashcard > .definition'),
       text    : $('#flashcard > .definition > .text'),
-      media   : $('#flashcard > .definition > .media')
+      media   : $('#flashcard > .definition > .media'),
+      mediaInput: $('<input type="file">'),
+      showUploadForm: function () {
+        showUploadForm.call(this);
+      },
+      hideUploadForm: function () {
+        hideUploadForm.call(this);
+      },
+      showMediaCanvas: function () {
+        showMediaCanvas.call(this);
+      },
+      hideMediaCanvas: function () {
+        showMediaCanvas.call(this);
+      }
     },
     arrowPrev = $('#arrow-prev'),
     arrowNext = $('#arrow-next');
@@ -123,6 +162,59 @@ function DeckEditor (deckId) {
 }
 
 /**
+ * _flashcardItemHtml
+ *
+ * @param {Object} flashcard The flashcard object to make an
+ *    item with
+ * @return {string} The corresponding flashcard item html
+ */
+DeckEditor.prototype._flashcardItemHtml = function (flashcard) {
+  // HTML sanitization is done on client side,
+  // and a placeholder is displayed if the flashcard's
+  // term or definition is empty
+  flashcard.term_text = this._displayableValue(
+    flashcard.term_text, term.text.data(_Data.PLACEHOLDER)
+  );
+  flashcard.definition_text = this._displayableValue(
+    flashcard.definition_text, definition.text.data(_Data.PLACEHOLDER)
+  );
+
+  var dataTermMediaId = '',
+      dataDefinitionMediaId = '',
+      termMediaHtml = '',
+      definitionMediaHtml = '';
+
+  if (flashcard.term_media_id) {
+    dataTermMediaId = 'data-media-id="' + flashcard.term_media_id + '"';
+    termMediaHtml = this._mediaThumbnailHtml(flashcard.term_media_id);
+  }
+  if (flashcard.definition_media_id) {
+    dataDefinitionMediaId = 
+      'data-media-id="' + flashcard.definition_media_id+'"';
+    definitionMediaHtml = 
+      this._mediaThumbnailHtml(flashcard.definition_media_id);
+  }
+
+  return '' +
+    '<a class="flashcard-item list-group-item" href="#"' +  
+    'data-flashcard-id="' + flashcard.id + '">' +
+      '<div class="list-group-item-heading term">' + 
+        '<div class="media media-thumbnail" ' + dataTermMediaId + '>' + 
+          termMediaHtml +
+        '</div>' +
+        '<div class="text">' + flashcard.term_text + '</div>' +
+      '</div>' +
+      '<div class="list-group-item-text definition">' + 
+        '<div class="media media-thumbnail" ' + dataDefinitionMediaId + '>' + 
+          definitionMediaHtml + 
+        '</div>' +
+        '<div class="text">' + flashcard.definition_text + '</div>' +
+      '</div>' +
+      '<span class="btn-delete glyphicon glyphicon-remove"></span>' +
+    '</a>';
+};
+
+/**
  * initializeFlashcardList pushes every flashcard
  * on the flashcard list
  *
@@ -134,36 +226,71 @@ DeckEditor.prototype.initializeFlashcardList = function (flashcards) {
   }
 
   var node = '';
+  var that = this;
+
   flashcards.forEach(function (flashcard, index, array) {
-    // HTML sanitization is done on client side,
-    // and a placeholder is displayed if the flashcard's
-    // term or definition is empty
-    flashcard.term = flashcard.term ? 
-                     sanitize(flashcard.term) :
-                     '<i>' + term.text.data(_Data.PLACEHOLDER) + '</i>';
-
-    flashcard.definition = flashcard.definition ? 
-                           sanitize(flashcard.definition) :
-                           '<i>' + 
-                             definition.text.data(_Data.PLACEHOLDER) + 
-                           '</i>';
-
-    // TODO: Find a way to add dynamic HTML without having
-    // to write an ugly code like the one below
-    node += '' + 
-      '<a class="flashcard-item list-group-item" href="#"' +  
-      'data-flashcard-id="' + flashcard.id + '">' +
-        '<div class="list-group-item-heading term">' + 
-          '<div class="text">' + flashcard.term + '</div>' +
-        '</div>' +
-        '<div class="list-group-item-text definition">' + 
-          '<div class="text">' + flashcard.definition + '</div>' +
-        '</div>' +
-        '<span class="btn-delete glyphicon glyphicon-remove"></span>' +
-      '</a>';
+    node += that._flashcardItemHtml(flashcard);
   });
   flashcardList.append(node);
 }; 
+
+/** @private */
+var _MEDIA = {
+  PATH: '/media/',
+  THUMBNAIL: {
+    MAX_HEIGHT: '1em',
+    MAX_WIDTH : '1em'
+  },
+  HALFSIZE: {
+    MAX_HEIGHT: term.selector.height(),
+    MAX_WIDTH : term.selector.width() / 2
+  },
+  FULLSIZE: {
+    MAX_HEIGHT: term.selector.height(),
+    MAX_WIDTH : term.selector.width()
+  }
+};
+
+/**
+ * displayMedia
+ *
+ * @param {Element} canvas The DOM canvas element where the
+ *    media must be drawn
+ * @param {File} media The file to draw in the canvas
+ * @param {number} maxWidth
+ * @param {number} maxHeight
+ */
+DeckEditor.prototype.drawMedia = function (
+  canvas, media, maxWidth, maxHeight) {
+
+  if (!media.type.match(/image.*/)) {
+    alert('The selected file is not an image');
+  }
+
+  var img = document.createElement('img');
+  img.src = window.URL.createObjectURL(media);
+
+  img.onload = function() {
+    var width = img.width;
+    var height = img.height;
+     
+    if (width > height) {
+      if (width > maxWidth) {
+        height *= maxWidth / width;
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width *= maxHeight / height;
+        height = maxHeight;
+      }
+    }
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+  };
+};
 
 /**
  * saveFlashcard updates flashcard's fields on the
@@ -176,14 +303,15 @@ DeckEditor.prototype.initializeFlashcardList = function (flashcards) {
 DeckEditor.prototype.saveFlashcard = function (flashcardItem) {
   var updates = {};
   var newFlashcardItem = flashcardItem;
-  
+
   // Update flashcard list
-  updates.term = this._applyModifications(term.text, 
-                        flashcardItem.term.text,
-                        term.text.data(_Data.PLACEHOLDER));
-  updates.definition = this._applyModifications(definition.text, 
-                              flashcardItem.definition.text,
-                              definition.text.data(_Data.PLACEHOLDER));
+  updates.term = this._applyModifications(
+    term, flashcardItem.term, term.text.data(_Data.PLACEHOLDER)
+  );
+  updates.definition = this._applyModifications(
+    definition, flashcardItem.definition, 
+    definition.text.data(_Data.PLACEHOLDER)
+  );
 
   var termUpdates = !($.isEmptyObject(updates.term));
   var definitionUpdates = !($.isEmptyObject(updates.definition));
@@ -192,16 +320,13 @@ DeckEditor.prototype.saveFlashcard = function (flashcardItem) {
     return;
   }
 
-  console.log(updates.term);
-  console.log(updates.definition);
-
   updates.deckId = this.id;
 
   // The flashcard already has an id in
   // the database
   if (typeof flashcardItem.id === 'number') {
     updates.id = flashcardItem.id;
-    
+
     // Update remote server
     socket.emit(_Event.SAVE_FLASHCARD, updates);
   }
@@ -218,7 +343,7 @@ DeckEditor.prototype.saveFlashcard = function (flashcardItem) {
       var prev = new FlashcardItem(
         flashcardItem.selector.prev('.flashcard-item')
       );
-      
+
       // the flashcard is the only one to be waiting
       // for an id at the end of the deck or
       // the deck is empty, so the flashcard
@@ -227,9 +352,9 @@ DeckEditor.prototype.saveFlashcard = function (flashcardItem) {
         socket.emit(_Event.SAVE_FLASHCARD, updates);
       }
       //else {
-        // Another flashcard is already being appended
-        // to the end of the deck, so we must wait
-        // for its id
+      // Another flashcard is already being appended
+      // to the end of the deck, so we must wait
+      // for its id
       //}
     }
     // if there is other flashcards after the one
@@ -244,12 +369,12 @@ DeckEditor.prototype.saveFlashcard = function (flashcardItem) {
       socket.emit(_Event.SAVE_FLASHCARD, updates);
     }
     //else {
-      //the flashcard must wait its successor
-      //which is being saved to get its id
-      //in order to be saved. if there are several
-      //flashcards which are waiting for the
-      //same successor, then they are sent together
-      //once the successor gets its id
+    //the flashcard must wait its successor
+    //which is being saved to get its id
+    //in order to be saved. if there are several
+    //flashcards which are waiting for the
+    //same successor, then they are sent together
+    //once the successor gets its id
     //}
   }
 
@@ -292,9 +417,9 @@ DeckEditor.prototype._displayableValue = function (value, placeholder) {
  * to dest, if their content differ
  *
  * @private
- * @param {Object} src the jQuery selector corresponding
+ * @param {FlashcardItem} src the FlashcardItem corresponding
  *    to the source element
- * @param {Object} dest the jQuery selector corresponding
+ * @param {FlashcardItem} dest the FlashcardItem corresponding
  *    to the destination element
  * @param {string} placeholder the value to copy in case
  *    the source content is empty
@@ -304,15 +429,53 @@ DeckEditor.prototype._displayableValue = function (value, placeholder) {
  *    is no difference between src and dest content
  */
 DeckEditor.prototype._applyModifications = function (src, dest, placeholder) {
-  if (src.html() === dest.html()) {
+  if (src.selector.html() === dest.selector.html()) {
     return {};
   } 
-  var newValue = (src.html() !== '<i>'+ placeholder +'</i>') ?
-                unescapeHtml(src.html()) : ''; 
-  console.log('newValue = ' + newValue);
-  dest.html(this._displayableValue(newValue, placeholder));
 
-  return {text: newValue};
+  var modifs = {};
+
+  if (src.text.html() !== dest.text.html()) {
+    modifs.text = (src.text.html() !== '<i>'+ placeholder +'</i>') ?
+      unescapeHtml(src.text.html()) : ''; 
+    dest.text.html(this._displayableValue(modifs.text, placeholder));
+  }
+
+  if (src.media.data('media-id') !== dest.media.data('media-id')) {
+    modifs.media = {};
+
+    modifs.media.id = src.selector.data('media-id');
+
+    var canvas = dest.media.children('canvas');
+    if (canvas.length <= 0) {
+      canvas = dest.media.prepend('<canvas class="media-canvas">');
+    }
+    
+    this._canvasToFile(src.media.children('.media-canvas').get(0));
+    this.drawMedia(canvas, media, _MEDIA.THUMBNAIL.MAX_WIDTH, 
+                   _MEDIA.THUMBNAIL.MAX_HEIGHT);
+  }
+
+  return modifs;
+};
+
+DeckEditor.prototype._dataURItoBlob = function (dataURI) {
+  var binary = atob(dataURI.split(',')[1]);
+  var array = [];
+  for(var i = 0; i < binary.length; i++) {
+    array.push(binary.charCodeAt(i));
+  }
+  return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
+};
+
+DeckEditor.prototype._canvasToFile = function (canvas) {
+  var url = canvas.toDataURL();
+  var blob = this._dataURItoBlob(url);
+
+  var form = $('form');
+  var fd = new FormData(form.get(0));
+  fd.append('canvasImage', blob);
+  console.log('form html = ', form.html());
 };
 
 /**
@@ -438,17 +601,19 @@ DeckEditor.prototype.createFlashcard = function () {
   // than the ugly thing below
   var item = '' +
     '<a class="flashcard-item list-group-item" href="#">' +
-      '<div class="list-group-item-heading term">' +
-        '<div class="text">' +
-          '<i>' + term.text.data(_Data.PLACEHOLDER) + '</i>' +
-        '</div>' +
-      '</div>' +
-      '<div class="list-group-item-text definition">' +
-        '<div class="text">' +
-          '<i>' + definition.text.data(_Data.PLACEHOLDER) + '</i>' +
-        '</div>' +
-      '</div>' +
-      '<span class="btn-delete glyphicon glyphicon-remove"></span>' +
+    '<div class="list-group-item-heading term">' +
+    '<div class="media"></div>' +
+    '<div class="text">' +
+    '<i>' + term.text.data(_Data.PLACEHOLDER) + '</i>' +
+    '</div>' +
+    '</div>' +
+    '<div class="list-group-item-text definition">' +
+    '<div class="media"></div>' +
+    '<div class="text">' +
+    '<i>' + definition.text.data(_Data.PLACEHOLDER) + '</i>' +
+    '</div>' +
+    '</div>' +
+    '<span class="btn-delete glyphicon glyphicon-remove"></span>' +
     '</a>';
 
   return new FlashcardItem($(item));
@@ -468,8 +633,24 @@ DeckEditor.prototype.displayFlashcard = function (flashcard) {
       selectedFlashcard.selector.removeClass('active');
     }
 
+    var mediaHtml = {
+      term: flashcard.term.media.html(),
+      definition: flashcard.definition.media.html()
+    };
+
     term.text.html(flashcard.term.text.html());
+    /*
+     *term.media.html(mediaHtml.term)
+     *  .removeClass('media-thumbnail')
+     *  .addClass('media-halfsize');
+     */
+
     definition.text.html(flashcard.definition.text.html());
+    /*
+     *definition.media.html(mediaHtml.definition)
+     *  .removeClass('media-thumbnail')
+     *  .addClass('media-halfsize');
+     */
 
     flashcard.selector.addClass('active');
     selectedFlashcard = flashcard;
@@ -482,21 +663,21 @@ DeckEditor.prototype.displayFlashcard = function (flashcard) {
   //- and in the second case it is set to the last
   //- flashcard
   else if (!selectedFlashcard ||
-    selectedFlashcard.selector.get(0) === 
-      flashcardList.children().last().get(0)) {
+           selectedFlashcard.selector.get(0) === 
+             flashcardList.children().last().get(0)) {
     console.log('does not exist yet');
-    if (selectedFlashcard) {
-      selectedFlashcard.selector.removeClass('active');
-    }
+  if (selectedFlashcard) {
+    selectedFlashcard.selector.removeClass('active');
+  }
 
-    var createdFlashcard = this.createFlashcard(); 
-    createdFlashcard.selector.appendTo(flashcardList);
+  var createdFlashcard = this.createFlashcard(); 
+  createdFlashcard.selector.appendTo(flashcardList);
 
-    term.text.html('');
-    definition.text.html('');
+  term.text.html('');
+  definition.text.html('');
 
-    createdFlashcard.selector.addClass('active');
-    selectedFlashcard = createdFlashcard;
+  createdFlashcard.selector.addClass('active');
+  selectedFlashcard = createdFlashcard;
   }
 
   definition.text.blur(); // show the placeholder if definition is empty
@@ -522,6 +703,14 @@ DeckEditor.prototype.goToNextFlashcard = function () {
   this.goTo(new FlashcardItem(next));
 };
 
+$('#btn-bold').click(function () {
+  boldApplier.toggleSelection();
+});
+
+$('#btn-italic').click(function () {
+  italicApplier.toggleSelection();
+});
+
 var editingEnv = {
   setDeckEditor : function (deckEditor) {
     // Display the first flashcard on page load
@@ -532,14 +721,6 @@ var editingEnv = {
     /*
      * Event handlers configuration
      */
-
-    $('#btn-bold').click(function () {
-      boldApplier.toggleSelection();
-    });
-
-    $('#btn-italic').click(function () {
-      italicApplier.toggleSelection();
-    });
 
     term.selector.keydown(function (e) {
       // SHIFT + TAB
@@ -581,14 +762,6 @@ var editingEnv = {
       return false;
     });
 
-    //term.focus(function() {
-      //$(this).children('.text').focus();
-    //});
-
-    //definition.focus(function() {
-      //$(this).children('.text').focus();
-    //});
-
     //- Simulate a placeholder on flashcard term and
     //- definition which shows 'Term' and 'Definition'
     //- if the term or the definition is empty
@@ -622,6 +795,19 @@ var editingEnv = {
       $(this).children('.btn-image').css('visibility', 'hidden');
     });
 
+    term.mediaInput.add(definition.mediaInput).change(function (e) {
+      // TODO: add an attribute to inputs to know if its 
+      // definition or term
+      console.log(e);
+      var canvas = definition.media.children('.media-canvas').get(0);
+      var media = e.target.files[0];
+      deckEditor.drawMedia(
+        canvas, media, _MEDIA.HALFSIZE.MAX_WIDTH, _MEDIA.HALFSIZE.MAX_HEIGHT
+      );
+
+      var uploader = new SocketIOUploader(socket);
+      uploader.upload(media);
+    });
   }
 };
 
@@ -632,17 +818,13 @@ socket.on(_Event.FLASHCARD_SAVED, function (flashcard) {
   // TODO: Treat case where several flashcards have been saved
   // TODO: Handle locks
 
-  console.log('Flashcard saved');
-  console.log('\tid: ' + flashcard.id);
   if (typeof flashcard.localId === 'undefined') {
     return;
   }
 
-  console.log('\tlocalId: ' + flashcard.localId);
-
   var f = flashcardList.children('[data-' + _Data.LOCAL_ID + 
                                  '=' + flashcard.localId + ']');
-  
+
   // TODO: send a delete event for that id if the flashcard is not found
 
   f.data(_Data.FLASHCARD_ID, flashcard.id);
@@ -694,46 +876,28 @@ socket.on(_Event.FLASHCARD_SAVED, function (flashcard) {
  * Image upload
  */
 
+function showMediaUploadForm () {
+  this.find('.upload-form').css('display', 'inline-block');
+}
+
+$('.btn-image').click(function (e) {
+  showMediaUploadForm.call($(this).parent());
+  $(this).parent().children('.media').css('display', 'inline-block');
+});
+
+$('.btn-browse').click(function (e) {
+  if ($(this).data('target') === 'term') {
+    term.mediaInput.click();
+  }
+  else {
+    definition.mediaInput.click();
+  }
+});
+
+
 var selectedFile;
 function fileChosen(event) {
   selectedFile = event.target.files[0];
-}
-
-var $fileBox = $('file-box');
-
-var fReader;
-var name;
-function startUpload () {
-  if (selectedFile.name !== '') {
-    fReader = new FileReader();
-    var content = '<span id="name-area">Uploading ' + 
-      selectedFile.name + '</span>';
-    content += '' + 
-      '<div id="progress-container">' +
-        '<div id="progress-bar"></div>' +
-      '</div>' +
-      '<span id="percent">0%</span>';
-    content += '<span id="uploaded"> - <span id="MB">0</span>/' + 
-      Math.round(selectedFile.size / 1048576) + 'MB</span>';
-
-    document.getElementById('upload-area').innerHTML = content;
-    fReader.onload = function(event){
-      console.log('emit upload-img');
-      socket.emit('upload-img', {
-        name: selectedFile.name, 
-        data : event.target.result
-      });
-    };
-    console.log('emit start: name: ' + selectedFile.name + 
-                '\tsize: ' + selectedFile.size);
-    socket.emit('start', {
-      name: selectedFile.name, 
-      size: selectedFile.size
-    });
-  }
-  else {
-    alert('Please Select A File');
-  }
 }
 
 function updateBar(percent){
@@ -743,51 +907,5 @@ function updateBar(percent){
   document.getElementById('MB').innerHTML = MBDone;
 }
 
-socket.on('moreData', function (data) {
-  console.log('received moreData');
-  updateBar(data.percent);
-
-  var place = data.place * 524288; //The Next Blocks Starting Position
-  var newFile; //The Variable that will hold the new Block of Data
-  if(selectedFile.webkitSlice) {
-    newFile = selectedFile.webkitSlice(place, 
-      place + Math.min(524288, (selectedFile.size - place)));
-  }
-  else {
-    console.log(selectedFile.slice);
-    newFile = selectedFile.slice(place, 
-      place + Math.min(524288, (selectedFile.size - place)));
-  }
-
-  console.log(newFile);
-  fReader.readAsBinaryString(newFile);
-});
-
-var path = 'http://localhost/';
-
-socket.on('done', function (data){
-  console.log('received done');
-  var content = 'Image Successfully Uploaded !!';
-  content += '<img id="thumb" src="' + path + data.image + 
-    '" alt="' + name + '"><br>';
-  content += '<button type="button" name="upload" value=""' +
-    'id="restart" class="button">upload Another</button>';
-  document.getElementById('upload-area').innerHTML = content;
-});
-
-var $uploadButton = $('#btn-upload-img');
-
-function ready() {
-  if (window.File && window.FileReader) { 
-    $uploadButton.on('click', startUpload);
-    document.getElementById('image-box').addEventListener('change', fileChosen);
-  }
-  else {
-    $('#upload-img-modal .modal-body')
-      .html('Your Browser Doesn\'t Support ' +
-            'The File API Please Update Your Browser');
-  }
-}
-
-window.addEventListener('load', ready);
+//window.addEventListener('load', ready);
 

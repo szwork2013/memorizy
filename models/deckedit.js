@@ -1,4 +1,6 @@
 var q = require('q');
+var fs = require('fs');
+var crypto = require('crypto');
 var db = require('./db');
 
 function DeckEdit () {}
@@ -28,46 +30,93 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
   // plpgsql functions will consider term and 
   // definition as null if they are null as
   // javascript variables
-  if (typeof flashcard.term.text === 'undefined') {
-    flashcard.term.text = null;
-  }
-  if (typeof flashcard.definition.text === 'undefined') {
-    flashcard.definition.text = null;
-  }
+  console.log('Before nullification:', flashcard);
+  this._nullifyFlashcardUpdates(flashcard);
+  console.log('After nullification:', flashcard);
 
-  console.log('Save ' + flashcard.term.text + ' / ' +
-              flashcard.definition.text);
   if (typeof flashcard.id === 'number') {
-    return db.executePreparedStatement({
-      name : 'saveFlashcard',
-      text : 'select update_flashcard($1::INTEGER, $2::INTEGER,' +
-                                     '$3::TEXT, $4::TEXT)',
-      values : [
-        userId, flashcard.id, 
-        flashcard.term.text, 
-        flashcard.definition.text
-      ]
-    }).then(function (res) {
-      return res.rows[0].update_flashcard;
-    });
+    return this._updateFlashcard(userId, flashcard);
   }
   if (typeof flashcard.deckId === 'number') {
-    return db.executePreparedStatement({
-      name : 'appendFlashcard',
-      text : 'select append_flashcard($1::INTEGER, $2::INTEGER,' +
-                                     '$3::TEXT, $4::TEXT)',
-      values : [
-        userId, flashcard.deckId, 
-        flashcard.term.text, 
-        flashcard.definition.text
-      ]
-    }).then(function (res) {
-      return res.rows[0].append_flashcard;
-    });
+    return this._appendFlashcard(userId, flashcard);
   }
 
   return q.reject('Flashcard must have either an id ' +
                   'or the id of its deck');
+};
+
+DeckEdit.prototype._appendFlashcard = function (userId, flashcard) {
+  if (typeof flashcard.deckId !== 'number') {
+    return q.reject('flashcard.deckId = ' + flashcard.deckId + 
+                    ' (expected a number)');
+  }
+
+  return db.executePreparedStatement({
+    name : 'appendFlashcard',
+    text : 'select append_flashcard($1::INTEGER, $2::INTEGER,' +
+                                   '$3::TEXT, $4::INTEGER,' +
+                                   '$5::TEXT, $6::TEXT,' +
+                                   '$7::INTEGER, $8::TEXT)',
+    values : [
+      userId, flashcard.deckId, 
+      flashcard.term.text, flashcard.term.media.id, 
+      flashcard.term.media.position, 
+      flashcard.definition.text, flashcard.definition.media.id,
+      flashcard.definition.media.position
+    ]
+  }).then(function (res) {
+    return res.rows[0].append_flashcard;
+  });
+};
+
+DeckEdit.prototype._updateFlashcard = function (userId, flashcard) {
+  if (typeof flashcard.id !== 'number') {
+    return q.reject('flashcard.id = ' + flashcard.id + 
+                    ' (expected a number)');
+  }
+
+  return db.executePreparedStatement({
+    name : 'saveFlashcard',
+    text : 'select update_flashcard($1::INTEGER, $2::INTEGER,' +
+                                   '$3::TEXT, $4::INTEGER,' +
+                                   '$5::TEXT, $6::TEXT,' +
+                                   '$7::INTEGER, $8::TEXT)',
+    values : [
+      userId, flashcard.id, 
+      flashcard.term.text, flashcard.term.media.id, 
+      flashcard.term.media.position, 
+      flashcard.definition.text, flashcard.definition.media.id,
+      flashcard.definition.media.position
+    ]
+  }).then(function (res) {
+    return res.rows[0].update_flashcard;
+  });
+};
+
+/**
+ * Used for flashcard updates
+ * nullification
+ * @private
+ */
+var _EMPTY_FLASHCARD_UPDATE = {
+  text: null,
+  media: {
+    id: null,
+    position: null
+  }
+};
+
+DeckEdit.prototype._nullifyFlashcardUpdates = function (flashcard) {
+  for (var i in _EMPTY_FLASHCARD_UPDATE) {
+    if (_EMPTY_FLASHCARD_UPDATE.hasOwnProperty(i)) {
+      if (typeof flashcard.term[i] === 'undefined') {
+        flashcard.term[i] = _EMPTY_FLASHCARD_UPDATE[i];
+      }
+      if (typeof flashcard.definition[i] === 'undefined') {
+        flashcard.definition[i] = _EMPTY_FLASHCARD_UPDATE[i];
+      }
+    }
+  }
 };
 
 /**
@@ -120,5 +169,47 @@ DeckEdit.prototype.deleteFlashcard = function (userId, flashcardId) {
   });
 };
 
-module.exports = singleton;
+DeckEdit.prototype.createMediaLink = function (path) {
+  if (typeof path !== 'string') {
+    return q.reject('path = ' + path + ' (expected an string)');
+  }
 
+  var rs = fs.ReadStream(path);
+
+  return this._sha256(rs).then(function (shasum) {
+    console.log('shasum = ' + shasum);
+
+    return db.executePreparedStatement({
+      name: 'createMediaLink',
+      text: 'select create_media_link($1)',
+      values: [shasum]
+    })
+    .then(function (res) {
+      console.log(res);
+      return res.rows[0].create_media_link;
+    });
+  });
+};
+
+DeckEdit.prototype._sha256 = function (readStream) {
+  var defer = q.defer();
+  var shasum = crypto.createHash('sha256');
+
+  readStream.on('data', function(data) {
+    shasum.update(data);
+  });
+
+  readStream.on('end', function() {
+    var data = shasum.digest('hex');
+    defer.resolve(data);
+  });
+
+  return defer.promise;
+};
+
+DeckEdit.prototype._mimeType = function () {
+
+
+};
+
+module.exports = singleton;

@@ -1,4 +1,4 @@
-function rk(){};
+function rk(){}
 
 var singleton = new rk();
 
@@ -68,6 +68,8 @@ rk.prototype.isNotReservedKeyword = function(req, res, next){
 		'guide',
 		'help',
 		'home',
+    'image',
+    'images',
 		'inbox',
 		'invitations',
 		'invite',
@@ -81,17 +83,22 @@ rk.prototype.isNotReservedKeyword = function(req, res, next){
 		'login',
 		'logout',
 		'mail',
+		'map',
+		'maps',
 		'me',
+    'media',
+    'medias',
 		'message',
 		'messages',
 		'mind',
 		'mindmap',
 		'mindmaps',
-		'map',
-		'maps',
 		'misc',
+    'miscellaneous',
 		'mobile',
 		'mobiles',
+    'movie',
+    'movies',
 		'my',
 		'notification',
 		'notifications',
@@ -100,6 +107,8 @@ rk.prototype.isNotReservedKeyword = function(req, res, next){
 		'pages',
 		'partner',
 		'partners',
+    'picture',
+    'pictures',
 		'place',
 		'places',
 		'privacy',
@@ -119,6 +128,8 @@ rk.prototype.isNotReservedKeyword = function(req, res, next){
 		'share',
 		'signin',
 		'signup',
+    'sound',
+    'sounds',
 		'statistics',
 		'stats',
 		'stylesheet',
@@ -129,12 +140,14 @@ rk.prototype.isNotReservedKeyword = function(req, res, next){
 		'upgrade',
 		'user',
 		'users',
+    'video',
+    'videos',
 		'welcome',
 		'widget',
 		'widgets'
 	];
 
-	if (reserved.indexOf(ps[1]) == -1) {
+	if (reserved.indexOf(ps[1]) === -1) {
 		return next();
 	}
 	return next('route');

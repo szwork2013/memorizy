@@ -1,11 +1,3 @@
-/*
- * Dependencies:
- *
- * jQuery
- * socket.io
- * html-sanitizer
- */
-
 var socket = io.connect();
 
 function showUploadForm () {
@@ -115,43 +107,6 @@ var _Event = {
 var _localId = 0;
 
 /**
- * FlashcardItem
- *
- * @constructor
- * @private
- * @param {Object} flashcardItem the jQuery selector corresponding
- *    to an item in the flashcard list
- */
-function FlashcardItem (flashcardItem) {
-  if (flashcardItem.length <= 0) {
-    return;
-  }
-  this.id = flashcardItem.data(_Data.FLASHCARD_ID);
-  this.term = {
-    text : flashcardItem.find('.term .text'),
-    media: flashcardItem.find('.term .media'),
-    selector: flashcardItem.find('.term')
-  };
-
-  this.definition = {
-    text : flashcardItem.find('.definition .text'),
-    media: flashcardItem.find('.definition .media'),
-    selector: flashcardItem.find('.definition')
-  };
-  this.selector = flashcardItem;
-}
-
-/**
- * exists 
- *
- * @return true if the item has an existing 
- *    jQuery selector, false otherwise
- */
-FlashcardItem.prototype.exists = function () {
-  return typeof this.selector !== 'undefined';
-};
-
-/**
  * DeckEditor
  *
  * @constructor
@@ -233,64 +188,6 @@ DeckEditor.prototype.initializeFlashcardList = function (flashcards) {
   });
   flashcardList.append(node);
 }; 
-
-/** @private */
-var _MEDIA = {
-  PATH: '/media/',
-  THUMBNAIL: {
-    MAX_HEIGHT: '1em',
-    MAX_WIDTH : '1em'
-  },
-  HALFSIZE: {
-    MAX_HEIGHT: term.selector.height(),
-    MAX_WIDTH : term.selector.width() / 2
-  },
-  FULLSIZE: {
-    MAX_HEIGHT: term.selector.height(),
-    MAX_WIDTH : term.selector.width()
-  }
-};
-
-/**
- * displayMedia
- *
- * @param {Element} canvas The DOM canvas element where the
- *    media must be drawn
- * @param {File} media The file to draw in the canvas
- * @param {number} maxWidth
- * @param {number} maxHeight
- */
-DeckEditor.prototype.drawMedia = function (
-  canvas, media, maxWidth, maxHeight) {
-
-  if (!media.type.match(/image.*/)) {
-    alert('The selected file is not an image');
-  }
-
-  var img = document.createElement('img');
-  img.src = window.URL.createObjectURL(media);
-
-  img.onload = function() {
-    var width = img.width;
-    var height = img.height;
-     
-    if (width > height) {
-      if (width > maxWidth) {
-        height *= maxWidth / width;
-        width = maxWidth;
-      }
-    } else {
-      if (height > maxHeight) {
-        width *= maxHeight / height;
-        height = maxHeight;
-      }
-    }
-    canvas.width = width;
-    canvas.height = height;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(img, 0, 0, width, height);
-  };
-};
 
 /**
  * saveFlashcard updates flashcard's fields on the
@@ -388,29 +285,6 @@ DeckEditor.prototype.saveFlashcard = function (flashcardItem) {
   return newFlashcardItem;
 };
 
-/**
- * _displayableValue gets the value to be displayed
- * when the corresponding flashcard is displayed
- * and in the flashcard list
- *
- * @private
- * @param {string} value the pre-sanitized value 
- * @param {string} placeholder the string to be
- *    displayed in case `value` is empty or undefined
- * @return {string} the value to be displayed
- */
-DeckEditor.prototype._displayableValue = function (value, placeholder) {
-  if (typeof value === 'string' && value) {
-    //- sanitize is used here to prevent users from xss-ing
-    //- themselves... and also be able to write html
-    //- tags in their flashcards without messing up
-    //- the rendering of their page
-    return sanitize(value); 
-  }
-  else {
-    return '<i>' + placeholder + '</i>'; 
-  }
-};
 
 /**
  * _applyModifications copy the html content from src
@@ -457,25 +331,6 @@ DeckEditor.prototype._applyModifications = function (src, dest, placeholder) {
   }
 
   return modifs;
-};
-
-DeckEditor.prototype._dataURItoBlob = function (dataURI) {
-  var binary = atob(dataURI.split(',')[1]);
-  var array = [];
-  for(var i = 0; i < binary.length; i++) {
-    array.push(binary.charCodeAt(i));
-  }
-  return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
-};
-
-DeckEditor.prototype._canvasToFile = function (canvas) {
-  var url = canvas.toDataURL();
-  var blob = this._dataURItoBlob(url);
-
-  var form = $('form');
-  var fd = new FormData(form.get(0));
-  fd.append('canvasImage', blob);
-  console.log('form html = ', form.html());
 };
 
 /**
@@ -588,35 +443,6 @@ DeckEditor.prototype.goTo = function (flashcard) {
     this.saveFlashcard(selectedFlashcard);
   }
   this.displayFlashcard(flashcard);
-};
-
-/**
- * createFlashcard add an item at the end
- * of the flashcard list
- *
- * @return {FlashcardItem} the created flashcard
- */
-DeckEditor.prototype.createFlashcard = function () {
-  // TODO: Find a prettier way to add dynamic HTML
-  // than the ugly thing below
-  var item = '' +
-    '<a class="flashcard-item list-group-item" href="#">' +
-    '<div class="list-group-item-heading term">' +
-    '<div class="media"></div>' +
-    '<div class="text">' +
-    '<i>' + term.text.data(_Data.PLACEHOLDER) + '</i>' +
-    '</div>' +
-    '</div>' +
-    '<div class="list-group-item-text definition">' +
-    '<div class="media"></div>' +
-    '<div class="text">' +
-    '<i>' + definition.text.data(_Data.PLACEHOLDER) + '</i>' +
-    '</div>' +
-    '</div>' +
-    '<span class="btn-delete glyphicon glyphicon-remove"></span>' +
-    '</a>';
-
-  return new FlashcardItem($(item));
 };
 
 /**

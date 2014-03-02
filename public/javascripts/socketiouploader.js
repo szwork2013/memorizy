@@ -7,14 +7,18 @@
  */
 function SocketIOUploader (socket) {
   this.socket = socket;
+  this.listeners = {};
 
-  this.events = {
-    start: 'start',
-    data: 'data',
-    done: 'done',
-    error: 'error'
-  };
+  this.chunkSize = 524288; // 512 ko
 }
+
+/** @enum {string} */
+SocketIOUploader.prototype.Events = {
+  START: 'start',
+  DATA: 'data',
+  DONE: 'done',
+  ERROR: 'error'
+};
 
 /** @enum {string} */
 SocketIOUploader.prototype.Errors = {
@@ -25,62 +29,46 @@ SocketIOUploader.prototype.Errors = {
   UNKNOWN: 'unknown'
 };
 
-SocketIOUploader.prototype.chunkSize = 524288; // 512 ko
-
 SocketIOUploader.prototype.upload = function (file) {
   this._startUpload(file);
 
-  this.socket.on(this.events.data, function (data) {
-    this._emit(this.events.data, data);
-    this._readChunk(file, data.downloaded);
+  var that = this;
+  this.socket.on(this.Events.DATA, function (data) {
+    that.emit(that.Events.DATA, data);
+    that._readChunk(file, data.downloaded);
   });
 
-  this.socket.on(this.events.done, function (media) {
-    this._emit(this.events.done, media);
+  this.socket.on(this.Events.DONE, function (media) {
+    this.emit(this.Events.DONE, media);
   });
 };
 
 SocketIOUploader.prototype._startUpload = function (file) {
   if (!window.File || !window.FileReader) {
-    this._emit(this.events.error, {
+    this.emit(this.Events.ERROR, {
       type: this.Errors.UNSUPPORTED_BROWSER, 
       msg: 'Your browser does not support the File API'
     });
     return;
   }
 
-  if (!(file instanceof window.File)) {
-    this._emit(this.events.error, {
-      type: this.Errors.ILLEGAL_ARGUMENT,
-      msg: 'The file argument must be a window.File object'
-    });
-    return;
-  }
-
+  var that = this;
   this.reader = new FileReader();
 
   this.reader.onload = function (e) {
-    this.socket.emit(this.events.data, {
+    that.socket.emit(that.Events.DATA, {
       name: file.name,
       data: e.target.result
     });
   };
 
-  this.socket.emit(this.events.start, {
+  this.socket.emit(this.Events.START, {
     name: file.name, 
     size: file.size
   });
 };
 
 SocketIOUploader.prototype._readChunk = function (file, place) {
-  if (!(file instanceof window.File)) {
-    this._emit(this.events.error, {
-      type: this.Errors.ILLEGAL_ARGUMENT,
-      msg: 'The file argument must be a window.File object'
-    });
-    return;
-  }
-
   var chunk = file.slice(
     place, place + Math.min(this.chunkSize, (file.size - place))
   );
@@ -88,35 +76,51 @@ SocketIOUploader.prototype._readChunk = function (file, place) {
   this.reader.readAsBinaryString(chunk);
 };
 
-SocketIOUploader.prototype._emit = function (name, detail) {
-  if (!window.CustomEvent) {
-    // Polyfill for IE
-    (function () {
-      function CustomEvent (event, params) {
-        detail = detail || {
-          bubbles: false, 
-          cancelable: false, 
-          detail: undefined
-        };
-        var evt = document.createEvent(name);
-        evt.initCustomEvent(
-          event, detail.bubbles, detail.cancelable, detail.detail
-        );
-        return evt;
-      }
-
-      CustomEvent.prototype = window.CustomEvent.prototype;
-
-      window.CustomEvent = CustomEvent;
-    })();
+SocketIOUploader.prototype.on = function (eventName, callback) {
+  if (typeof eventName !== 'string') {
+    throw 'The event name must be a string';
+  }
+  if (!(callback instanceof Function)) {
+    throw 'The callback must be a function';
   }
 
-  var event = new CustomEvent(name, {
-    detail: detail,
-    bubbles: false,
-    cancelable: true
-  });
+  if (typeof this.listeners[eventName] === 'undefined' ||
+     this.listeners[eventName] === null) {
+    this.listeners[eventName] = [];
+  }
 
-  this.dispatchEvent(event);
+  this.listeners[eventName].push(callback);
 };
 
+/*
+ *SocketIOUploader.prototype.off = function (eventName, callbacks) {
+ *  if (typeof eventName !== 'string') {
+ *    console.log('The event name must be a string');
+ *    return;
+ *  }
+ *  if (typeof callbacks === 'undefined') {
+ *    this.listeners[eventName] = null;
+ *    return;
+ *  }
+ *  if (!(this.listeners[eventName])) {
+ *    return;
+ *  }
+ *
+ *  this.listeners[eventName].filter(function (element) {
+ *    if (callbacks.indexOf(element) !== -1) {
+ *      return false;
+ *    }
+ *    return true;
+ *  });
+ *};
+ */
+
+SocketIOUploader.prototype.emit = function (name, event) {
+  if (!(this.listeners[name])) {
+    return;
+  }
+
+  this.listeners[name].forEach(function (callback, index, arr) {
+    callback(event);
+  });
+};

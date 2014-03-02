@@ -1,6 +1,7 @@
-var should = require('should');
-var register = require('../models/register');
+/* jshint expr: true */
+require('should');
 var sinon = require('sinon');
+var register = require('../models/register');
 var util = require('util');
 var q = require('q');
 var filenavigation = require('../models/filenavigation');
@@ -154,11 +155,11 @@ describe('FileNavigation.createFileWithPath', function(){
 	it('should return a resolved promise if the file has been created successfully', function(done){
 		var result = {
 			value : {
-				row: [{id : 0}]
+				rows: [{create_file : 0}]
 			}
 		};
 
-		var stub = sinon.stub(db, 'executePreparedStatement').returns(q.resolve(result));
+		var stub = sinon.stub(db, 'executePreparedStatement').returns(q.resolve(result.value));
 		
 		filenavigation.createFileWithPath(123, 'filename', 'type', 'path').then(function(){
 			done();
@@ -218,11 +219,11 @@ describe('FileNavigation.createFileWithParentId', function(){
 	it('should return a resolved promise if the file has been created successfully', function(done){
 		var result = {
 			value : {
-				row: [{id : 0}]
+				rows: [{id : 0}]
 			}
 		};
 
-		var stub = sinon.stub(db, 'executePreparedStatement').returns(q.resolve(result));
+		var stub = sinon.stub(db, 'executePreparedStatement').returns(q.resolve(result.value));
 		
 		filenavigation.createFileWithParentId(123, 'filename', 'type', 123).then(function(){
 			done();

@@ -1,38 +1,8 @@
-function Media () {}
+function Media (file) {
+  this.file = file;
+}
 
-/** @private */
-var _MEDIA = {
-  PATH: '/media/',
-  THUMBNAIL: {
-    MAX_HEIGHT: '1em',
-    MAX_WIDTH : '1em'
-  },
-  HALFSIZE: {
-    MAX_HEIGHT: term.selector.height(),
-    MAX_WIDTH : term.selector.width() / 2
-  },
-  FULLSIZE: {
-    MAX_HEIGHT: term.selector.height(),
-    MAX_WIDTH : term.selector.width()
-  }
-};
-
-/**
- * draw
- *
- * @param {Element} canvas The DOM canvas element where the
- *    media must be drawn
- * @param {File} media The file to draw in the canvas
- * @param {number} maxWidth
- * @param {number} maxHeight
- */
-Media.prototype.draw = function (
-  canvas, media, maxWidth, maxHeight) {
-
-  if (!media.type.match(/image.*/)) {
-    alert('The selected file is not an image');
-  }
-
+Media.prototype.draw = function (canvas, maxWidth, maxHeight) {
   var img = document.createElement('img');
   img.src = window.URL.createObjectURL(media);
 
@@ -41,12 +11,12 @@ Media.prototype.draw = function (
     var height = img.height;
      
     if (width > height) {
-      if (width > maxWidth) {
+      if (maxWidth && width > maxWidth) {
         height *= maxWidth / width;
         width = maxWidth;
       }
     } else {
-      if (height > maxHeight) {
+      if (maxHeight && height > maxHeight) {
         width *= maxHeight / height;
         height = maxHeight;
       }
@@ -56,6 +26,12 @@ Media.prototype.draw = function (
     var ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, width, height);
   };
+};
+
+Media.prototype.resize = function (width, height) {
+  var canvas = document.createElement('canvas');
+  this.draw(canvas, width, height);
+  this.file = this._canvasToFile(canvas);
 };
 
 Media.prototype._canvasToFile = function (canvas) {

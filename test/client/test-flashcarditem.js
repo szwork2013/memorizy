@@ -19,7 +19,7 @@ describe('FlashcardItem', function () {
       fi.term.media.should.equal('test');
     });
 
-    it('should update DOM if there is any change and the selector is defined', function () {
+    it('should update the DOM if there is any change and the selector is defined', function () {
       var fi = new FlashcardItem();
 
       var oldHtml = fi.selector.html();

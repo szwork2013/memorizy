@@ -2,12 +2,12 @@ var pg = require('pg');
 var q = require('q');
 
 function Db() {
-	this.conn = 'postgres://postgres:cL1475369!@localhost:5432/study';
+	this.conn = 'postgres://postgres:cL1475369!@localhost:5432/memorizy';
 }
 
 var singleton = new Db();
 
-var NODEPG_CONN = 'tcp://nodepg:nodepg@localhost:5432/study';
+var NODEPG_CONN = 'tcp://nodepg:nodepg@localhost:5432/memorizy';
 
 Db.prototype.pgConnect = function (callback) {
 	pg.connect(NODEPG_CONN, function (err, client, done) {

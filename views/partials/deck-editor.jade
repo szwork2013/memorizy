@@ -1,0 +1,82 @@
+append head
+  link(rel="stylesheet", href="/stylesheets/deck-edit.css")
+
+append content
+  #content
+    #flashcard-editor
+      #content-left
+        #list-flashcards.list-group
+          a.flashcard-item.list-group-item(ng-repeat="flashcard in deck.flashcards" 
+          ng-class="{active: deck.active == $index}" href="#" data-flashcard-id="{{flashcard.id}}")
+            .term.list-group-item-heading
+              //-.media.media-thumbnail
+              .text(ng-model="flashcard.term_index" ng-init="flashcard.term_text") 
+                {{flashcard.term_text}}
+            .definition.list-group-item-heading
+              //-.media.media-thumbnail
+              .text(contenteditable="true" ng-model="flashcard.definition_text")
+                {{flashcard.definition_text}}
+            .btn-delete.glyphicon.glyphicon-remove
+
+      #content-center
+        nav#edit-tools
+          a#btn-bold.btn-style(href="#" title="Bold")
+            span.glyphicon.glyphicon-bold
+          a#btn-italic.btn-style(href="#" title="Italic")
+            span.glyphicon.glyphicon-italic
+        #flashcard
+          .term
+            .text(ng-model="deck.flashcards[deck.active].term_text" 
+            ng-tab="focusDefinition()" ng-shift-tab="display(deck.active - 1)" 
+            focus-on="term" contenteditable="true" spellcheck="false" 
+            data-placeholder="Term") 
+              {{deck.flashcards[deck.active].term_text}}
+            a.btn-image.btn-style(href="#")
+              span.glyphicon.glyphicon-picture
+          .definition
+            //-.media.media-halfsize
+              //-.upload-form
+                //-button.btn-browse.btn.btn-primary(type="button" data-target="definition") Browse
+              //-.upload-progress
+                //-.percent
+                //-.MB
+              //-canvas.media-canvas
+
+            .text(ng-model="deck.flashcards[deck.active].definition_text" ng-tab="display(deck.active + 1)" ng-shift-tab="focusTerm()" 
+            focus-on="definition" contenteditable="true" spellcheck="false" data-placeholder="Definition")
+              //-{{deck.flashcards[deck.active].definition_text}}
+            
+            a.btn-image.btn-style(href="#")
+              span.glyphicon.glyphicon-picture
+
+
+      #content-right
+        p test
+        #flashcard-info 
+
+    //-include includes/upload-image-modal
+
+  //-script(src="/javascripts/html-sanitizer.js")
+
+  //-//- Needs to be after the HTML code since it caches
+  //-//- jQuery selectors
+  //-script(src="/javascripts/deckedit.js")
+  //-script(src="/javascripts/socketiouploader.js")
+
+  //-//- Configures the UI
+  //-//-script.
+    //-//-var deck = new DeckEditor(#{deck.id});
+    //-//-deck.initializeFlashcardList(!{flashcards});
+    //-//-editingEnv.setDeckEditor(deck);
+
+  //-//- Used for text style
+  //-script(src="/javascripts/rangy-core.js")
+  //-script(src="/javascripts/rangy-cssclassapplier.js")
+  //-script.
+    //-var cssApplier;
+    //-window.onload = function() {
+      //-rangy.init();
+      //-boldApplier = rangy.createCssClassApplier("bold", {normalize: true});
+      //-italicApplier = rangy.createCssClassApplier("italic", {normalize: true});
+    //-};
+

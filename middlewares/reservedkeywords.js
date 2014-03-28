@@ -105,6 +105,8 @@ rk.prototype.isNotReservedKeyword = function(req, res, next){
 		'oauth',
 		'page',
 		'pages',
+    'partial',
+    'partials',
 		'partner',
 		'partners',
     'picture',

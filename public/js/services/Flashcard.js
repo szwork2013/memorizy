@@ -9,14 +9,18 @@ angular.module('memorizy.services')
 
     equals: function (f1, f2) {
       if (typeof f1 === 'undefined' || typeof f2 === 'undefined') {
+        console.log('1');
         return false;
       }
 
       for (var i in this.attrs) {
-        if (f1[i] !== f2[i]) {
+        var prop = this.attrs[i];
+        if (f1[prop] !== f2[prop]) {
           return false;
         }
       }
+
+      console.log('equals');
 
       return true;
     },

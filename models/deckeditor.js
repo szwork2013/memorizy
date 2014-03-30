@@ -37,7 +37,7 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
   if (typeof flashcard.id === 'number') {
     return this._updateFlashcard(userId, flashcard);
   }
-  if (typeof flashcard.deckId === 'number') {
+  if (typeof flashcard.deck_id === 'number') {
     return this._appendFlashcard(userId, flashcard);
   }
 
@@ -46,8 +46,8 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
 };
 
 DeckEdit.prototype._appendFlashcard = function (userId, flashcard) {
-  if (typeof flashcard.deckId !== 'number') {
-    return q.reject('flashcard.deckId = ' + flashcard.deckId + 
+  if (typeof flashcard.deck_id !== 'number') {
+    return q.reject('flashcard.deck_id = ' + flashcard.deck_id + 
                     ' (expected a number)');
   }
 
@@ -58,11 +58,11 @@ DeckEdit.prototype._appendFlashcard = function (userId, flashcard) {
                                    '$5::TEXT, $6::TEXT,' +
                                    '$7::INTEGER, $8::TEXT)',
     values : [
-      userId, flashcard.deckId, 
-      flashcard.term.text, flashcard.term.media.id, 
-      flashcard.term.media.position, 
-      flashcard.definition.text, flashcard.definition.media.id,
-      flashcard.definition.media.position
+      userId, flashcard.deck_id, 
+      flashcard.term_text, flashcard.term_media_id, 
+      flashcard.term_media_position, 
+      flashcard.definition_text, flashcard.definition_media_id,
+      flashcard.definition_media_position
     ]
   }).then(function (res) {
     return res.rows[0].append_flashcard;
@@ -83,10 +83,10 @@ DeckEdit.prototype._updateFlashcard = function (userId, flashcard) {
                                    '$7::INTEGER, $8::TEXT)',
     values : [
       userId, flashcard.id, 
-      flashcard.term.text, flashcard.term.media.id, 
-      flashcard.term.media.position, 
-      flashcard.definition.text, flashcard.definition.media.id,
-      flashcard.definition.media.position
+      flashcard.term_text, flashcard.term_media_id, 
+      flashcard.term_media_position, 
+      flashcard.definition_text, flashcard.definition_media_id,
+      flashcard.definition_media_position
     ]
   }).then(function (res) {
     return res.rows[0].update_flashcard;
@@ -98,23 +98,21 @@ DeckEdit.prototype._updateFlashcard = function (userId, flashcard) {
  * nullification
  * @private
  */
-var _EMPTY_FLASHCARD_UPDATE = {
-  text: null,
-  media: {
-    id: null,
-    position: null
-  }
-};
+var _FLASHCARD_EDITABLE_FIELDS= [
+  'term_text',
+  'term_media_id',
+  'term_media_position',
+  'definition_text',
+  'definition_media_id',
+  'definition_media_id'
+];
 
 DeckEdit.prototype._nullifyFlashcardUpdates = function (flashcard) {
-  for (var i in _EMPTY_FLASHCARD_UPDATE) {
-    if (_EMPTY_FLASHCARD_UPDATE.hasOwnProperty(i)) {
-      if (typeof flashcard.term[i] === 'undefined') {
-        flashcard.term[i] = _EMPTY_FLASHCARD_UPDATE[i];
-      }
-      if (typeof flashcard.definition[i] === 'undefined') {
-        flashcard.definition[i] = _EMPTY_FLASHCARD_UPDATE[i];
-      }
+  for (var i in _FLASHCARD_EDITABLE_FIELDS) {
+    var prop = _FLASHCARD_EDITABLE_FIELDS[i];
+
+    if (typeof flashcard[prop] === 'undefined') {
+      flashcard[prop] = null;
     }
   }
 };

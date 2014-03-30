@@ -7,7 +7,6 @@ function sendFolderContent (req, res, folder) {
   .then(function(rows){
     folder.type = 'folder';
     folder.files = rows;
-    console.log('folder = ', folder);
     res.json(folder);
   }).catch(function(err){
     console.log(err);
@@ -20,7 +19,6 @@ function sendDeckFlashcards (req, res, deck) {
   fileManager.getFileFlashcards(2, deck.id).then(function (flashcards) {
     deck.flashcards = flashcards;
     deck.type = 'deck';
-    console.log('res = ', deck);
     res.json(deck);
   }).catch(function (err) {
     console.log(err);
@@ -62,11 +60,6 @@ module.exports = function (app) {
 		}).catch(function(err){
 			console.log(err);
 		}).done();
-  });
-
-  app.post('/api/:username/:subfolders?*', function (req, res) {
-    var flashcards = req.body;
-
   });
 
   app.delete('/api/:username/:subfolders?*', function (req, res) {

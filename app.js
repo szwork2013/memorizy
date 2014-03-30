@@ -76,14 +76,14 @@ app.use(express.session({
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(app.router);
 app.use(lessMiddleware({
 	src : __dirname + '/public',
 	/*
          *compress : true
 	 */
 }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(app.router);
 
 // does not compress html files
 app.configure('development', function () { 

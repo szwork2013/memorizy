@@ -7,16 +7,17 @@ append content
       #content-left
         #list-flashcards.list-group
           a.flashcard-item.list-group-item(ng-repeat="flashcard in deck.flashcards" 
-          ng-class="{active: deck.active == $index}" href="#" data-flashcard-id="{{flashcard.id}}")
+          ng-class="{active: deck.active == $index}" href="#" data-flashcard-id="{{flashcard.id}}"
+          ng-click="display($index)" ng-mouseover="setDeleteButtonIndex($index)")
             .term.list-group-item-heading
               //-.media.media-thumbnail
-              .text(ng-model="flashcard.term_index" ng-init="flashcard.term_text") 
+              .text(ng-bind="flashcard.term_text" ng-init="flashcard.term_text") 
                 {{flashcard.term_text}}
             .definition.list-group-item-heading
               //-.media.media-thumbnail
-              .text(contenteditable="true" ng-model="flashcard.definition_text")
+              .text(ng-bind="flashcard.definition_text")
                 {{flashcard.definition_text}}
-            .btn-delete.glyphicon.glyphicon-remove
+            .btn-delete.glyphicon.glyphicon-remove(ng-click="removeFlashcard(flashcard.id); $event.stopPropagation();")
 
       #content-center
         nav#edit-tools

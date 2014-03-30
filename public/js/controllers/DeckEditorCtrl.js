@@ -16,6 +16,12 @@ angular.module('memorizy.controllers')
     };
 
     $scope.removeFlashcard = function (id) {
+      DeckEditorService.remove(id).success(function (data) {
+        console.log('success : ', data);
+      })
+      .error(function (err) {
+        console.log(err);
+      });
 
     }; 
     $scope.moveFlashcard = function () {

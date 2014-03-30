@@ -62,7 +62,10 @@ module.exports = function (app) {
 		}).done();
   });
 
-  app.delete('/api/:username/:subfolders?*', function (req, res) {
+  app.delete('/api/:username/:subfolders?*', function (req, res, next) {
+    if (req.query.action !== 'deleteFile') {
+      return next();
+    }
 		fileManager.deleteFile(/*req.user.id*/2, parseInt(req.query.fileId)).then(function (val) {
 			res.json({
 				id: val,

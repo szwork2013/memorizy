@@ -41,7 +41,6 @@
 }
 .btn-delete {
   position: absolute;
-  visibility: hidden;
   top: 5%;
   right: 2%;
   width: 0.8em;

@@ -3,9 +3,9 @@ var fs = require('fs');
 var crypto = require('crypto');
 var db = require('./db');
 
-function DeckEdit () {}
+function DeckEditor () {}
 
-var singleton = new DeckEdit();
+var singleton = new DeckEditor();
 
 /**
  * saveFlashcard
@@ -17,7 +17,7 @@ var singleton = new DeckEdit();
  *    if the flashcard has been saved, a promise rejected with
  *    the error otherwise
  */
-DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
+DeckEditor.prototype.saveFlashcard = function (userId, flashcard) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');
   }
@@ -45,7 +45,7 @@ DeckEdit.prototype.saveFlashcard = function (userId, flashcard) {
                   'or the id of its deck');
 };
 
-DeckEdit.prototype._appendFlashcard = function (userId, flashcard) {
+DeckEditor.prototype._appendFlashcard = function (userId, flashcard) {
   if (typeof flashcard.deck_id !== 'number') {
     return q.reject('flashcard.deck_id = ' + flashcard.deck_id + 
                     ' (expected a number)');
@@ -69,7 +69,7 @@ DeckEdit.prototype._appendFlashcard = function (userId, flashcard) {
   });
 };
 
-DeckEdit.prototype._updateFlashcard = function (userId, flashcard) {
+DeckEditor.prototype._updateFlashcard = function (userId, flashcard) {
   if (typeof flashcard.id !== 'number') {
     return q.reject('flashcard.id = ' + flashcard.id + 
                     ' (expected a number)');
@@ -107,7 +107,7 @@ var _FLASHCARD_EDITABLE_FIELDS= [
   'definition_media_id'
 ];
 
-DeckEdit.prototype._nullifyFlashcardUpdates = function (flashcard) {
+DeckEditor.prototype._nullifyFlashcardUpdates = function (flashcard) {
   for (var i in _FLASHCARD_EDITABLE_FIELDS) {
     var prop = _FLASHCARD_EDITABLE_FIELDS[i];
 
@@ -126,7 +126,7 @@ DeckEdit.prototype._nullifyFlashcardUpdates = function (flashcard) {
  * @return {Promise} A resolved promise if the flashcard has been moved, 
  *    a promise rejected with the error otherwise
  */
-DeckEdit.prototype.moveFlashcard = function (userId, flashcardId, beforeId) {
+DeckEditor.prototype.moveFlashcard = function (userId, flashcardId, beforeId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');
   }
@@ -152,7 +152,7 @@ DeckEdit.prototype.moveFlashcard = function (userId, flashcardId, beforeId) {
  * @return {Promise} A resolved promise if the flashcard has been deleted, 
  *    a promise rejected with the error otherwise
  */
-DeckEdit.prototype.deleteFlashcard = function (userId, flashcardId) {
+DeckEditor.prototype.removeFlashcard = function (userId, flashcardId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');
   }
@@ -160,6 +160,7 @@ DeckEdit.prototype.deleteFlashcard = function (userId, flashcardId) {
     return q.reject('flashcardId = ' + flashcardId + ' (expected an number)');
   }
 
+  console.log('going to delete id ' + flashcardId);
   return db.executePreparedStatement({
     name : 'deleteFlashcard',
     text : 'select delete_flashcard($1, $2)',
@@ -167,7 +168,7 @@ DeckEdit.prototype.deleteFlashcard = function (userId, flashcardId) {
   });
 };
 
-DeckEdit.prototype.createMediaLink = function (path) {
+DeckEditor.prototype.createMediaLink = function (path) {
   if (typeof path !== 'string') {
     return q.reject('path = ' + path + ' (expected an string)');
   }
@@ -189,7 +190,7 @@ DeckEdit.prototype.createMediaLink = function (path) {
   });
 };
 
-DeckEdit.prototype._sha256 = function (readStream) {
+DeckEditor.prototype._sha256 = function (readStream) {
   var defer = q.defer();
   var shasum = crypto.createHash('sha256');
 
@@ -205,7 +206,7 @@ DeckEdit.prototype._sha256 = function (readStream) {
   return defer.promise;
 };
 
-DeckEdit.prototype._mimeType = function () {
+DeckEditor.prototype._mimeType = function () {
 
 
 };

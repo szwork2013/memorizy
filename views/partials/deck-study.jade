@@ -8,13 +8,7 @@ append content
       #content-center
         #flashcard
           .term
-            .text(ng-model="deck.flashcards[deck.active].term_text" 
-            ng-tab="focusDefinition()" ng-shift-tab="display(deck.active - 1)" 
-            focus-on="term" contenteditable="true" spellcheck="false" 
-            data-placeholder="Term") 
-              {{deck.flashcards[deck.active].term_text}}
-            a.btn-image.btn-style(href="#")
-              span.glyphicon.glyphicon-picture
+            .text(ng-bind="deck.flashcards[deck.active].term_text" spellcheck="false" ng-show="showTerm == true")
           .definition
             //-.media.media-halfsize
               //-.upload-form
@@ -24,45 +18,21 @@ append content
                 //-.MB
               //-canvas.media-canvas
 
-            .text(ng-model="deck.flashcards[deck.active].definition_text" ng-tab="display(deck.active + 1)" ng-shift-tab="focusTerm()" 
-            focus-on="definition" contenteditable="true" spellcheck="false" data-placeholder="Definition")
-              //-{{deck.flashcards[deck.active].definition_text}}
+            .text(ng-bind="deck.flashcards[deck.active].definition_text" spellcheck="false" ng-show="showDefinition == true")
             
       #content-right
         #study-options
-          input(type="radio" name="show-first" value="term")
-            label(for="term") Term
-          input(type="radio" name="show-first" value="definition")
-            label(for="term") Definition
-          input(type="radio" name="show-first" value="random")
-            label(for="term") Random
-          input(type="radio" name="show-first" value="both")
-            label(for="term") Both
+          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="term" value="term")
+          label(for="term") Term
+          br
+          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="definition" value="definition")
+          label(for="definition") Definition
+          br
+          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="random" value="random")
+          label(for="random") Random
+          br
+          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="both" value="both")
+          label(for="both") Both
+          br
         #flashcard-info 
-
-    //-include includes/upload-image-modal
-
-  //-script(src="/javascripts/html-sanitizer.js")
-
-  //-//- Needs to be after the HTML code since it caches
-  //-//- jQuery selectors
-  //-script(src="/javascripts/deckedit.js")
-  //-script(src="/javascripts/socketiouploader.js")
-
-  //-//- Configures the UI
-  //-//-script.
-    //-//-var deck = new DeckEditor(#{deck.id});
-    //-//-deck.initializeFlashcardList(!{flashcards});
-    //-//-editingEnv.setDeckEditor(deck);
-
-  //-//- Used for text style
-  //-script(src="/javascripts/rangy-core.js")
-  //-script(src="/javascripts/rangy-cssclassapplier.js")
-  //-script.
-    //-var cssApplier;
-    //-window.onload = function() {
-      //-rangy.init();
-      //-boldApplier = rangy.createCssClassApplier("bold", {normalize: true});
-      //-italicApplier = rangy.createCssClassApplier("italic", {normalize: true});
-    //-};
 

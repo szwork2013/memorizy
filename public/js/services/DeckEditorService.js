@@ -6,17 +6,7 @@ angular.module('memorizy.services')
       return $http.post('/api' + $location.path(), flashcard, { 
         params: { action: 'saveFlashcard' }
       });
-    },
-
-    remove: function (id) {
-      console.log('remove id ' + id);
-      return $http.delete('/api' + $location.path(), {
-        params: { 
-          action: 'deleteFlashcard',
-          flashcardId: id
-        }
-      });
-    },
+    }
   };
 
 }]); 

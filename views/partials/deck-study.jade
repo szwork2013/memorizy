@@ -4,23 +4,43 @@ append head
 append content
   #content
     #flashcard-editor
-      #content-left
+      #content-left(ng-if="visible.stats == false")
+        span(ng-bind="deck.active + 1") 
+        / 
+        span(ng-bind="deck.flashcards.length")
       #content-center
-        #flashcard
+        #flashcard(ng-if="visible.stats == false")
           .term
-            .text(ng-bind="deck.flashcards[deck.active].term_text" spellcheck="false" ng-show="showTerm == true")
+            .text(ng-bind="deck.flashcards[deck.active].term_text" spellcheck="false" ng-show="visible.term == true")
           .definition
             //-.media.media-halfsize
               //-.upload-form
                 //-button.btn-browse.btn.btn-primary(type="button" data-target="definition") Browse
               //-.upload-progress
-                //-.percent
+                //-.percentd
                 //-.MB
               //-canvas.media-canvas
 
-            .text(ng-bind="deck.flashcards[deck.active].definition_text" spellcheck="false" ng-show="showDefinition == true")
+            .text(ng-bind="deck.flashcards[deck.active].definition_text" spellcheck="false" ng-show="visible.definition == true")
+          .answer-bar.btn-group
+            button#btn-wrong.btn.btn-default(type="button" ng-click="answer(false)" ng-show="visible.answerButtons == true") Wrong
+            button#btn-turn.btn.btn-default(type="button" ng-click="displayAll()" ng-show="visible.answerButtons != true") Turn
+            button#btn-right.btn.btn-default(type="button" ng-click="answer(true)" ng-show="visible.answerButtons == true") Right
+        #stats(ng-if="visible.stats == true")
+          p
+            | Cards: 
+            span(ng-bind="deck.flashcards.length")
+          p
+            | Correct answers: 
+            span(ng-bind="stats.correct.percentage")
+            |%
+          p
+            | Wrong answers: 
+            span(ng-bind="stats.wrong.percentage")
+            |%
+
             
-      #content-right
+      #content-right(ng-if="visible.stats == false")
         #study-options
           input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="term" value="term")
           label(for="term") Term

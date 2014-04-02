@@ -1,5 +1,5 @@
-angular.module('memorizy.services')
-.factory('Flashcard', [function () {
+angular.module('memorizy.flashcard.FlashcardService', [])
+.service('flashcardService', [function () {
 
   return {
     attrs: [

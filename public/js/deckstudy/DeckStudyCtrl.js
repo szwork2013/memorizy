@@ -1,7 +1,7 @@
-angular.module('memorizy.controllers')
+angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
 .controller(
   'DeckStudyCtrl', 
-  function ($scope, $document, DeckStudyService, Flashcard, focus) {
+  function ($scope, $document, DeckStudy) {
     $scope.studyOpt = {
      showFirst: 'term'
     };
@@ -13,21 +13,8 @@ angular.module('memorizy.controllers')
       stats: false
     };
 
-    $scope.stats = {
-      answered: 0,
-      correct: {
-        number: 0,
-        percentage: 0
-      },
-      wrong: {
-        number: 0,
-        percentage: 0
-      }
-    };
-
     $scope.display = function (index) {
       if (index >= $scope.deck.flashcards.length) {
-        console.log('stats: ', $scope.stats);
         $scope.showStats();
       }
       else {
@@ -55,6 +42,7 @@ angular.module('memorizy.controllers')
           case 'both':
             $scope.visible.term = true;
             $scope.visible.definition = true;
+            $scope.visible.answerButtons = true;
             break;
           default:
             console.log('$scope.studyOpt.visible.First value cannot be handled');
@@ -87,13 +75,17 @@ angular.module('memorizy.controllers')
           c = stats.correct,
           w = stats.wrong;
 
+      var active = $scope.deck.active;
+
       stats.answered++;
 
       if (correct) {
         c.number++;
+        c.flashcardIds.push(active);
       }
       else {
         w.number++;
+        w.flashcardIds.push(active);
       }
 
       c.percentage = 100 * c.number / stats.answered;
@@ -105,6 +97,14 @@ angular.module('memorizy.controllers')
     $scope.showStats = function () {
       $scope.visible.stats = true;
     };
+
+    $scope.updateStats = function () {
+      DeckStudy.updateStats($scope.stats);
+    };
+
+    //$rootScope.$on('end', function (event) {
+      //$scope.showStats();
+    //});
 
     $document.bind('keypress', function (event) {
       var key = event.which || event.keyCode || event.charCode;

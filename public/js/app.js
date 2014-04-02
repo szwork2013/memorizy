@@ -1,8 +1,14 @@
 angular.module('memorizy', [
-  'memorizy.controllers',
-  'memorizy.filters',
-  'memorizy.services',
-  'memorizy.directives',
+  'memorizy.filemanager',
+  'memorizy.filenavigation',
+  'memorizy.deckeditor',
+  'memorizy.deckstudy',
+  'memorizy.focus',
+  'memorizy.keyboard',
+  'memorizy.mouse',
+  'memorizy.contenteditable',
+
+  /* Misc */
   'ngRoute'
 ])
 .config(function ($routeProvider, $locationProvider) {
@@ -25,11 +31,3 @@ angular.module('memorizy', [
   $locationProvider.html5Mode(true);
 });
 
-angular.module('memorizy.controllers', []);
-angular.module('memorizy.services', ['ngResource']);
-angular.module('memorizy.directives', []);
-angular.module('memorizy.filters', []);
-
-//angular.element(document).ready(function() {
-  //angular.bootstrap(document.getElementById('appRoot'), ['memorizy']);
-//});

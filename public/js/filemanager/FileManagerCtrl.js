@@ -1,10 +1,10 @@
-angular.module('memorizy.controllers')
+angular.module('memorizy.filemanager.FileManagerCtrl', [])
 .controller('FileManagerCtrl', 
-  function ($scope, $http, $location, FileManagerService) { 
+  function ($scope, $http, $location, FileManager) { 
 
     $scope.refresh = function () {
-      console.log(JSON.stringify('refresh...'));
-      FileManagerService.getAll().success(function (data) {
+      console.log('FileManager = ', FileManager);
+      FileManager.getAll().success(function (data) {
         console.log('got data:', data);
         // depending on whether $scope.folder or $scope.deck
         // exists, a different partial and another controller

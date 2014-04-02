@@ -1,7 +1,5 @@
 append head
   link(rel="stylesheet", href="/stylesheets/style.css")
-  //- used for text selection 
-  script(src='/js/rangy/uncompressed/rangy-core.js') 
 append content
   #content(ng-if="folder" ng-cloak ng-include="'/partials/file-navigation'" ng-controller="FileNavigationCtrl")
   #content(ng-if="deck && action == 'edit'" ng-cloak ng-include="'/partials/deck-editor'" ng-controller="DeckEditorCtrl")

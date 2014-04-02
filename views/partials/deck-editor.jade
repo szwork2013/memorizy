@@ -55,29 +55,3 @@ append content
         p test
         #flashcard-info 
 
-    //-include includes/upload-image-modal
-
-  //-script(src="/javascripts/html-sanitizer.js")
-
-  //-//- Needs to be after the HTML code since it caches
-  //-//- jQuery selectors
-  //-script(src="/javascripts/deckedit.js")
-  //-script(src="/javascripts/socketiouploader.js")
-
-  //-//- Configures the UI
-  //-//-script.
-    //-//-var deck = new DeckEditor(#{deck.id});
-    //-//-deck.initializeFlashcardList(!{flashcards});
-    //-//-editingEnv.setDeckEditor(deck);
-
-  //-//- Used for text style
-  //-script(src="/javascripts/rangy-core.js")
-  //-script(src="/javascripts/rangy-cssclassapplier.js")
-  //-script.
-    //-var cssApplier;
-    //-window.onload = function() {
-      //-rangy.init();
-      //-boldApplier = rangy.createCssClassApplier("bold", {normalize: true});
-      //-italicApplier = rangy.createCssClassApplier("italic", {normalize: true});
-    //-};
-

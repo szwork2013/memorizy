@@ -1,7 +1,7 @@
-angular.module('memorizy.controllers')
+angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
 .controller(
   'DeckEditorCtrl', 
-  function ($scope, DeckEditorService, Flashcard, focus) {
+  function ($scope, DeckEditorService, flashcardService, focusService) {
 
     $scope.addFlashcard = function () {
       $scope.deck.flashcards.push({
@@ -57,7 +57,7 @@ angular.module('memorizy.controllers')
       }
 
       // send updates to the server, if any
-      if (!Flashcard.equals(beforeEdit, displayed) && 
+      if (!flashcardService.equals(beforeEdit, displayed) && 
           typeof beforeEdit !== 'undefined') {
 
         DeckEditorService.save(displayed).success(function (data) {
@@ -73,37 +73,9 @@ angular.module('memorizy.controllers')
       // clone the flashcard before it is edited, so that we can
       // know if it has been modified when we display
       // another flashcard
-      beforeEdit = Flashcard.clone($scope.deck.flashcards[index]);
+      beforeEdit = flashcardService.clone($scope.deck.flashcards[index]);
 
-      // stop watching the previously displayed flashcard
-      //if (typeof unregister === 'function') {
-      //unregister();
-      //}
-
-      // track changes on the displayed flashcard
-      //unregister = $scope.$watch('deck.flashcards[' + index + ']', 
-      //function (newContent, oldContent) {
-
-      //if (oldContent === newContent) { 
-      //$scope.deck.active = index;
-      //return;
-      //}
-
-      //var props = ['term_text', 'definition_text'];
-      //oldContent.id = 2;
-
-      //for (var i in props) {
-      //var p = props[i];
-      //if (newContent[p] !== oldContent[p]) {
-      //if (typeof toSave[oldContent.id] === 'undefined') {
-      //toSave[oldContent.id] = {};
-      //}
-      //toSave[oldContent.id][p] = newContent[p];
-      //}
-      //}
-      //}, true);
-
-      focus('term');
+      focusService.focus('term');
     };
 
     $scope.focusTerm = function () {

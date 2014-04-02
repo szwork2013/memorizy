@@ -1,8 +1,12 @@
-angular.module('memorizy.services')
-.factory('FileNavigationService', 
-  ['$http', '$location', function ($http, $location) {
+angular.module('memorizy.filenavigation.FileNavigationProvider', [])
+.provider('FileNavigation', function () {
 
+  this.$get = ['$http', '$location', function ($http, $location) {
     return {
+      getAll: function () {
+        return $http.get('/api' + $location.path());
+      },
+
       addFile: function (file) {
         return $http.put('/api' + $location.path() + '/' + file.name, file);
       },
@@ -16,4 +20,5 @@ angular.module('memorizy.services')
                             { params: {fileId: file.id } });
       }
     };
-  }]);
+  }];
+});

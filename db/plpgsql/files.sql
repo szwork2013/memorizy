@@ -608,17 +608,46 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function update_file_status(user_id integer, file_id integer, percentage_difference integer) returns void as $$
+create or replace function update_file_status(_user_id integer, _file_id integer, _percentage_difference integer) returns void as $$
+declare 
+  _size  integer;
 begin
-	-- Update percentages of the file and all of its parents (following user_id file tree)
-	execute 'with parents as ('
-		|| ' select ancestor_id'
-		|| ' from file_tree'
-		|| ' where descendant_id = ' || file_id || ' and user_id = ' || user_id || '),'
-	|| ' update users_files'
-	|| ' set percentage = (percentage * size + rest_percentage + ' || percentage_difference || ') / size'
-		|| ',rest_percentage = (percentage * size + rest_percentage + ' || percentage_difference || ') % size'
-		|| ' where file_id in parents';
+  select f.size from files f
+  where f.id = _file_id 
+  into _size;
+
+	-- Update percentages of the file and all of its parents 
+	with parents as (
+    select ancestor_id
+		from file_tree
+		where descendant_id = _file_id 
+  )
+	update users_files
+	set 
+    percentage = 
+      (percentage * _size + rest_percentage + _percentage_difference) / _size,
+    rest_percentage = 
+      (percentage * _size + rest_percentage +  _percentage_difference) % _size
+	where file_id in (
+    select ancestor_id 
+    from parents
+  );
+  insert into users_files (
+    user_id, 
+    file_id, 
+    percentage, 
+    rest_percentage
+  ) 
+  select 
+    _user_id, 
+    _file_id, 
+    _percentage_difference / _size, 
+    _percentage_difference % _size
+  where not exists (
+    select 1 from users_files 
+    where user_id = _user_id and 
+    file_id = _file_id
+  );
 end;
 $$ language plpgsql
 

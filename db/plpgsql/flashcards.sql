@@ -67,6 +67,10 @@ begin
   )
   returning id into _id;
 
+  update files 
+  set size = size + 1
+  where id = _deck_id;
+
   if _term_media_id is not null or
     _definition_media_id is not null then
 
@@ -186,6 +190,10 @@ begin
 		raise exception 'Flashcard with id % not found', _flashcard_id
 		using errcode = '22023'; /*invalid_parameter_value*/
   end if;
+
+  update files 
+  set size = size - 1
+  where id = _deck_id;
 end;
 $$ language plpgsql;
 

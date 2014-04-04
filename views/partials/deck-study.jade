@@ -24,7 +24,7 @@ append content
             .text(ng-bind="deck.flashcards[deck.active].definition_text" spellcheck="false" ng-show="visible.definition == true")
           .answer-bar.btn-group
             button#btn-wrong.btn.btn-default(type="button" ng-click="answer(false)" ng-show="visible.answerButtons == true") Wrong
-            button#btn-turn.btn.btn-default(type="button" ng-click="displayAll()" ng-show="visible.answerButtons != true") Turn
+            button#btn-turn.btn.btn-default(type="button" ng-click="showAll()" ng-show="visible.answerButtons != true") Turn
             button#btn-right.btn.btn-default(type="button" ng-click="answer(true)" ng-show="visible.answerButtons == true") Right
         #stats(ng-if="visible.stats == true")
           p

@@ -1,5 +1,54 @@
-extends layout
+doctype html
+html(ng-app="memorizy")
+  head
+    block head
+      title= title
+      meta(http-equiv="content-type" content="text/html; charset=UTF-8")
+      link(rel="stylesheet", href="/stylesheets/bootstrap.css")
+      link(rel="stylesheet", href="/stylesheets/bootstrap-theme.css")
+      link(rel="stylesheet", href="/stylesheets/common.css")
+      script(src="/js/lib/jquery-2.0.3.js")
+      script(src="/js/lib/bootstrap.js")
 
-block body
-  div(ng-view)
+      script(src='/js/lib/angular/angular.js')
+      script(src='/js/lib/angular/angular-route.js')
+      script(src='/js/lib/angular/angular-resource.js')
+
+      script(src='/js/app.js')
+
+      script(src='/js/filemanager/FileManager.js')
+      script(src='/js/filemanager/FileManagerCtrl.js')
+      script(src='/js/filemanager/FileManagerProvider.js')
+
+      script(src='/js/filenavigation/FileNavigation.js')
+      script(src='/js/filenavigation/FileNavigationCtrl.js')
+      script(src='/js/filenavigation/FileNavigationProvider.js')
+
+      script(src='/js/deckeditor/DeckEditor.js')
+      script(src='/js/deckeditor/DeckEditorCtrl.js')
+      script(src='/js/deckeditor/DeckEditorProvider.js')
+
+      script(src='/js/deckstudy/DeckStudy.js')
+      script(src='/js/deckstudy/DeckStudyCtrl.js')
+      script(src='/js/deckstudy/DeckStudyModel.js')
+
+      script(src='/js/flashcard/Flashcard.js')
+      script(src='/js/flashcard/FlashcardService.js')
+
+      script(src='/js/focus/Focus.js')
+      script(src='/js/focus/FocusDirective.js')
+      script(src='/js/focus/FocusService.js')
+
+      script(src='/js/keyboard/Keyboard.js')
+      script(src='/js/keyboard/KeyboardDirectives.js')
+
+      script(src='/js/mouse/Mouse.js')
+      script(src='/js/mouse/MouseDirectives.js')
+
+      script(src='/js/contenteditable/ContentEditable.js')
+      script(src='/js/contenteditable/ContentEditableDirective.js')
+
+  body
+    block body 
+      div(ng-view)
 

@@ -1,116 +1,52 @@
 angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
 .controller(
   'DeckStudyCtrl', 
-  function ($scope, $document, DeckStudy) {
-    $scope.studyOpt = {
-     showFirst: 'term'
-    };
+  function ($scope, $document, DeckStudyModel) {
+    DeckStudyModel.init($scope.deck);
 
-    $scope.visible = {
-      term: false,
-      definition: false,
-      answerButtons: false,
-      stats: false
-    };
+    $scope.studyOpt = DeckStudyModel.studyOpt;
+    $scope.visible = DeckStudyModel.visible;
+    $scope.stats = DeckStudyModel.stats;
 
-    $scope.display = function (index) {
-      if (index >= $scope.deck.flashcards.length) {
-        $scope.showStats();
-      }
-      else {
-        $scope.deck.active = index;
-        $scope.visible.answerButtons = false;
-        switch($scope.studyOpt.showFirst) {
-          case 'term':
-            $scope.visible.term = true;
-            $scope.visible.definition = false;
-            break;
-          case 'definition':
-            $scope.visible.term = false;
-            $scope.visible.definition = true;
-            break;
-          case 'random':
-            if (Math.random() < 0.5) {
-              $scope.visible.term = true;
-              $scope.visible.definition = false;
-            }
-            else {
-              $scope.visible.term = false;
-              $scope.visible.definition = true;
-            }
-            break;
-          case 'both':
-            $scope.visible.term = true;
-            $scope.visible.definition = true;
-            $scope.visible.answerButtons = true;
-            break;
-          default:
-            console.log('$scope.studyOpt.visible.First value cannot be handled');
-            break;
-        }
-      }
+    $scope.show = function (index) {
+      DeckStudyModel.show(index);
 
       if ($scope.$root.$$phase !== '$apply' && $scope.$root.$$phase !== '$digest') {
         $scope.$apply();
       }
     };
 
-    $scope.displayAll = function () {
-      $scope.visible.term = true;
-      $scope.visible.definition = true;
-
-      $scope.visible.answerButtons = true;
+    $scope.showAll = function () {
+      DeckStudyModel.showAll();
 
       if ($scope.$root.$$phase !== '$apply' && $scope.$root.$$phase !== '$digest') {
         $scope.$apply();
       }
     };
 
-    $scope.displayNext = function () {
-      $scope.display($scope.deck.active + 1);
+    $scope.showNext = function () {
+      DeckStudyModel.show(DeckStudyModel.deck.active + 1);
+
+      if ($scope.$root.$$phase !== '$apply' && $scope.$root.$$phase !== '$digest') {
+        $scope.$apply();
+      }
     };
 
     $scope.answer = function (correct) {
-      var stats = $scope.stats,
-          c = stats.correct,
-          w = stats.wrong;
-
-      var active = $scope.deck.active;
-
-      stats.answered++;
-
-      if (correct) {
-        c.number++;
-        c.flashcardIds.push(active);
-      }
-      else {
-        w.number++;
-        w.flashcardIds.push(active);
+      var active = DeckStudyModel.deck.active;
+      DeckStudyModel.answer(active.id, correct);
+      if ($scope.$root.$$phase !== '$apply' && $scope.$root.$$phase !== '$digest') {
+        $scope.$apply();
       }
 
-      c.percentage = 100 * c.number / stats.answered;
-      w.percentage = 100 * w.number / stats.answered;
-
-      $scope.displayNext();
+      $scope.showNext();
     };
-
-    $scope.showStats = function () {
-      $scope.visible.stats = true;
-    };
-
-    $scope.updateStats = function () {
-      DeckStudy.updateStats($scope.stats);
-    };
-
-    //$rootScope.$on('end', function (event) {
-      //$scope.showStats();
-    //});
 
     $document.bind('keypress', function (event) {
       var key = event.which || event.keyCode || event.charCode;
       switch (key) {
         case 32: // Space bar
-          $scope.displayAll();
+          $scope.showAll();
           break;
         case 37: // Left arrow, wrong answer
           $scope.answer(false);
@@ -123,6 +59,6 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
       }
     });
 
-    $scope.display(0);
+    $scope.show(0);
   });
 

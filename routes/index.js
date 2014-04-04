@@ -1,6 +1,7 @@
 exports.api = {
   filemanager: require('./filemanager'),
-  deckeditor: require('./deckeditor')
+  deckeditor: require('./deckeditor'),
+  deckstudy: require('./deckstudy')
 };
 
 exports.partials = function (app) {

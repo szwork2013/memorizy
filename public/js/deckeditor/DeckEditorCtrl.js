@@ -1,15 +1,14 @@
 angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
 .controller(
   'DeckEditorCtrl', 
-  function ($scope, DeckEditorService, flashcardService, focusService) {
+  function ($scope, DeckEditorModel, flashcardService, focusService) {
 
     $scope.addFlashcard = function () {
       $scope.deck.flashcards.push({
         deck_id: $scope.deck.id,
         term_text: 'coucou',
         definition_text: 'fez'
-      });
-    };
+      }); };
 
     $scope.updateFlashcard = function () {
 
@@ -60,7 +59,7 @@ angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
       if (!flashcardService.equals(beforeEdit, displayed) && 
           typeof beforeEdit !== 'undefined') {
 
-        DeckEditorService.save(displayed).success(function (data) {
+        DeckEditorModel.save(displayed).success(function (data) {
           console.log('successfuly saved: ', data);      
         })
         .error(function (err) {
@@ -79,15 +78,15 @@ angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
     };
 
     $scope.focusTerm = function () {
-      focus('term');
+      focusService.focus('term');
     };
 
     $scope.focusDefinition = function () {
-      focus('definition');
+      focusService.focus('definition');
     };
 
     function save (flashcard) {
-      return DeckEditorService.save(flashcard); 
+      return DeckEditorModel.save(flashcard); 
     }
 
     if ($scope.deck.flashcards.length <= 0) {

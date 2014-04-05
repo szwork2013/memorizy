@@ -3,6 +3,7 @@ angular.module('memorizy', [
   'memorizy.filenavigation',
   'memorizy.deckeditor',
   'memorizy.deckstudy',
+  'memorizy.flashcard',
   'memorizy.focus',
   'memorizy.keyboard',
   'memorizy.mouse',

@@ -1,5 +1,5 @@
-angular.module('memorizy.deckeditor.DeckEditorProvider', [])
-.provider('DeckEditor', function () {
+angular.module('memorizy.deckeditor.DeckEditorModel', [])
+.provider('DeckEditorModel', function () {
 
   this.$get = ['$http', '$location', function ($http, $location) {
     return {

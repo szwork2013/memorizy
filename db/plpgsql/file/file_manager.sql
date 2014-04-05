@@ -515,30 +515,32 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function update_file_status(_user_id integer, _file_id integer, _percentage_difference integer) returns void as $$
+create or replace function _update_file_status (
+  _user_id integer, _file_id integer, _percentage_difference integer
+) returns void as $$
 declare 
-  _size  integer;
 begin
-  select f.size from files f
-  where f.id = _file_id 
-  into _size;
-
-	-- Update percentages of the file and all of its parents 
+	-- Upsert percentages of the file and all of its parents 
 	with parents as (
     select ancestor_id
 		from file_tree
 		where descendant_id = _file_id 
+  ),
+	u as (
+    update users_files uf
+    set 
+      percentage = 
+        (percentage * f.size + rest_percentage + _percentage_difference) / f.size,
+      rest_percentage = 
+        (percentage * f.size + rest_percentage +  _percentage_difference) % f.size
+    from files f
+    where file_id in (
+      select ancestor_id 
+      from parents
+    ) 
+    and uf.user_id = _user_id
+    and f.id = uf.file_id
   )
-	update users_files
-	set 
-    percentage = 
-      (percentage * _size + rest_percentage + _percentage_difference) / _size,
-    rest_percentage = 
-      (percentage * _size + rest_percentage +  _percentage_difference) % _size
-	where file_id in (
-    select ancestor_id 
-    from parents
-  );
   insert into users_files (
     user_id, 
     file_id, 
@@ -547,14 +549,71 @@ begin
   ) 
   select 
     _user_id, 
-    _file_id, 
-    _percentage_difference / _size, 
-    _percentage_difference % _size
-  where not exists (
+    f.id, 
+    _percentage_difference / f.size, 
+    _percentage_difference % f.size
+  from files f 
+  where f.id in (
+    select ancestor_id 
+    from parents 
+  )
+  and not exists (
     select 1 from users_files 
     where user_id = _user_id and 
     file_id = _file_id
   );
 end;
-$$ language plpgsql
+$$ language plpgsql;
 
+create or replace function _update_file_size (_file_id integer, _size_diff integer)
+returns void as $$
+declare   
+  _new_size   integer;
+begin 
+  select f.size + _size_diff 
+  from files f 
+  where f.id = _file_id 
+  into _new_size;
+
+  with parents as (
+    select ancestor_id
+    from file_tree
+    where descendant_id = _file_id 
+  ),
+  update_percentage_0 as (
+    update users_files uf
+    set 
+      percentage = 0,
+      rest_percentage = 0
+    from files f
+    where file_id in (
+      select ancestor_id 
+      from parents
+    ) 
+    and f.id = uf.file_id
+    and f.size + _size_diff = 0
+  ),
+  update_percentage as (
+    update users_files uf
+    set 
+      percentage = 
+        (percentage * f.size + rest_percentage) / (f.size + _size_diff),
+      rest_percentage = 
+        (percentage * f.size + rest_percentage) % (f.size + _size_diff)
+    from files f
+    where file_id in (
+      select ancestor_id 
+      from parents
+    ) 
+    and f.id = uf.file_id
+    and f.size + _size_diff > 0
+  )
+  update files f
+  set size = size + _size_diff 
+  where f.id in (
+    select ancestor_id 
+    from parents
+  );
+
+end;
+$$ language plpgsql;

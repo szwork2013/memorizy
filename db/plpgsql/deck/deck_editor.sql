@@ -1,43 +1,3 @@
-create or replace
-function get_flashcards (_user_id integer, _file_id integer)
-returns table(id integer, owner_id integer, deck_id integer,
-              term_text text, term_media_id integer, term_media_position integer, 
-              definition_text text, definition_media_id integer,
-              definition_media_position integer, index integer, state_history text)
-as $$
--- TODO return flashcards of all file's decks if the file
--- provided as arguments isn't a deck
-begin
-  return query
-    select    
-      f.id,   
-      f.owner_id,   
-      f.deck_id,   
-      f.term_text::TEXT,   
-      f.term_media_id::INTEGER,   
-      f.term_media_position::INTEGER,   
-      f.definition_text::TEXT,   
-      f.definition_media_id::INTEGER,   
-      f.definition_media_position::INTEGER,   
-      f.index,   
-      coalesce(   
-        uf.state_history,    
-        '00000'    
-      )::TEXT   
-    from   
-      flashcards f left join users_flashcards uf 
-      on f.id = uf.flashcard_id 
-      and _user_id = uf.user_id   
-    where f.deck_id in (
-      select ft.descendant_id
-      from file_tree ft
-      where ft.ancestor_id = _file_id
-    )
-    order by   
-      f.index asc ;
-end;
-$$ language plpgsql;
-
 create or replace 
 function append_flashcard(_owner_id integer, _deck_id integer,
                           _term_text text, _term_media_id integer,
@@ -67,9 +27,7 @@ begin
   )
   returning id into _id;
 
-  update files 
-  set size = size + 1
-  where id = _deck_id;
+  perform _update_file_size(_deck_id, 1);
 
   if _term_media_id is not null or
     _definition_media_id is not null then
@@ -191,9 +149,7 @@ begin
 		using errcode = '22023'; /*invalid_parameter_value*/
   end if;
 
-  update files 
-  set size = size - 1
-  where id = _deck_id;
+  perform _update_file_size(_deck_id, -1);
 end;
 $$ language plpgsql;
 
@@ -226,23 +182,3 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace 
-function update_flashcard_status (_user_id integer, 
-                                  _flashcard_id integer, 
-                                  _last_state char) 
-returns void as $$
-declare
-	state_histories	record;
-begin
-	select update_flashcard_state_history( 
-		user_id, 
-		flashcard_id, 
-		quote_literal(last_state) 
-  ) 
-  into state_histories;
-
-	perform update_file_status(user_id, tmp_status.deck_id, 
-		(select percentage from state_hist_to_percentage where state_hist = state_histories.new) -
-		(select percentage from state_hist_to_percentage where state_hist = state_histories.old));
-end;
-$$ language plpgsql;

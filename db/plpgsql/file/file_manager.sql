@@ -1,67 +1,7 @@
-create or replace function get_file_id(_path text[]) returns integer as $$
-declare
-	_parent_id	integer := 0;
-	_folder		text;
-begin
-	foreach _folder in array _path 
-	loop
-		select descendant_id into _parent_id                                                                                       
-		from file_tree ft                                                                                                         
-		where ft.ancestor_id = _parent_id                                                                                          
-		and dist = 1                                                                                                               
-		and _folder = (                                                                                                            
-			select name                                                                                                        
-			from files                                                                                                         
-			where id = ft.descendant_id                                                                                        
-		);                                                                                                                         
-
-		if not found then
-			raise invalid_parameter_value using message = 'Folder with path "' || array_to_string(_path, '/') || '" not found';
-		end if;
-	end loop;                                                                                                                          
-	return _parent_id;                                                                                                                                            
-end;
-$$ language plpgsql;
-
--- returns the path of a file depending on its id
--- path format is 'folder/subfolder/subsubfolder/...'
-create or replace
-function get_path (_file_id integer) returns text as $$
-declare
-	_path 	text;
-begin
-	select string_agg (sub.name::text, '/'::text)
-	from ( 
-		select * from file_tree ft join files f on ft.ancestor_id = f.id
-		where ft.descendant_id = _file_id
-		and ft.ancestor_id <> 0
-		order by ft.dist desc
-	) as sub
-	into _path;
-
-	return _path;
-end;
-$$ language plpgsql;
-
-create or replace function get_file(_path text[]) returns setof record as $$
-	declare
-	_file_id	integer := 0;
-begin
-	select get_file_id(_path) into _file_id;
-	return query execute 'select id::INTEGER,' ||
-			     'owner_id::INTEGER,' ||
-			     'name::TEXT,' ||
-			     'size::INTEGER,' ||
-			     'type::TEXT ' ||
-			     'from files where id = ' || _file_id;
-end;
-$$ language plpgsql;	
-
-
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
 returns setof record as $$
-begin                                                                                                                                      
+begin
 	if not exists(
 		select 1 from files f 
 		where f.id = _folder_id 
@@ -71,51 +11,51 @@ begin
 		using message = 'Folder with id ' || _folder_id || ' not found';
 	end if;
 
-	-- The path is correct, so we return the last folder found's children                                                              
-	return query execute                                                                                                               
-	'with children_ids as ( ' ||                                                                                               
-			'select descendant_id children_id ' ||                                                                                     
-			'from file_tree ' ||                                                                                                      
-			'where ancestor_id = ' || _folder_id ||                                                                                    
-			' and dist = 1 ' ||                                                                                                        
-			') ' ||                                                                                                                            
+	-- The path is correct, so we return the last folder found's children
+	return query execute
+	'with children_ids as ( ' ||
+			'select descendant_id children_id ' ||
+			'from file_tree ' ||
+			'where ancestor_id = ' || _folder_id ||
+			' and dist = 1 ' ||
+			') ' ||
 	'select f.id::INTEGER, f.owner_id::INTEGER, f.name::TEXT'                     
-	|| ', f.size::INTEGER, f.type::TEXT'                                                                                        
-	|| ', coalesce(uf.percentage, 0)::INTEGER percentage'                                                                              
+	|| ', f.size::INTEGER, f.type::TEXT'
+	|| ', coalesce(uf.percentage, 0)::INTEGER percentage'
 	|| ', coalesce(uf.starred::BOOLEAN, ''f'')'
 	|| ', get_path(coalesce(f.symlink_of, f.id))::TEXT path'
-	|| ' from files f left join users_files'                                                                            
-	|| ' uf on f.id = uf.file_id'                                                                                            
-	|| ' where f.id in (select children_id from children_ids)'                                                                 
+	|| ' from files f left join users_files'
+	|| ' uf on f.id = uf.file_id'
+	|| ' where f.id in (select children_id from children_ids)'
 	|| ' and (uf.user_id = ' || _user_id || ' or uf.user_id is null)'
-	|| ' order by type desc, name asc';                                                                              
+	|| ' order by type desc, name asc';
 end;                                                                  
 $$ language plpgsql;
 
 create or replace 
 function get_folder_content (_user_id integer, _path text[]) 
 returns setof record as $$
-declare                                                                                                                                    
-	_file_id	integer := 0;                                                                                                      
-begin                                                                                                                                      
+declare
+	_file_id	integer := 0;
+begin
 	select get_file_id(_path) into _file_id;
 
-	-- The path is correct, so we return the last folder found's children                                                              
-	return query execute                                                                                                               
-	'with children_ids as ( ' ||                                                                                               
-			'select descendant_id children_id ' ||                                                                                     
-			'from file_tree ' ||                                                                                                      
-			'where ancestor_id = ' || _file_id ||                                                                                    
-			' and dist = 1 ' ||                                                                                                        
-			') ' ||                                                                                                                            
+	-- The path is correct, so we return the last folder found's children
+	return query execute
+	'with children_ids as ( ' ||
+			'select descendant_id children_id ' ||
+			'from file_tree ' ||
+			'where ancestor_id = ' || _file_id ||
+			' and dist = 1 ' ||
+			') ' ||
 	'select f.id, f.owner_id, f.name::TEXT'                     
-	|| ', f.size, f.type'                                                                                        
-	|| ', coalesce(uf.percentage, 0) percentage'                                                                              
-	|| ' from files f left join users_files'                                                                            
-	|| ' uf on f.id = uf.file_id'                                                                                            
-	|| ' where f.id in (select children_id from children_ids)'                                                                 
+	|| ', f.size, f.type'
+	|| ', coalesce(uf.percentage, 0) percentage'
+	|| ' from files f left join users_files'
+	|| ' uf on f.id = uf.file_id'
+	|| ' where f.id in (select children_id from children_ids)'
 	|| ' and (uf.user_id = ' || _user_id || ' or uf.user_id is null)'
-	|| ' order by type desc, name asc';                                                                              
+	|| ' order by type desc, name asc';
 end;                                                                  
 $$ language plpgsql;
 
@@ -519,39 +459,6 @@ begin
 		-- )
 		and ancestor_id = _file_id
 	);
-end;
-$$ language plpgsql;
-
--- TODO Try it
-create or replace
-function get_file_tree (_user_id integer, 
-                        _excluded_folder_id integer)
-returns setof record as $$
-begin
-     return query execute
-        'select f.id, f.name, f.type, ft.ancestor_id,' +
-        'get_path(f.id) as path' +
-        ' from files f join file_tree ft' +
-        ' on f.id = ft.descendant_id' +
-        ' where f.id in (' +
-            -- search <rootFolder> root folder's subfolder
-            -- with _excluded_folder_id and its children
-            -- excluded
-            'select descendant_id from file_tree ft2' +
-            ' where ft2.ancestor_id = (' + 
-                -- search the root folder which is named <rootFolder> 
-                'select f2.id from files f2' +
-                ' where f2.name = $1 and f2.id in (' +
-                    -- get user root folders
-                    'select descendant_id from file_tree ft3' + 
-                    ' where ft3.ancestor_id = 0 and ft3.dist = 1' + 
-                ')' + 
-            ') and not exists (' +
-                'select 1 from file_tree ft3 ' +
-                'where ft3.descendant_id = ft2.descendant_id ' +
-                'and ft3.ancestor_id = _excluded_folder_id' +
-            ')' +
-        ') and dist = 1 and type = ''folder''';
 end;
 $$ language plpgsql;
 

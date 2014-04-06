@@ -61,15 +61,14 @@
     li
       a#mi-edit(tabindex="-1" ng-href="{{contextMenu.editUrl}}") Edit  
     li
-      a#mi-rename(tabindex="-1" href="#" ng-click="showRenameModal()") Rename
+      a#mi-rename(tabindex="-1" href="#" data-toggle="modal" data-target="#rename-file-modal") Rename
     li
-      a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal" ng-click="showMoveModal()") Move 
+      a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal") Move 
     li
-      a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal" ng-click="showCopyModal()") Copy
+      a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal") Copy
     li
-      a#mi-delete(tabindex="-1" href="#" ng-click="deleteFile(contextMenu.file)") Delete
+      a#mi-delete(tabindex="-1" href="#" ng-click="deleteFile(selected)") Delete
 
-//- Modal
 .modal.fade(id="new-file-modal" role="dialog" aria-labelledby="Create a new file" aria-hidden="true")
   .modal-dialog
     .modal-content
@@ -89,3 +88,19 @@
       .modal-footer
         button(type="button" class="btn btn-default" data-dismiss="modal") Close
         button.create-file(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="addFile()") Create 
+
+.modal.fade(id="rename-file-modal" role="dialog" aria-labelledby="Rename" aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
+        h4.modal-title#id="Rename"
+      .modal-body
+        form(role="form")
+          .form-group
+            label(for="filename-input") Filename
+            input#filename-input.form-control(type="text" placeholder="Enter a filename" ng-model="renameModal.filename" autofocus)
+
+      .modal-footer
+        button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
+        button.create-file(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="renameFile(selected, renameModal.filename)") Rename

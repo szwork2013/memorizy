@@ -7,7 +7,9 @@ function sendFolderContent (req, res, folder) {
   .then(function(rows){
     folder.type = 'folder';
     folder.files = rows;
-    res.json(folder);
+    res.json({
+      file: folder,
+    });
   }).catch(function(err){
     console.log(err);
     res.send(404);
@@ -19,7 +21,9 @@ function sendDeckFlashcards (req, res, deck) {
   fileManager.getFileFlashcards(2, deck.id).then(function (flashcards) {
     deck.flashcards = flashcards;
     deck.type = 'deck';
-    res.json(deck);
+    res.json({
+      file: deck
+    });
   }).catch(function (err) {
     console.log(err);
     res.send(404);
@@ -60,6 +64,20 @@ module.exports = function (app) {
 		}).catch(function(err){
 			console.log(err);
 		}).done();
+  });
+
+  app.post('/api/:username/:subfolders?*', function (req, res, next) {
+    if (req.query.action !== 'renameFile') { return next(); }
+
+    var newName = req.body.newName;
+    var fileId = req.body.fileId;
+    
+    fileManager.renameFile(2, fileId, newName).then(function () {
+      res.send(204);
+    }).catch(function (err) {
+      console.log(err);
+      res.send(400);
+    });
   });
 
   app.delete('/api/:username/:subfolders?*', function (req, res, next) {

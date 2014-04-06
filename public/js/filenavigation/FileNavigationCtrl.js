@@ -2,14 +2,22 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
 .controller('FileNavigationCtrl', 
   function ($document, $scope, $http, $location, FileNavigation) {
 
-    $scope.newFile = {};
+    $scope.newFile = {}; 
     $scope.newFile.parentId = $scope.folder.id;
     $scope.newFile.type = 'folder' ;
     $scope.contextMenu = {
       left: 0,
       top: 0,
-      visible: false
+      visible: false,
     };
+    $scope.selected = {};
+    $scope.renameModal = {
+      filename: ''
+    };
+
+    if (!$scope.$$phase) {
+      $scope.$apply();
+    }
 
     $scope.addFile = function () {
       FileNavigation.addFile($scope.newFile).success(function (file) {
@@ -37,6 +45,12 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
       $scope.folder.files.splice(file.index, 1);
     };
 
+    $scope.renameFile = function (file, newName) {
+      FileNavigation.renameFile(file, newName);
+      $scope.selected.name = newName;
+      $scope.renameModal.filename = '';
+    };
+
     $scope.showContextMenu = function (event) {
       // The table contains th tags which should 
       // not display a context menu on right click
@@ -47,11 +61,13 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
       //$scope.contextMenu.visible = true;
 
       var fileIdx = event.target.parentNode.dataset.index;
-      $scope.contextMenu.file = $scope.folder.files[fileIdx];
-      $scope.contextMenu.file.index = fileIdx;
-
-      console.log('$scope.contextMenu.file = ', $scope.contextMenu.file);
-
+      var file = $scope.folder.files[fileIdx];
+      $scope.selected = file;
+      $scope.selected.index = fileIdx;
+      $scope.contextMenu.studyUrl = 
+        $location.path() + '/' + file.name + '?action=study';
+      $scope.contextMenu.editUrl = 
+        $location.path() + '/' + file.name + '?action=edit';
 
       $('#contextMenu').css({
         display: 'block',

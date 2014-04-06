@@ -32,35 +32,49 @@ begin
 end;
 $$ language plpgsql;	
 
--- TODO Try it
 create or replace
-function get_file_tree (_user_id integer, 
-                        _excluded_folder_id integer)
-returns setof record as $$
+function get_file_tree (_user_id integer)
+returns table (id integer, name text, type text, ancestor_id integer)
+as $$
 begin
-     return query execute
-        'select f.id, f.name, f.type, ft.ancestor_id,' +
-        'get_path(f.id) as path' +
-        ' from files f join file_tree ft' +
-        ' on f.id = ft.descendant_id' +
-        ' where f.id in (' +
-            -- search <rootFolder> root folder's subfolder
-            -- with _excluded_folder_id and its children
-            -- excluded
-            'select descendant_id from file_tree ft2' +
-            ' where ft2.ancestor_id = (' + 
-                -- search the root folder which is named <rootFolder> 
-                'select f2.id from files f2' +
-                ' where f2.name = $1 and f2.id in (' +
-                    -- get user root folders
-                    'select descendant_id from file_tree ft3' + 
-                    ' where ft3.ancestor_id = 0 and ft3.dist = 1' + 
-                ')' + 
-            ') and not exists (' +
-                'select 1 from file_tree ft3 ' +
-                'where ft3.descendant_id = ft2.descendant_id ' +
-                'and ft3.ancestor_id = _excluded_folder_id' +
-            ')' +
-        ') and dist = 1 and type = ''folder''';
+  return query 
+    with username as (
+      select u.name 
+      from users u 
+      where u.id = _user_id
+    ), user_root_folder as (
+      select f.id, f.name 
+      from files f
+      where f.name = (
+        select u.name 
+        from username u
+      ) 
+      and exists (
+        select 1 from file_tree ft 
+        where ft.descendant_id = f.id 
+        and ft.ancestor_id = 0 
+        and ft.dist = 1
+      )
+    ), descendants as (
+      select ft.descendant_id
+      from file_tree ft 
+      where ft.ancestor_id = (
+        select urf.id 
+        from user_root_folder urf 
+      )
+    )
+    select 
+      f.id,
+      f.name::TEXT, 
+      f.type::TEXT,
+      ft.ancestor_id
+    from files f join file_tree ft
+    on f.id = ft.descendant_id
+    where ft.descendant_id in (
+      select descendant_id 
+      from descendants 
+    )
+    and ft.dist = 1 
+    and f.type = 'folder';
 end;
 $$ language plpgsql;

@@ -7,7 +7,7 @@
 
   br
 
-  table#file-list.table.table-hover.table-condensed
+  table#file-list.table.table-hover.table-condensed(ng-right-click="showContextMenu($event)")
     thead
       tr
         th.star
@@ -50,28 +50,24 @@
           {{file.percentage}}%
         td.file-id
           {{file.id}}
-        td.delete(ng-click="removeFile($index)") Delete
       
-      //-include ../includes/mixins/file-row
-      //-each val in files
-        //-+file-row(val)
 #content-right
   #file-details
 
-//-#contextMenu.dropdown.clearfix
-  //-ul.dropdown-menu(role="menu" aria-labelledby="dropdownMenu" style="display:{{contextMenu.display}};position:static;margin-bottom:5px;left:{{contextMenu.left}};top:{{contextMenu.top}};")
-    //-li
-      //-a#mi-study(tabindex="-1" href="#") Study
-    //-li
-      //-a#mi-edit(tabindex="-1" href="#") Edit  
-    //-li
-      //-a#mi-rename(tabindex="-1" href="#") Rename
-    //-li
-      //-a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal") Move 
-    //-li
-      //-a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal") Copy
-    //-li
-      //-a#mi-delete(tabindex="-1" href="#") Delete
+#contextMenu.dropdown.clearfix
+  ul.dropdown-menu(role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;")
+    li
+      a#mi-study(tabindex="-1" ng-href="{{contextMenu.studyUrl}}") Study
+    li
+      a#mi-edit(tabindex="-1" ng-href="{{contextMenu.editUrl}}") Edit  
+    li
+      a#mi-rename(tabindex="-1" href="#" ng-click="showRenameModal()") Rename
+    li
+      a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal" ng-click="showMoveModal()") Move 
+    li
+      a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal" ng-click="showCopyModal()") Copy
+    li
+      a#mi-delete(tabindex="-1" href="#" ng-click="deleteFile(contextMenu.file)") Delete
 
 //- Modal
 .modal.fade(id="new-file-modal" role="dialog" aria-labelledby="Create a new file" aria-hidden="true")

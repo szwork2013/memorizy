@@ -15,9 +15,13 @@ angular.module('memorizy.filenavigation.FileNavigationProvider', [])
         return $http.put('/api' + $location.path() + '/' + file.name, file);
       },
 
-      removeFile: function (file) {
-        return $http.delete('/api' + $location.path() + '/' + file.name, 
-                            { params: {fileId: file.id } });
+      deleteFile: function (file) {
+        return $http.delete('/api' + $location.path() + '/' + file.name, { 
+          params: {
+            action: 'deleteFile',
+            fileId: file.id 
+          } 
+        });
       }
     };
   }];

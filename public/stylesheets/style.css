@@ -75,9 +75,6 @@ button#new-folder {
 .file-id {
   display: none;
 }
-.dropdown-menu {
-  text-align: left;
-}
 #file-details {
   width: 100%;
 }
@@ -85,6 +82,9 @@ button#new-folder {
   position: absolute;
   display: none;
 }
+/*.dropdown-menu {*/
+/*text-align: left;*/
+/*}*/
 /* Remove border around focused text/input boxes */
 *:focus {
   outline: none;

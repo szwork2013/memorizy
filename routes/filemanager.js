@@ -66,6 +66,8 @@ module.exports = function (app) {
     if (req.query.action !== 'deleteFile') {
       return next();
     }
+    
+    console.log('delete file ' + req.query.fileId);
 		fileManager.deleteFile(/*req.user.id*/2, parseInt(req.query.fileId)).then(function (val) {
 			res.json({
 				id: val,

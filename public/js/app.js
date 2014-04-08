@@ -8,6 +8,7 @@ angular.module('memorizy', [
   'memorizy.keyboard',
   'memorizy.mouse',
   'memorizy.contenteditable',
+  'memorizy.encodeURI',
 
   /* Misc */
   'ngRoute'
@@ -30,5 +31,8 @@ angular.module('memorizy', [
   });
 
   $locationProvider.html5Mode(true);
+})
+.run(function ($rootScope, $location) {
+  $rootScope.$location = $location; 
 });
 

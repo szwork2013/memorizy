@@ -51,6 +51,21 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
       $scope.renameModal.filename = '';
     };
 
+    $scope.moveFile = function (src, dest) {
+      console.log('move file');
+      FileNavigation.moveFile(src, dest);
+    };
+
+    $scope.getFileTree = function () {
+      FileNavigation.getFileTree().success(function (tree) {
+        console.log('tree = ', tree);
+        $scope.tree = tree; 
+      })
+      .error(function (err) {
+        console.log(err); 
+      });
+    };
+
     $scope.showContextMenu = function (event) {
       // The table contains th tags which should 
       // not display a context menu on right click

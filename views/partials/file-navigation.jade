@@ -1,5 +1,5 @@
 #content-left
-  #path(path)
+  //-#path(path)
   //-include ../includes/path
   
   #action-bar
@@ -28,7 +28,7 @@
           span.glyphicon.glyphicon-file(ng-if="file.type == 'deck'")
           //-span.glyphicon.glyphicon-file
         td.filename
-          a(href="{{file.path}}")
+          a(ng-href="{{$location.path()}}/{{file.name | encodeURI}}")
             {{file.name}}
         td.study-mode
           .btn-group
@@ -57,13 +57,13 @@
 #contextMenu.dropdown.clearfix
   ul.dropdown-menu(role="menu" aria-labelledby="dropdownMenu" style="display:block;position:static;margin-bottom:5px;")
     li
-      a#mi-study(tabindex="-1" ng-href="{{contextMenu.studyUrl}}") Study
+      a#mi-study(tabindex="-1" ng-href="{{contextMenu.studyUrl | encodeURI}}") Study
     li
-      a#mi-edit(tabindex="-1" ng-href="{{contextMenu.editUrl}}") Edit  
+      a#mi-edit(tabindex="-1" ng-href="{{contextMenu.editUrl | encodeURI}}") Edit  
     li
       a#mi-rename(tabindex="-1" href="#" data-toggle="modal" data-target="#rename-file-modal") Rename
     li
-      a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal") Move 
+      a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal" ng-click="getFileTree()") Move 
     li
       a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal") Copy
     li
@@ -104,3 +104,21 @@
       .modal-footer
         button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
         button.create-file(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="renameFile(selected, renameModal.filename)") Rename
+
+.modal.fade(id="move-file-modal" role="dialog" aria-labelledby="Move to" aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
+        h4.modal-title#id="Move to"
+      .modal-body
+        div.ft
+          div.ft-row(ng-repeat="file in tree" ng-click="tree.selected = file")
+            div.ft-data.ft-selected
+              span.glyphicon.glyphicon-ok(ng-if="file.id == tree.selected.id")
+            div.ft-data
+              {{file.name}}
+
+      .modal-footer
+        button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
+        button.move-file(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="moveFile(selected, tree.selected)") Move

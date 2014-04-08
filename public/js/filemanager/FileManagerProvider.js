@@ -3,7 +3,9 @@ angular.module('memorizy.filemanager.FileManagerProvider', [])
   this.$get = ['$http', '$location', function ($http, $location) {
     return {
       getAll: function () {
-        return $http.get('/api' + $location.path());
+        return $http.get('/api' + $location.path(), {
+          params: { action: 'getAll' }
+        });
       }
     };
   }];

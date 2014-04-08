@@ -82,6 +82,15 @@ button#new-folder {
   position: absolute;
   display: none;
 }
+.ft-row:hover {
+  background-color: lightgrey;
+}
+.ft-data {
+  display: inline-block;
+}
+.ft-selected {
+  width: 1em;
+}
 /*.dropdown-menu {*/
 /*text-align: left;*/
 /*}*/

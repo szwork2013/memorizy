@@ -3,12 +3,20 @@ angular.module('memorizy.filenavigation.FileNavigationProvider', [])
 
   this.$get = ['$http', '$location', function ($http, $location) {
     return {
-      getAll: function () {
-        return $http.get('/api' + $location.path());
+      //getAll: function () {
+        //return $http.get('/api' + $location.path());
+      //},
+
+      getFileTree: function () {
+        return $http.get('/api' + $location.path(), {
+          params: { action: 'getFileTree' } 
+        });
       },
 
       addFile: function (file) {
-        return $http.put('/api' + $location.path() + '/' + file.name, file);
+        return $http.put('/api' + $location.path() + '/' + file.name, file, {
+          params: { action: 'createFile' }
+        });
       },
 
       updateFile: function (file) {
@@ -23,6 +31,16 @@ angular.module('memorizy.filenavigation.FileNavigationProvider', [])
           params: { 
             action: 'renameFile'
           }
+        });
+      },
+
+      moveFile: function (src, dest) {
+        // should fix the url
+        return $http.put('/api' + $location.path() + '/' + src.name, {
+          src: src.id,
+          dest: dest.id 
+        }, {
+          params: { action: 'moveFile' }
         });
       },
 

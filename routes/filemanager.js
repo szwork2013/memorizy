@@ -32,7 +32,11 @@ function sendDeckFlashcards (req, res, deck) {
 }
 
 module.exports = function (app) {
-  app.get('/api/:username/:subfolders?*', function (req, res) {
+  app.get('/api/:username/:subfolders?*', function (req, res, next) {
+    if (req.query.action !== 'getAll') {
+      return next();
+    }
+
     fileManager.getFileByPath(req.path.slice('/api'.length))
     .then(function (file) {
       if (file.type === 'folder') {
@@ -51,7 +55,25 @@ module.exports = function (app) {
     .done();
   });
 
-  app.put('/api/:username/:subfolders?*', function (req, res) {
+  app.get('/api/:username/:subfolders?*', function (req, res, next) {
+    if (req.query.action !== 'getFileTree') {
+      return next();
+    }
+    
+    fileManager.getFileTree(2).then(function (tree) {
+      res.json(tree);
+    })
+    .catch(function (err) {
+      console.log(err);
+      res.send(404);
+    });
+  });
+
+  app.put('/api/:username/:subfolders?*', function (req, res, next) {
+    if (req.query.action !== 'createFile') {
+      return next();
+    }
+
     var file = req.body;
     file.path = req.path.slice('/api'.length);
 		fileManager.createFile(2 /*req.user.id*/, file).then(function (val) {
@@ -64,6 +86,21 @@ module.exports = function (app) {
 		}).catch(function(err){
 			console.log(err);
 		}).done();
+  });
+
+  app.put('/api/:username/:subfolders?*', function (req, res, next) {
+    if (req.query.action !== 'moveFile') {
+      return next();
+    }
+
+    fileManager.moveFile(2, req.body.src, req.body.dest).then(function () {
+      res.send(204);
+    })
+    .catch(function (err) {
+      console.log(err);
+      res.send(404);
+    });
+
   });
 
   app.post('/api/:username/:subfolders?*', function (req, res, next) {

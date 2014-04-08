@@ -12,7 +12,8 @@ FileManager.prototype.getFileByPath = function (path) {
     return q.reject('path = ' + path + ' (expected a string)');
   }
 
-  path = this.getArrayablePGPath(path);
+  path = this.getArrayablePGPath(decodeURI(path));
+  console.log(path);
 
   return db.executePreparedStatement({
     name : 'getFileByPath',
@@ -123,36 +124,18 @@ FileManager.prototype.getArrayablePGPath = function (path) {
  * @param {string} rootFolder
  * @return {Array.<Object>}
  */
-FileManager.prototype.getFileTree = function (userId, rootFolder) {
+FileManager.prototype.getFileTree = function (userId) {
   // TODO Use pl/pgsql function instead
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
-  if (typeof rootFolder !== 'string') {
-    return q.reject('rootFolder = ' + rootFolder + ' (expected a string)');	
-  }
+
+  console.log('getting file tree');
 
   return db.executePreparedStatement({
     name: 'getFileTree',
-    // get every info about all user's files
-    text: 'select f.id, f.filename, f.type, ft.ancestor_id,' +
-      'get_path(f.id) as path' +
-      ' from files f join file_tree ft' +
-      ' on f.id = ft.descendant_id' +
-      ' where f.id in (' +
-      // search <rootFolder> root folder's subfolder
-      'select descendant_id from file_tree ft2' +
-      ' where ft2.ancestor_id = (' + 
-      // search the root folder which is named <rootFolder> 
-      'select f2.id from files f2' +
-      ' where f2.filename = $1 and f2.id in (' +
-      // get user root folders
-      'select descendant_id from file_tree ft3' + 
-      ' where ft3.ancestor_id = 0 and ft3.dist = 1' + 
-      ')' + 
-      ')' + 
-      ') and dist = 1 and type = \'folder\'',
-    values: [rootFolder]
+    text: 'select * from get_file_tree($1)', 
+    values: [ userId ]
   }).then(function (result) {
     console.log(result.rows);
     return result.rows;

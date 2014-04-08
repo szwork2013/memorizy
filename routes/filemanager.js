@@ -88,13 +88,31 @@ module.exports = function (app) {
 		}).done();
   });
 
-  app.put('/api/:username/:subfolders?*', function (req, res, next) {
+  app.post('/api/:username/:subfolders?*', function (req, res, next) {
     if (req.query.action !== 'moveFile') {
       return next();
     }
 
     fileManager.moveFile(2, req.body.src, req.body.dest).then(function () {
       res.send(204);
+    })
+    .catch(function (err) {
+      console.log(err);
+      res.send(404);
+    });
+
+  });
+
+  app.post('/api/:username/:subfolders?*', function (req, res, next) {
+    if (req.query.action !== 'copyFile') {
+      return next();
+    }
+
+    fileManager.copyFile(2, req.body.src, req.body.dest).then(function (id) {
+      console.log('send id ' + id);
+      res.json({
+        fileId: id
+      });
     })
     .catch(function (err) {
       console.log(err);

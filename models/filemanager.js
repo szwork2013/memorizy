@@ -317,11 +317,13 @@ FileManager.prototype.copyFile = function (userId, src, dest) {
     return q.reject('dest must be a number');
   }
 
-  // TODO Should return the id of the copy
   return db.executePreparedStatement({
     name: 'copyFile',
     text: 'select copy_file($1, $2, $3)',
     values: [ userId, src, dest ]
+  }).then(function (result) {
+    console.log('result ' , result.rows[0].copy_file);
+    return result.rows[0].copy_file; // new file's id
   });
 };
 

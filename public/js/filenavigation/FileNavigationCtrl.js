@@ -52,8 +52,16 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
     };
 
     $scope.moveFile = function (src, dest) {
-      console.log('move file');
       FileNavigation.moveFile(src, dest);
+    };
+
+    $scope.copyFile = function (src, dest) {
+      FileNavigation.copyFile(src, dest).success(function (id) {
+        console.log('copy id: ' + id);
+      })
+      .error(function (err) {
+        console.log(err);
+      });
     };
 
     $scope.getFileTree = function () {

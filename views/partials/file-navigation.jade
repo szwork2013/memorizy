@@ -65,7 +65,7 @@
     li
       a#mi-move(tabindex="-1" href="#" data-toggle="modal" data-target="#move-file-modal" ng-click="getFileTree()") Move 
     li
-      a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal") Copy
+      a#mi-copy(tabindex="-1" href="#" data-toggle="modal" data-target="#copy-file-modal" ng-click="getFileTree()") Copy
     li
       a#mi-delete(tabindex="-1" href="#" ng-click="deleteFile(selected)") Delete
 
@@ -122,3 +122,21 @@
       .modal-footer
         button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
         button.move-file(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="moveFile(selected, tree.selected)") Move
+
+.modal.fade(id="copy-file-modal" role="dialog" aria-labelledby="Move to" aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
+        h4.modal-title#id="Copy to"
+      .modal-body
+        div.ft
+          div.ft-row(ng-repeat="file in tree" ng-click="tree.selected = file")
+            div.ft-data.ft-selected
+              span.glyphicon.glyphicon-ok(ng-if="file.id == tree.selected.id")
+            div.ft-data
+              {{file.name}}
+
+      .modal-footer
+        button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
+        button.copy-file(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="copyFile(selected, tree.selected)") Copy

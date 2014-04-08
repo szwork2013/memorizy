@@ -355,7 +355,7 @@ $$ language plpgsql;
 
 create or replace 
 function copy_file (_user_id integer, _file_id integer, _parent_id integer) 
-returns void as $$
+returns integer as $$
 declare
 	_cpt			integer;
 	_new_subtree_head	integer;
@@ -408,8 +408,27 @@ begin
 	),
 	flashcard_copies as (
 		-- Copy flashcards to copied decks
-		insert into flashcards(owner_id, deck_id, index, term, definition)
-		select _user_id, c1.id, f1.index, f1.term, f1.definition
+		insert into flashcards(
+      owner_id, 
+      deck_id, 
+      index, 
+      term_text, 
+      term_media_id, 
+      term_media_position, 
+      definition_text,
+      definition_media_id,
+      definition_media_position
+    )
+		select 
+      _user_id, 
+      c1.id, 
+      f1.index, 
+      f1.term_text, 
+      f1.term_media_id, 
+      f1.term_media_position, 
+      f1.definition_text,
+      f1.definition_media_id,
+      f1.definition_media_position
 		from file_copies c1 join flashcards f1 on c1.copy_of = f1.deck_id
 		where c1.type = 'deck' 
 	)
@@ -423,6 +442,7 @@ begin
 	WHERE subtree.ancestor_id = _new_subtree_head
 	AND supertree.descendant_id = _parent_id;
 
+  return _new_subtree_head;
 end;
 $$ language plpgsql;
 

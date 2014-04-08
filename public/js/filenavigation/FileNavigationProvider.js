@@ -36,11 +36,21 @@ angular.module('memorizy.filenavigation.FileNavigationProvider', [])
 
       moveFile: function (src, dest) {
         // should fix the url
-        return $http.put('/api' + $location.path() + '/' + src.name, {
+        return $http.post('/api' + $location.path() + '/' + src.name, {
           src: src.id,
           dest: dest.id 
         }, {
           params: { action: 'moveFile' }
+        });
+      },
+
+      copyFile: function (src, dest) {
+        // should fix the url
+        return $http.post('/api' + $location.path() + '/' + src.name, {
+          src: src.id,
+          dest: dest.id 
+        }, {
+          params: { action: 'copyFile' }
         });
       },
 

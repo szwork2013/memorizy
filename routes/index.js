@@ -12,6 +12,10 @@ exports.partials = function (app) {
   });
 };
 
+exports.login = function (app) {
+  require('./login')(app);
+};
+
 exports.index = function (app) {
   app.get('*', function (req, res) {
     console.log('render index');

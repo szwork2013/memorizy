@@ -16,6 +16,12 @@ html(ng-app="memorizy")
 
       script(src='/js/app.js')
 
+      script(src='/js/login/Login.js')
+      script(src='/js/login/LoginCtrl.js')
+      script(src='/js/login/LoginModel.js')
+
+      script(src='/js/auth/http-auth-interceptor.js')
+
       script(src='/js/filemanager/FileManager.js')
       script(src='/js/filemanager/FileManagerCtrl.js')
       script(src='/js/filemanager/FileManagerProvider.js')
@@ -52,5 +58,62 @@ html(ng-app="memorizy")
       script(src='/js/encodeURI/encodeURIFilter.js')
   body
     block body 
-      div(ng-view)
+      nav.navbar.navbar-default.navbar-fixed-top(role="navigation")
+        .container
+          .navbar-header
+            a.navbar-brand(href="#") Memorizy
+          .collapse.navbar-collapse#bs-example-navbar-collapse-1
+            ul.nav.navbar-nav
+              li.active
+                a(href="#") Home
+              li
+                a(href="#") Starred
+              li
+                a(href="#") Calendar
+              li
+                a(href="#") Discover 
+              li.dropdown
+                a(href="#" class="dropdown-toggle" data-toggle="dropdown") Dropdown
+                  b.caret
+                ul.dropdown-menu
+                  li
+                    a(href="#") Action
+                  li
+                    a(href="#") Another action
+                  li
+                    a(href="#") Something else here
+                  li.divider
+                  li
+                    a(href="#") Separated link
+                  li.divider
+                  li
+                    a(href="#") One more separated link
+
+              form.navbar-form.navbar-left(role="search")
+                .form-group
+                  input.form-control(type="text" placeholder="Search")
+                button.btn.btn-default(type="submit") Submit
+
+              ul.nav.navbar-nav.navbar-right
+                li
+                  a(href="#") Link
+                li.dropdown
+                  a.dropdown-toggle(href="#" data-toggle="dropdown") Dropdown
+                    b.caret
+                  ul.dropdown-menu
+                    li
+                      a(href="#") Action
+                    li
+                      a(href="#") Another action
+                    li
+                      a(href="#") Something else here
+                    li.divider
+                    li
+                      a(href="#") Separated link
+
+
+    
+    div(style="padding-top: 70px;")
+      div(ng-view ng-if="user")
+      div(ng-if="!user" ng-include="'/partials/login'" ng-controller="LoginCtrl")
 

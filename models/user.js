@@ -12,7 +12,7 @@ User.prototype.getUserById = function (id) {
 
   return db.executePreparedStatement({
     name : 'getUserById',
-    text : 'select * from Users where id = $1',
+    text : 'select * from users where id = $1',
     values : [ id ]
   }).then(function (res) {
     if (res.rows.length !== 1) {
@@ -22,9 +22,9 @@ User.prototype.getUserById = function (id) {
   });
 };
 
-User.prototype.authenticateUser = function (Username, password) {
-  if (typeof Username !== 'string') {
-    return q.reject(new Error('Username = ' + Username + 
+User.prototype.authenticateUser = function (username, password) {
+  if (typeof username !== 'string') {
+    return q.reject(new Error('username = ' + username + 
                               ' (expected a string)'));
   }
 
@@ -35,9 +35,9 @@ User.prototype.authenticateUser = function (Username, password) {
 
   return db.executePreparedStatement({
     name : 'authenticateUser',
-    text : 'select * from Users where Username = $1 ' +
+    text : 'select u.id, u.name from users u where name = $1 ' +
       'and password = $2',
-    values : [ Username, password ]
+    values : [ username, password ]
   }).then(function (res) {
     if (res.rows.length !== 1) {
       throw new Error('Authentication failed');

@@ -1,6 +1,6 @@
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
-returns table (id integer, owner_id integer, name text, size integer, type text, 
+returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
                percentage integer, starred boolean, study_mode integer)
 as $$
 begin
@@ -24,14 +24,17 @@ begin
     select 
       f.id::INTEGER, 
       f.owner_id::INTEGER, 
+      u.name::TEXT owner_name, 
       f.name::TEXT, 
       f.size::INTEGER, 
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
       coalesce(uf.starred::BOOLEAN, 'f'), 
       coalesce(uf.study_mode::INTEGER, 1)
-    from files f left join users_files uf 
-    on f.id = uf.file_id 
+    from 
+      files f 
+      left join users_files uf on f.id = uf.file_id 
+      join users u on f.owner_id = u.id
     where f.id in (
       select children_id 
       from children_ids
@@ -43,7 +46,7 @@ $$ language plpgsql;
 
 create or replace 
 function get_folder_content (_user_id integer, _path text[]) 
-returns table (id integer, owner_id integer, name text, size integer, type text, 
+returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
                percentage integer, starred boolean, study_mode integer)
 as $$
 declare

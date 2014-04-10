@@ -37,9 +37,9 @@
               span.caret
             ul.dropdown-menu(role="menu")
               li(role="presentation" ng-repeat="mode in studyModes")
-                a(role="menuitem" href="#" ng-bind="mode") 
+                a(role="menuitem" href="#" ng-bind="mode" ng-click="file.study_mode = $index + 1") 
         td.owner
-          {{file.owner_id}}
+          {{file.owner_name}}
         td.size
           {{file.size}}
         td.percentage

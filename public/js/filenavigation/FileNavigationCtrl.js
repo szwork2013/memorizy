@@ -101,6 +101,17 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
       return false;
     };
 
+    $scope.studyModes = [
+      'Classic',
+      'Hardest to easiest',
+      'Least studied',
+      'Wrongs'
+    ];
+
+    $scope.stringifyStudyMode = function (studyModeId) {
+      return $scope.studyModes[studyModeId - 1];
+    };
+
     $document.on('click', function () {
       $('#contextMenu').hide();
     });

@@ -33,15 +33,11 @@
         td.study-mode
           .btn-group
             a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
-              | Action
+              | {{stringifyStudyMode(file.study_mode)}}
               span.caret
             ul.dropdown-menu(role="menu")
-              li(role="presentation")
-                a(role="menuitem" href="#") Classic
-              li(role="presentation")
-                a(role="menuitem" href="#") Random
-              li(role="presentation")
-                a(role="menuitem" href="#") Hardest to easiest
+              li(role="presentation" ng-repeat="mode in studyModes")
+                a(role="menuitem" href="#" ng-bind="mode") 
         td.owner
           {{file.owner_id}}
         td.size

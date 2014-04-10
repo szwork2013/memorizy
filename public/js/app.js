@@ -1,4 +1,5 @@
 angular.module('memorizy', [
+  'memorizy.navbar',
   'memorizy.login',
   'memorizy.filemanager',
   'memorizy.filenavigation',

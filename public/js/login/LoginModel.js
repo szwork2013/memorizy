@@ -13,6 +13,12 @@ angular.module('memorizy.login.LoginModel', [])
             $localStorage.user = data.user;
             $localStorage.token = data.token;
           });
+        },
+
+        logout: function () {
+          $localStorage.$reset();
+          $location.path('/');
+          $rootScope.user = null;
         }
       };
   }];

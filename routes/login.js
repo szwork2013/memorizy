@@ -11,6 +11,11 @@ module.exports = function(app){
       then(function (row) {
         user = row; 
 
+        if (user.enabled === false) {
+          res.send(401, 'The account is not activated');
+          return;
+        }
+
         // We are sending the profile inside the token
         var token = jwt.sign(user, 'hello world !', { expiresInMinutes: 259200 /* 6 months */ });
         res.json({ user: user, token: token });

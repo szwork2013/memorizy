@@ -19,7 +19,7 @@ angular.module('memorizy', [
 ]).
   
 /**
- * intercepts all http requests and manage user session 
+ * intercept all http requests and manage user session 
  */
 factory('authInterceptor', function ($rootScope, $q, $localStorage) {
   return {
@@ -49,6 +49,8 @@ factory('authInterceptor', function ($rootScope, $q, $localStorage) {
         // called 'user'
         $rootScope.user = null;
       }
+
+      return $q.reject(rejection);
     }
   };
 })

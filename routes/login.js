@@ -1,33 +1,23 @@
 var jwt = require('jsonwebtoken');
 var passport = require('passport');
 
+var userModel = require('../models/user.js');
+
 module.exports = function(app){
 	app.post('/login', function (req, res) {
-    //TODO validate req.body.username and req.body.password
-    //if is invalid, return 401
-    
-    console.log('req.body = ', req.body);
+    var user;
 
-    if (!(req.body.username === 'john.doe' && req.body.password === 'foobar')) {
-      res.send(401, 'Wrong user or password');
-      return;
-    }
+    userModel.authenticateUser(req.body.username, req.body.password).
+      then(function (row) {
+        user = row; 
 
-    var profile = {
-      first_name: 'John',
-      last_name: 'Doe',
-      email: 'john@doe.com',
-      id: 123
-    };
-
-    // We are sending the profile inside the token
-    var token = jwt.sign(profile, 'hello world !', { expiresInMinutes: 60*5 });
-
-    res.json({ user: profile, token: token });
-	});
-
-	app.get('/logout', function(req, res){
-    req.logout();
-		res.redirect('/');
+        // We are sending the profile inside the token
+        var token = jwt.sign(user, 'hello world !', { expiresInMinutes: 259200 /* 6 months */ });
+        res.json({ user: user, token: token });
+      }). 
+      catch(function (err) {
+        res.send(401, 'Wrong user or password');
+      })
+      .done();
 	});
 };

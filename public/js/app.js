@@ -11,27 +11,44 @@ angular.module('memorizy', [
   'memorizy.contenteditable',
   'memorizy.encodeURI',
 
-  'http-auth-interceptor',
+  //'http-auth-interceptor',
 
   /* Misc */
-  'ngRoute'
-])
-.factory('authInterceptor', function ($rootScope, $q, $window) {
+  'ngRoute',
+  'ngStorage'
+]).
+  
+/**
+ * intercepts all http requests and manage user session 
+ */
+factory('authInterceptor', function ($rootScope, $q, $localStorage) {
   return {
     request: function (config) {
-      console.log('intercept');
       config.headers = config.headers || {};
-      if ($window.sessionStorage.token) {
-        config.headers.Authorization = 'Bearer ' + $window.sessionStorage.token;
+      // send the session token at every request, if any
+      if ($localStorage.token) {
+        config.headers.Authorization = 'Bearer ' + $localStorage.token;
       }
       return config;
     },
+
     response: function (response) {
-      if (response.status === 401) {
-        // handle the case where the user is not authenticated
-        console.log('bad login');
-      }
       return response || $q.when(response);
+    },
+
+    responseError: function(rejection) {
+      // remove current token and user information
+      // if the server rejected the token, if they
+      // exists
+      if (rejection.status === 401) {
+        delete $localStorage.token;
+        delete $localStorage.user;
+
+        // the login form is displayed when
+        // the root scope does not have a property
+        // called 'user'
+        $rootScope.user = null;
+      }
     }
   };
 })
@@ -60,7 +77,10 @@ angular.module('memorizy', [
 
   $httpProvider.interceptors.push('authInterceptor');
 })
-.run(function ($rootScope, $location) {
+.run(function ($rootScope, $location, $localStorage) {
+  // used for relative path 
   $rootScope.$location = $location; 
-  $rootScope.user = null;
+
+  // get insensitive information about the logged user
+  $rootScope.user = $localStorage.user;
 });

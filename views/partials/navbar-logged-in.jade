@@ -3,7 +3,7 @@ nav.navbar.navbar-default.navbar-fixed-top(role="navigation")
     .navbar-header
       a.navbar-brand(href="#") Memorizy
     .collapse.navbar-collapse#bs-example-navbar-collapse-1
-      ul.nav.navbar-nav
+      ul.nav.navbar-nav.navbar-left
         li
           a(ng-href="/{{user.name}}") Home
         li
@@ -11,42 +11,25 @@ nav.navbar.navbar-default.navbar-fixed-top(role="navigation")
         li
           a(href="/{{user.name}}/calendar") Calendar
         li
-          a(href="/discover") Discover 
+          a(href="/poll") Poll
+
+        ul.nav.navbar-nav
+          form.navbar-form.navbar-left(role="search")
+            .form-group
+              input.form-control(type="text" placeholder="Search")
+            button.btn.btn-default(type="submit") Submit
+
+      ul.nav.navbar-nav.navbar-right
         li.dropdown
-          a(href="#" class="dropdown-toggle" data-toggle="dropdown") Dropdown
+          a.dropdown-toggle(href="#" data-toggle="dropdown") {{user.name}}
             b.caret
           ul.dropdown-menu
             li
-              a(href="#") Action
+              a(href="#") Profile
             li
-              a(href="#") Another action
-            li
-              a(href="#") Something else here
+              a(href="#") Upgrade
             li.divider
             li
-              a(href="#") Separated link
-            li.divider
-            li
-              a(href="#") One more separated link
-
-        form.navbar-form.navbar-left(role="search")
-          .form-group
-            input.form-control(type="text" placeholder="Search")
-          button.btn.btn-default(type="submit") Submit
-
-        ul.nav.navbar-nav.navbar-right
-          li
-            a(href="#") Link
-          li.dropdown
-            a.dropdown-toggle(href="#" data-toggle="dropdown") {{user.name}}
-              b.caret
-            ul.dropdown-menu
-              li
-                a(href="#") Profile
-              li
-                a(href="#") Upgrade
-              li.divider
-              li
-                a(href="#" ng-click="loginModel.logout()") Logout
+              a(href="#" ng-click="loginModel.logout()") Logout
 
 

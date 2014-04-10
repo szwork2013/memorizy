@@ -47,10 +47,7 @@ FileManager.prototype.getFolderContentById = function (userId, folderId) {
 
   return db.executePreparedStatement({
     name : 'getFolderContentById',
-    text : 'select * ' +
-      'from get_folder_content($1::INTEGER, $2::INTEGER) as ' +
-      '(id integer,owner_id integer,name text,size integer,' +
-      'type text,percentage integer,starred boolean,path text)',
+    text : 'select * from get_folder_content($1::INTEGER, $2::INTEGER)',
     values : [userId, folderId]
   }).then(function (results) {
     return results.rows;	
@@ -81,12 +78,7 @@ FileManager.prototype.getFolderContentByPath = function (userId, path) {
 
   return db.executePreparedStatement({
     name : 'getFolderContentByPath',
-    text : 'select * ' +
-      'from get_folder_content($1::INTEGER,' +
-      'string_to_array($2, \'/\'))' +
-      ' as (id integer, owner_id integer, name text,' +
-      'size integer,type text, percentage integer,' +
-      'starred boolean, path text)',
+    text : 'select * from get_folder_content($1::INTEGER, string_to_array($2, \'/\'))',
     values : [ userId, path ]
   }).then(function (results) {
     return results.rows;	

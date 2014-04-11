@@ -101,15 +101,20 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
       return false;
     };
 
-    $scope.studyModes = [
+    $scope.studyOrders = [
       'Classic',
       'Hardest to easiest',
       'Least studied',
       'Wrongs'
     ];
 
-    $scope.stringifyStudyMode = function (studyModeId) {
-      return $scope.studyModes[studyModeId - 1];
+    $scope.stringifyStudyOrder = function (studyOrderId) {
+      return $scope.studyOrders[studyOrderId - 1];
+    };
+
+    $scope.setStudyOrder = function (file, studyOrderId) {
+      file.study_order_id = studyOrderId;
+      FileNavigation.updateStudyOrder(file, studyOrderId);
     };
 
     $document.on('click', function () {

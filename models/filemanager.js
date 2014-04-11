@@ -6,8 +6,10 @@ function FileManager() {}
 
 var singleton = new FileManager(); 
 
-// TODO Ajouter l'userId en argument
-FileManager.prototype.getFileByPath = function (path) {
+FileManager.prototype.getFileByPath = function (userId, path) {
+  if (typeof userId !== 'number') {
+    return q.reject('userId = ' + userId + ' (expected a number)');
+  }
   if (typeof path !== 'string') {
     return q.reject('path = ' + path + ' (expected a string)');
   }
@@ -17,11 +19,8 @@ FileManager.prototype.getFileByPath = function (path) {
 
   return db.executePreparedStatement({
     name : 'getFileByPath',
-    text : 'select * ' +
-      'from get_file(string_to_array($1, \'/\')) as ' +
-      '(id integer, owner_id integer, name text,' +
-      'size integer, type text)',
-    values : [path]
+    text : 'select * from get_file($1, string_to_array($2, \'/\'))',
+    values : [userId, path]
   }).then(function (results) {
     if (results.rows.length <= 0) {
       throw new Error('Folder at path ' + path + ' not found');
@@ -396,18 +395,21 @@ FileManager.prototype.unstar = function (userId, fileId) {
   });
 };
 
-FileManager.prototype.getFileFlashcards = function (userId, fileId) {
+FileManager.prototype.getFileFlashcards = function (userId, fileId, studyOrderId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
   if (typeof fileId !== 'number') {
     return q.reject('fileId = ' + fileId + ' (expected a number)');
   }
+  if (typeof studyOrderId !== 'number') {
+    return q.reject('studyOrderId = ' + studyOrderId + ' (expected a number)');
+  }
 
   return db.executePreparedStatement({
     name: 'getFileFlashcards',
-    text: 'select * from get_flashcards($1, $2)',
-    values: [ userId, fileId ]
+    text: 'select * from get_flashcards($1, $2, $3)',
+    values: [ userId, fileId, studyOrderId ]
   })
   .then(function (res) {
     return res.rows;

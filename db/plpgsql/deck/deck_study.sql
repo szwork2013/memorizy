@@ -37,7 +37,7 @@ begin
 
   raise notice '_old_history = %', _old_history;
 
-  select right(_old_history, 4) ||  _last_state 
+  select _last_state || left(_old_history, 4) 
   into _new_history;
 
   raise notice '_new_history = %', _new_history;
@@ -67,10 +67,10 @@ declare
   _percentage  integer := 0;
 begin
   -- The state '0' means that the answer was correct
-  if substr(_state_history, 5, 1) = '0' then 
+  if substr(_state_history, 1, 1) = '0' then 
     _percentage := _percentage + 50;
   end if;
-  if substr(_state_history, 4, 1) = '0' then 
+  if substr(_state_history, 2, 1) = '0' then 
     _percentage := _percentage + 30;
   end if;
   if substr(_state_history, 3, 1) = '0' then 

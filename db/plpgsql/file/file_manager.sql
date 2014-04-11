@@ -647,3 +647,22 @@ begin
 
 end;
 $$ language plpgsql;
+
+create or replace function update_study_order (_user_id integer, _file_id integer, _order_id integer)
+returns void as $$
+begin
+  with upsert as (
+    update users_files
+    set study_order = _order_id 
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, study_order_id)
+  select _user_id, _file_id, _order_id
+  where not exists (
+    select 1 from upsert
+  );
+
+end;
+$$ language plpgsql;

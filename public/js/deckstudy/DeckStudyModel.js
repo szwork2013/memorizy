@@ -95,8 +95,8 @@ DeckStudyModel.prototype.showStats = function () {
 };
 
 DeckStudyModel.prototype.updateStats = function (stats) {
-  return $http.post('/api' + $location.path(), stats, {
-    params: { action: updateStats }
+  return this.$http.post('/api' + this.$location.path(), stats, {
+    params: { action: 'updateStats' }
   });
 };
 

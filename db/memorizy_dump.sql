@@ -2251,12 +2251,37 @@ begin
   where not exists (
     select 1 from upsert
   );
-
 end;
 $$;
 
 
 ALTER FUNCTION public.update_study_order(_user_id integer, _file_id integer, _order_id integer) OWNER TO postgres;
+
+--
+-- Name: update_until_100(integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_until_100(_user_id integer, _file_id integer, _enable boolean) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+  with upsert as (
+    update users_files
+    set until_100 = _enabled
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, until_100)
+  select _user_id, _file_id, _enable
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$;
+
+
+ALTER FUNCTION public.update_until_100(_user_id integer, _file_id integer, _enable boolean) OWNER TO postgres;
 
 SET search_path = web, pg_catalog;
 
@@ -2640,6 +2665,7 @@ CREATE TABLE users_files (
     starred boolean DEFAULT false NOT NULL,
     rest_percentage integer DEFAULT 0 NOT NULL,
     study_order integer DEFAULT 1 NOT NULL,
+    until_100 boolean DEFAULT false NOT NULL,
     CONSTRAINT users_files_percentage_check CHECK (((percentage >= 0) AND (percentage <= 100))),
     CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0))
 );

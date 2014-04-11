@@ -18,17 +18,19 @@ function sendFolderContent (req, res, folder) {
 }
 
 function sendDeckFlashcards (req, res, deck) {
-  fileManager.getFileFlashcards(2, deck.id).then(function (flashcards) {
-    deck.flashcards = flashcards;
-    deck.type = 'deck';
-    res.json({
-      file: deck
-    });
-  }).catch(function (err) {
-    console.log(err);
-    res.send(404);
-  })
-  .done();
+  fileManager.getFileFlashcards(2, deck.id, deck.study_order_id).
+    then(function (flashcards) {
+      deck.flashcards = flashcards;
+      deck.type = 'deck';
+      res.json({
+        file: deck
+      });
+    }).
+    catch(function (err) {
+      console.log(err);
+      res.send(404);
+    }).
+    done();
 }
 
 module.exports = function (app) {
@@ -37,7 +39,7 @@ module.exports = function (app) {
       return next();
     }
 
-    fileManager.getFileByPath(req.path.slice('/api'.length))
+    fileManager.getFileByPath(req.user.id, req.path.slice('/api'.length))
     .then(function (file) {
       if (file.type === 'folder') {
         sendFolderContent(req, res, file);

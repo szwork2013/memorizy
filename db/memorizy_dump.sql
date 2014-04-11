@@ -1104,7 +1104,7 @@ ALTER FUNCTION public.get_flashcards(_user_id integer, _file_id integer) OWNER T
 -- Name: get_folder_content(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order_id integer)
     LANGUAGE plpgsql
     AS $$
 begin
@@ -1134,7 +1134,7 @@ begin
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
       coalesce(uf.starred::BOOLEAN, 'f'), 
-      coalesce(uf.study_order::INTEGER, 1)
+      coalesce(uf.study_order_id::INTEGER, 1)
     from 
       files f 
       left join users_files uf on f.id = uf.file_id 
@@ -1155,7 +1155,7 @@ ALTER FUNCTION public.get_folder_content(_user_id integer, _folder_id integer) O
 -- Name: get_folder_content(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order_id integer)
     LANGUAGE plpgsql
     AS $$
 declare
@@ -2241,7 +2241,7 @@ CREATE FUNCTION update_study_order(_user_id integer, _file_id integer, _order_id
 begin
   with upsert as (
     update users_files
-    set study_order = _order_id 
+    set study_order_id = _order_id 
     where user_id = _user_id and 
     file_id = _file_id
     returning *
@@ -2664,7 +2664,7 @@ CREATE TABLE users_files (
     percentage integer DEFAULT 0 NOT NULL,
     starred boolean DEFAULT false NOT NULL,
     rest_percentage integer DEFAULT 0 NOT NULL,
-    study_order integer DEFAULT 1 NOT NULL,
+    study_order_id integer DEFAULT 1 NOT NULL,
     until_100 boolean DEFAULT false NOT NULL,
     CONSTRAINT users_files_percentage_check CHECK (((percentage >= 0) AND (percentage <= 100))),
     CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0))
@@ -3008,7 +3008,7 @@ ALTER TABLE ONLY users_files
 --
 
 ALTER TABLE ONLY users_files
-    ADD CONSTRAINT users_files_study_mode_fkey FOREIGN KEY (study_order) REFERENCES study_orders(id) ON DELETE SET DEFAULT;
+    ADD CONSTRAINT users_files_study_mode_fkey FOREIGN KEY (study_order_id) REFERENCES study_orders(id) ON DELETE SET DEFAULT;
 
 
 --

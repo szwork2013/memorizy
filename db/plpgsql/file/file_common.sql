@@ -16,8 +16,13 @@ begin
 		);
 
 		if not found then
-			raise invalid_parameter_value using message = 'Folder with path "' || array_to_string(_path, '/') || '" not found';
+			raise invalid_parameter_value 
+      using message = 
+        'Folder with path "' || 
+        array_to_string(_path, '/') || 
+        '" not found';
 		end if;
+
 	end loop;
 	return _parent_id;
 end;

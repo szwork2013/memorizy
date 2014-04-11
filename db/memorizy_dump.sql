@@ -58,10 +58,10 @@ declare
   _percentage  integer := 0;
 begin
   -- The state '0' means that the answer was correct
-  if substr(_state_history, 5, 1) = '0' then 
+  if substr(_state_history, 1, 1) = '0' then 
     _percentage := _percentage + 50;
   end if;
-  if substr(_state_history, 4, 1) = '0' then 
+  if substr(_state_history, 2, 1) = '0' then 
     _percentage := _percentage + 30;
   end if;
   if substr(_state_history, 3, 1) = '0' then 
@@ -948,27 +948,40 @@ $$;
 ALTER FUNCTION public.failed_test(thetest text) OWNER TO postgres;
 
 --
--- Name: get_file(text[]); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: get_file(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_file(_path text[]) RETURNS SETOF record
+CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, study_order_id integer, until_100 boolean, studied integer)
     LANGUAGE plpgsql
     AS $$
 	declare
 	_file_id	integer := 0;
 begin
 	select get_file_id(_path) into _file_id;
-	return query execute 'select id::INTEGER,' ||
-			     'owner_id::INTEGER,' ||
-			     'name::TEXT,' ||
-			     'size::INTEGER,' ||
-			     'type::TEXT ' ||
-			     'from files where id = ' || _file_id;
+	return query 
+    select 
+      f.id::INTEGER, 
+      f.owner_id::INTEGER, 
+      u.name::TEXT owner_name,
+      f.name::TEXT, 
+      f.size::INTEGER, 
+      f.type::TEXT,
+      uf.percentage::INTEGER,
+      uf.rest_percentage::INTEGER,
+      uf.starred::BOOLEAN,
+      uf.study_order_id::INTEGER,
+      uf.until_100::BOOLEAN,
+      uf.studied::INTEGER
+    from files f 
+    join users_files uf on f.id = uf.file_id 
+    join users u on u.id = uf.user_id
+    where f.id = _file_id
+    and u.id = _user_id;
 end;
 $$;
 
 
-ALTER FUNCTION public.get_file(_path text[]) OWNER TO postgres;
+ALTER FUNCTION public.get_file(_user_id integer, _path text[]) OWNER TO postgres;
 
 --
 -- Name: get_file_id(text[]); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1058,47 +1071,77 @@ $$;
 ALTER FUNCTION public.get_file_tree(_user_id integer) OWNER TO postgres;
 
 --
--- Name: get_flashcards(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: get_flashcards(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_flashcards(_user_id integer, _file_id integer) RETURNS TABLE(id integer, owner_id integer, deck_id integer, term_text text, term_media_id integer, term_media_position integer, definition_text text, definition_media_id integer, definition_media_position integer, index integer, state_history text)
+CREATE FUNCTION get_flashcards(_user_id integer, _file_id integer, _order_id integer) RETURNS TABLE(id integer, owner_id integer, deck_id integer, term_text text, term_media_id integer, term_media_position integer, definition_text text, definition_media_id integer, definition_media_position integer, index integer, state_history text, studied integer)
     LANGUAGE plpgsql
     AS $$
 -- TODO return flashcards of all file's decks if the file
 -- provided as arguments isn't a deck
 begin
-  return query
-    select    
-      f.id,   
-      f.owner_id,   
-      f.deck_id,   
-      f.term_text::TEXT,   
-      f.term_media_id::INTEGER,   
-      f.term_media_position::INTEGER,   
-      f.definition_text::TEXT,   
-      f.definition_media_id::INTEGER,   
-      f.definition_media_position::INTEGER,   
-      f.index,   
-      coalesce(   
-        uf.state_history,    
-        '00000'    
-      )::TEXT   
-    from   
-      flashcards f left join users_flashcards uf 
-      on f.id = uf.flashcard_id 
-      and _user_id = uf.user_id   
-    where f.deck_id in (
-      select ft.descendant_id
-      from file_tree ft
-      where ft.ancestor_id = _file_id
-    )
-    order by   
-      f.index asc ;
+  create temp table t (
+    id integer, owner_id integer, deck_id integer,
+    term_text text, term_media_id integer, term_media_position integer, 
+    definition_text text, definition_media_id integer,
+    definition_media_position integer, index integer, state_history text,
+    studied integer
+  ) on commit drop;
+
+  insert into t
+  select    
+    f.id,   
+    f.owner_id,   
+    f.deck_id,   
+    f.term_text::TEXT,   
+    f.term_media_id::INTEGER,   
+    f.term_media_position::INTEGER,   
+    f.definition_text::TEXT,   
+    f.definition_media_id::INTEGER,   
+    f.definition_media_position::INTEGER,   
+    f.index,   
+    coalesce(   
+      uf.state_history,    
+      '11111'    
+    )::TEXT state_history,
+    coalesce(uf.studied, 0)::INTEGER
+  from   
+    flashcards f left join users_flashcards uf 
+    on f.id = uf.flashcard_id 
+    and _user_id = uf.user_id   
+  where f.deck_id in (
+    select ft.descendant_id
+    from file_tree ft
+    where ft.ancestor_id = _file_id
+  );
+
+  case 
+    when _order_id = 1 then -- Classic
+      return query 
+        select * from t;
+    when _order_id =  2 then -- Hardest to easiest
+      return query 
+        select * from t 
+        order by state_history desc;
+    when _order_id =  3 then -- Least studied
+      return query 
+        select * from t 
+        order by studied asc; 
+    when _order_id =  4 then -- Wrongs
+      return query 
+        select * from t
+        where left(t.state_history, 3) <> '000'
+        order by t.index asc;
+    else 
+      raise invalid_parameter_value 
+      using message = 'Unknown order id';
+  end case;
+
 end;
 $$;
 
 
-ALTER FUNCTION public.get_flashcards(_user_id integer, _file_id integer) OWNER TO postgres;
+ALTER FUNCTION public.get_flashcards(_user_id integer, _file_id integer, _order_id integer) OWNER TO postgres;
 
 --
 -- Name: get_folder_content(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1165,7 +1208,7 @@ begin
 
   create temp table tt (
     id integer, owner_id integer, name text, size integer, type text, 
-    percentage integer, starred boolean, study_order integer
+    percentage integer, starred boolean, study_order_id integer
   ) on commit drop;
 
   insert into tt 
@@ -2204,7 +2247,7 @@ begin
 
   raise notice '_old_history = %', _old_history;
 
-  select right(_old_history, 4) ||  _last_state 
+  select _last_state || left(_old_history, 4) 
   into _new_history;
 
   raise notice '_new_history = %', _new_history;
@@ -2666,8 +2709,10 @@ CREATE TABLE users_files (
     rest_percentage integer DEFAULT 0 NOT NULL,
     study_order_id integer DEFAULT 1 NOT NULL,
     until_100 boolean DEFAULT false NOT NULL,
+    studied integer DEFAULT 0 NOT NULL,
     CONSTRAINT users_files_percentage_check CHECK (((percentage >= 0) AND (percentage <= 100))),
-    CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0))
+    CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0)),
+    CONSTRAINT users_files_studied_check CHECK ((studied >= 0))
 );
 
 
@@ -2701,7 +2746,9 @@ ALTER SEQUENCE users_files_id_seq OWNED BY users_files.id;
 CREATE TABLE users_flashcards (
     user_id integer NOT NULL,
     flashcard_id integer NOT NULL,
-    state_history character(5) DEFAULT '11111'::bpchar NOT NULL
+    state_history character(5) DEFAULT '11111'::bpchar NOT NULL,
+    studied integer DEFAULT 0 NOT NULL,
+    CONSTRAINT users_flashcards_studied_check CHECK ((studied >= 0))
 );
 
 

@@ -13,7 +13,7 @@
         th.star
         th.file-type Type
         th.name Name
-        th.study-mode Study mode
+        th.study-order Study order
         th.owner Owner
         th.size Size
         th.percentage %
@@ -30,14 +30,14 @@
         td.filename
           a(ng-href="{{$location.path()}}/{{file.name | encodeURI}}")
             {{file.name}}
-        td.study-mode
+        td.study-order
           .btn-group
             a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
-              | {{stringifyStudyMode(file.study_mode)}}
+              | {{stringifyStudyOrder(file.study_order_id)}}
               span.caret
             ul.dropdown-menu(role="menu")
-              li(role="presentation" ng-repeat="mode in studyModes")
-                a(role="menuitem" href="#" ng-bind="mode" ng-click="file.study_mode = $index + 1") 
+              li(role="presentation" ng-repeat="order in studyOrders")
+                a(role="menuitem" href="#" ng-bind="order" ng-click="setStudyOrder(file, $index + 1)") 
         td.owner
           {{file.owner_name}}
         td.size

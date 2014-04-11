@@ -1104,7 +1104,7 @@ ALTER FUNCTION public.get_flashcards(_user_id integer, _file_id integer) OWNER T
 -- Name: get_folder_content(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_mode integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order integer)
     LANGUAGE plpgsql
     AS $$
 begin
@@ -1134,7 +1134,7 @@ begin
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
       coalesce(uf.starred::BOOLEAN, 'f'), 
-      coalesce(uf.study_mode::INTEGER, 1)
+      coalesce(uf.study_order::INTEGER, 1)
     from 
       files f 
       left join users_files uf on f.id = uf.file_id 
@@ -1155,7 +1155,7 @@ ALTER FUNCTION public.get_folder_content(_user_id integer, _folder_id integer) O
 -- Name: get_folder_content(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_mode integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order integer)
     LANGUAGE plpgsql
     AS $$
 declare
@@ -1165,7 +1165,7 @@ begin
 
   create temp table tt (
     id integer, owner_id integer, name text, size integer, type text, 
-    percentage integer, starred boolean, study_mode integer
+    percentage integer, starred boolean, study_order integer
   ) on commit drop;
 
   insert into tt 

@@ -3,7 +3,6 @@ angular.module('memorizy.filemanager.FileManagerCtrl', [])
   function ($scope, $http, $location, $routeParams, FileManager) { 
 
     $scope.refresh = function () {
-      console.log('FileManager = ', FileManager);
       FileManager.getAll().success(function (data) {
         // depending on whether $scope.folder or $scope.deck
         // exists, a different partial and another controller

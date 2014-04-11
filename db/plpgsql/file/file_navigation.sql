@@ -18,17 +18,35 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function get_file(_path text[]) returns setof record as $$
+create or replace function get_file(_user_id integer, _path text[]) 
+returns table (id integer, owner_id integer, owner_name text, name text,
+               size integer, type text, percentage integer, rest_percentage integer,
+               starred boolean, study_order_id integer, until_100 boolean,
+               studied integer)
+as $$
 	declare
 	_file_id	integer := 0;
 begin
 	select get_file_id(_path) into _file_id;
-	return query execute 'select id::INTEGER,' ||
-			     'owner_id::INTEGER,' ||
-			     'name::TEXT,' ||
-			     'size::INTEGER,' ||
-			     'type::TEXT ' ||
-			     'from files where id = ' || _file_id;
+	return query 
+    select 
+      f.id::INTEGER, 
+      f.owner_id::INTEGER, 
+      u.name::TEXT owner_name,
+      f.name::TEXT, 
+      f.size::INTEGER, 
+      f.type::TEXT,
+      uf.percentage::INTEGER,
+      uf.rest_percentage::INTEGER,
+      uf.starred::BOOLEAN,
+      uf.study_order_id::INTEGER,
+      uf.until_100::BOOLEAN,
+      uf.studied::INTEGER
+    from files f 
+      join users_files uf on f.id = uf.file_id 
+      join users u on u.id = uf.user_id
+    where f.id = _file_id
+    and u.id = _user_id;
 end;
 $$ language plpgsql;	
 

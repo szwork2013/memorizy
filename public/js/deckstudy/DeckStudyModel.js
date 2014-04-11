@@ -2,8 +2,10 @@ function DeckStudyModel ($rootScope, $http, $location) {
   this.$rootScope = $rootScope;
   this.$http = $http;
   this.$location = $location;
+}
 
-  this.deck = null;
+DeckStudyModel.prototype.init = function (deck) { 
+  this.deck = deck; 
 
   this.studyOpt = {
     showFirst: 'term'
@@ -29,10 +31,6 @@ function DeckStudyModel ($rootScope, $http, $location) {
       flashcardIds: []
     }
   };
-}
-
-DeckStudyModel.prototype.init = function (deck) { 
-  this.deck = deck; 
   this._initEventListeners();
 };
 

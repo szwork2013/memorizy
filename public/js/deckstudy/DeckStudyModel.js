@@ -119,6 +119,17 @@ DeckStudyModel.prototype.answer = function (id, correct) {
   w.percentage = 100 * w.number / this.stats.answered;
 };
 
+DeckStudyModel.prototype.updateStudyOrder = function (file, studyOrderId) {
+  return this.$http.put('/api' + this.$location.path(), { 
+    fileId: file.id,
+    studyOrderId: studyOrderId
+  }, { 
+    params: {
+      action: 'updateStudyOrder',
+    }
+  });
+};
+
 angular.module('memorizy.deckstudy.DeckStudyModel', [])
 .provider('DeckStudyModel', function () {
   this.$get = [

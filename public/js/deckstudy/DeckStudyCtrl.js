@@ -42,6 +42,22 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
       $scope.showNext();
     };
 
+    $scope.studyOrders = [
+      'Classic',
+      'Hardest to easiest',
+      'Least studied',
+      'Wrongs'
+    ];
+
+    $scope.stringifyStudyOrder = function (studyOrderId) {
+      return $scope.studyOrders[studyOrderId - 1];
+    };
+
+    $scope.setStudyOrder = function (studyOrderId) {
+      $scope.deck.study_order_id = studyOrderId;
+      DeckStudyModel.updateStudyOrder($scope.deck, studyOrderId);
+    };
+
     $document.bind('keypress', function (event) {
       var key = event.which || event.keyCode || event.charCode;
       switch (key) {

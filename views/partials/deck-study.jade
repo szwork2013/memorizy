@@ -42,17 +42,21 @@ append content
             
       #content-right(ng-if="visible.stats == false")
         #study-options
-          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="term" value="term")
-          label(for="term") Term
-          br
-          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="definition" value="definition")
-          label(for="definition") Definition
-          br
-          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="random" value="random")
-          label(for="random") Random
-          br
-          input(type="radio" ng-model="studyOpt.showFirst" name="show-first" id="both" value="both")
-          label(for="both") Both
-          br
+          p
+            | Study order: 
+            .btn-group
+              a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
+                | {{stringifyStudyOrder(deck.study_order_id)}}
+                span.caret
+              ul.dropdown-menu(role="menu")
+                li(role="presentation" ng-repeat="order in studyOrders")
+                  a(role="menuitem" href="#" ng-bind="order" ng-click="setStudyOrder($index + 1)") 
+          p 
+            | Show first:
+            select.form-control
+              option(value="term") Term
+              option(value="definition") Definition
+              option(value="random") Random
+              option(value="both") Both
         #flashcard-info 
 

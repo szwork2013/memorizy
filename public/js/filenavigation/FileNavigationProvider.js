@@ -61,17 +61,6 @@ angular.module('memorizy.filenavigation.FileNavigationProvider', [])
             fileId: file.id 
           } 
         });
-      },
-
-      updateStudyOrder: function (file, studyOrderId) {
-        return $http.put('/api' + $location.path() + '/' + file.name, { 
-          fileId: file.id,
-          studyOrderId: studyOrderId
-        }, { 
-          params: {
-            action: 'updateStudyOrder',
-          }
-        });
       }
     };
   }];

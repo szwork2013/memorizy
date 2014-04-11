@@ -37,8 +37,7 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
 
     $scope.updateFile = function (index, file) {
       FileNavigation.updateFile(file);
-      $scope.files[index] = file;
-    };
+      $scope.files[index] = file; };
 
     $scope.deleteFile = function (file) {
       FileNavigation.deleteFile(file);
@@ -99,22 +98,6 @@ angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
       });
       
       return false;
-    };
-
-    $scope.studyOrders = [
-      'Classic',
-      'Hardest to easiest',
-      'Least studied',
-      'Wrongs'
-    ];
-
-    $scope.stringifyStudyOrder = function (studyOrderId) {
-      return $scope.studyOrders[studyOrderId - 1];
-    };
-
-    $scope.setStudyOrder = function (file, studyOrderId) {
-      file.study_order_id = studyOrderId;
-      FileNavigation.updateStudyOrder(file, studyOrderId);
     };
 
     $document.on('click', function () {

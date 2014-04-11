@@ -36,15 +36,15 @@ begin
       f.name::TEXT, 
       f.size::INTEGER, 
       f.type::TEXT,
-      uf.percentage::INTEGER,
-      uf.rest_percentage::INTEGER,
-      uf.starred::BOOLEAN,
-      uf.study_order_id::INTEGER,
-      uf.until_100::BOOLEAN,
-      uf.studied::INTEGER
+      coalesce(uf.percentage, 0)::INTEGER,
+      coalesce(uf.rest_percentage, 0)::INTEGER,
+      coalesce(uf.starred, false)::BOOLEAN,
+      coalesce(uf.study_order_id, 1)::INTEGER,
+      coalesce(uf.until_100, false)::BOOLEAN,
+      coalesce(uf.studied, 0)::INTEGER
     from files f 
-      join users_files uf on f.id = uf.file_id 
-      join users u on u.id = uf.user_id
+      left join users_files uf on f.id = uf.file_id 
+      join users u on u.id = f.owner_id
     where f.id = _file_id
     and u.id = _user_id;
 end;

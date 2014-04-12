@@ -951,7 +951,7 @@ ALTER FUNCTION public.failed_test(thetest text) OWNER TO postgres;
 -- Name: get_file(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, study_order_id integer, until_100 boolean, studied integer)
+CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, study_order_id integer, until_100 boolean, studied integer, show_first text)
     LANGUAGE plpgsql
     AS $$
 	declare
@@ -971,7 +971,8 @@ begin
       coalesce(uf.starred, false)::BOOLEAN,
       coalesce(uf.study_order_id, 1)::INTEGER,
       coalesce(uf.until_100, false)::BOOLEAN,
-      coalesce(uf.studied, 0)::INTEGER
+      coalesce(uf.studied, 0)::INTEGER,
+      coalesce(uf.show_first, 'term')::TEXT
     from files f 
       left join users_files uf on f.id = uf.file_id 
       join users u on u.id = f.owner_id
@@ -1128,11 +1129,11 @@ begin
     when _order_id =  2 then -- Hardest to easiest
       return query 
         select * from t 
-        order by state_history desc;
+        order by state_history desc, index asc;
     when _order_id =  3 then -- Least studied
       return query 
         select * from t 
-        order by studied asc; 
+        order by studied asc, index asc; 
     when _order_id =  4 then -- Wrongs
       return query 
         select * from t
@@ -2716,8 +2717,10 @@ CREATE TABLE users_files (
     study_order_id integer DEFAULT 1 NOT NULL,
     until_100 boolean DEFAULT false NOT NULL,
     studied integer DEFAULT 0 NOT NULL,
+    show_first character varying(32) DEFAULT 'term'::character varying NOT NULL,
     CONSTRAINT users_files_percentage_check CHECK (((percentage >= 0) AND (percentage <= 100))),
     CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0)),
+    CONSTRAINT users_files_show_first_check CHECK (((show_first)::text = ANY ((ARRAY['term'::character varying, 'definition'::character varying, 'both'::character varying, 'random'::character varying])::text[]))),
     CONSTRAINT users_files_studied_check CHECK ((studied >= 0))
 );
 

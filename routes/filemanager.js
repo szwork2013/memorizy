@@ -18,7 +18,11 @@ function sendFolderContent (req, res, folder) {
 }
 
 function sendDeckFlashcards (req, res, deck) {
-  fileManager.getFileFlashcards(2, deck.id, deck.study_order_id).
+  var order = req.query.action === 'study' ?
+    deck.study_order_id : 1; // Force classic order on edit mode
+
+  console.log('order = ' + order);
+  fileManager.getFileFlashcards(2, deck.id, order).
     then(function (flashcards) {
       deck.flashcards = flashcards;
       deck.type = 'deck';

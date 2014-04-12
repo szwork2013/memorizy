@@ -47,7 +47,8 @@ begin
   case 
     when _order_id = 1 then -- Classic
       return query 
-        select * from t;
+        select * from t
+        order by index asc;
     when _order_id =  2 then -- Hardest to easiest
       return query 
         select * from t 

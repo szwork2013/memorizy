@@ -54,8 +54,7 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
     };
 
     $scope.setStudyOrder = function (studyOrderId) {
-      $scope.deck.study_order_id = studyOrderId;
-      DeckStudyModel.updateStudyOrder($scope.deck, studyOrderId);
+      DeckStudyModel.sort(studyOrderId);
     };
 
     $document.bind('keypress', function (event) {

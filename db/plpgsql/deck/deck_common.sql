@@ -52,11 +52,11 @@ begin
     when _order_id =  2 then -- Hardest to easiest
       return query 
         select * from t 
-        order by state_history desc;
+        order by state_history desc, index asc;
     when _order_id =  3 then -- Least studied
       return query 
         select * from t 
-        order by studied asc; 
+        order by studied asc, index asc; 
     when _order_id =  4 then -- Wrongs
       return query 
         select * from t

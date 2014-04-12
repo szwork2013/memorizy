@@ -17,7 +17,7 @@ append content
               //-.media.media-thumbnail
               .text(ng-bind="flashcard.definition_text")
                 {{flashcard.definition_text}}
-            .btn-delete.glyphicon.glyphicon-remove(ng-click="removeFlashcard(flashcard.id); $event.stopPropagation();")
+            .btn-delete.glyphicon.glyphicon-remove(ng-click="removeFlashcard($index);")
 
       #content-center
         nav#edit-tools

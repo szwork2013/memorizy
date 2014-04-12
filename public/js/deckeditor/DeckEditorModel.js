@@ -7,6 +7,15 @@ angular.module('memorizy.deckeditor.DeckEditorModel', [])
         return $http.post('/api' + $location.path(), flashcard, { 
           params: { action: 'saveFlashcard' }
         });
+      },
+
+      removeFlashcard: function (flashcardId) {
+        return $http.delete('/api' + $location.path(), { 
+          params: { 
+            action: 'deleteFlashcard',
+            flashcardId: flashcardId
+          }
+        });
       }
     };
   }];

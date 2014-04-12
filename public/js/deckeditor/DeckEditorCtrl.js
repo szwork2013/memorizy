@@ -14,9 +14,12 @@ angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
 
     };
 
-    $scope.removeFlashcard = function (id) {
-
+    $scope.removeFlashcard = function (index) {
+      var f = $scope.deck.flashcards[index];
+      DeckEditorModel.removeFlashcard(f.id);
+      $scope.deck.flashcards.splice(index, 1);
     }; 
+
     $scope.moveFlashcard = function () {
 
     };

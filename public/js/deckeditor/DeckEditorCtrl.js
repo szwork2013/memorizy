@@ -3,21 +3,18 @@ angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
   'DeckEditorCtrl', 
   function ($scope, DeckEditorModel, flashcardService, focusService) {
 
+    DeckEditorModel.init($scope.deck);
+
     $scope.addFlashcard = function () {
-      $scope.deck.flashcards.push({
-        deck_id: $scope.deck.id,
-        term_text: 'coucou',
-        definition_text: 'fez'
-      }); };
+      DeckEditorModel.addFlashcard();
+    };
 
     $scope.updateFlashcard = function () {
 
     };
 
     $scope.removeFlashcard = function (index) {
-      var f = $scope.deck.flashcards[index];
-      DeckEditorModel.removeFlashcard(f.id);
-      $scope.deck.flashcards.splice(index, 1);
+      DeckEditorModel.removeFlashcard(index);
     }; 
 
     $scope.moveFlashcard = function () {
@@ -62,7 +59,7 @@ angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
       if (!flashcardService.equals(beforeEdit, displayed) && 
           typeof beforeEdit !== 'undefined') {
 
-        DeckEditorModel.save(displayed).success(function (data) {
+        DeckEditorModel.saveFlashcard(displayed).success(function (data) {
           console.log('successfuly saved: ', data);      
         })
         .error(function (err) {
@@ -96,10 +93,7 @@ angular.module('memorizy.deckeditor.DeckEditorCtrl', [])
       $scope.addFlashcard();
     }
 
+
     $scope.display(0);
-
-    // TEST
-
-    console.log('flashcards: ', $scope.deck.flashcards);
   });
 

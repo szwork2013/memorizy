@@ -951,7 +951,7 @@ ALTER FUNCTION public.failed_test(thetest text) OWNER TO postgres;
 -- Name: get_file(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, study_order_id integer, until_100 boolean, studied integer, show_first text)
+CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, flashcard_order_id integer, until_100 boolean, studied integer, show_first text)
     LANGUAGE plpgsql
     AS $$
 	declare
@@ -969,10 +969,10 @@ begin
       coalesce(uf.percentage, 0)::INTEGER,
       coalesce(uf.rest_percentage, 0)::INTEGER,
       coalesce(uf.starred, false)::BOOLEAN,
-      coalesce(uf.study_order_id, 1)::INTEGER,
+      coalesce(uf.flashcard_order_id, 1)::INTEGER,
       coalesce(uf.until_100, false)::BOOLEAN,
       coalesce(uf.studied, 0)::INTEGER,
-      coalesce(uf.show_first, 'term')::TEXT
+      coalesce(uf.show_first, 'Term')::TEXT
     from files f 
       left join users_files uf on f.id = uf.file_id 
       join users u on u.id = f.owner_id
@@ -1154,7 +1154,7 @@ ALTER FUNCTION public.get_flashcards(_user_id integer, _file_id integer, _order_
 -- Name: get_folder_content(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order_id integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, flashcard_order_id integer)
     LANGUAGE plpgsql
     AS $$
 begin
@@ -1184,7 +1184,7 @@ begin
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
       coalesce(uf.starred::BOOLEAN, 'f'), 
-      coalesce(uf.study_order_id::INTEGER, 1)
+      coalesce(uf.flashcard_order_id::INTEGER, 1)
     from 
       files f 
       left join users_files uf on f.id = uf.file_id 
@@ -1205,7 +1205,7 @@ ALTER FUNCTION public.get_folder_content(_user_id integer, _folder_id integer) O
 -- Name: get_folder_content(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, study_order_id integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, flashcard_order_id integer)
     LANGUAGE plpgsql
     AS $$
 declare
@@ -1215,7 +1215,7 @@ begin
 
   create temp table tt (
     id integer, owner_id integer, name text, size integer, type text, 
-    percentage integer, starred boolean, study_order_id integer
+    percentage integer, starred boolean, flashcard_order_id integer
   ) on commit drop;
 
   insert into tt 
@@ -2217,6 +2217,32 @@ $$;
 ALTER FUNCTION public.update_flashcard(_user_id integer, _flashcard_id integer, _term_text text, _term_media_id integer, _term_media_position text, _definition_text text, _definition_media_id integer, _definition_media_position text) OWNER TO postgres;
 
 --
+-- Name: update_flashcard_order(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_flashcard_order(_user_id integer, _file_id integer, _order_id integer) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+  with upsert as (
+    update users_files
+    set flashcard_order_id = _order_id 
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, flashcard_order_id)
+  select _user_id, _file_id, _order_id
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$;
+
+
+ALTER FUNCTION public.update_flashcard_order(_user_id integer, _file_id integer, _order_id integer) OWNER TO postgres;
+
+--
 -- Name: update_flashcard_status(integer, integer, character); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -2280,6 +2306,32 @@ $$;
 
 
 ALTER FUNCTION public.update_flashcard_status(_user_id integer, _flashcard_id integer, _last_state character) OWNER TO postgres;
+
+--
+-- Name: update_show_first(integer, integer, text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_show_first(_user_id integer, _file_id integer, _side text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+  with upsert as (
+    update users_files
+    set show_first = _side 
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, show_first)
+  select _user_id, _file_id, _side
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$;
+
+
+ALTER FUNCTION public.update_show_first(_user_id integer, _file_id integer, _side text) OWNER TO postgres;
 
 --
 -- Name: update_study_order(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2546,6 +2598,39 @@ ALTER SEQUENCE files_id_seq OWNED BY files.id;
 
 
 --
+-- Name: flashcard_orders; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE flashcard_orders (
+    id integer NOT NULL,
+    flashcard_order character varying(64) NOT NULL
+);
+
+
+ALTER TABLE public.flashcard_orders OWNER TO postgres;
+
+--
+-- Name: flashcard_orders_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE flashcard_orders_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.flashcard_orders_id_seq OWNER TO postgres;
+
+--
+-- Name: flashcard_orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE flashcard_orders_id_seq OWNED BY flashcard_orders.id;
+
+
+--
 -- Name: flashcards; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -2714,13 +2799,15 @@ CREATE TABLE users_files (
     percentage integer DEFAULT 0 NOT NULL,
     starred boolean DEFAULT false NOT NULL,
     rest_percentage integer DEFAULT 0 NOT NULL,
-    study_order_id integer DEFAULT 1 NOT NULL,
+    flashcard_order_id integer DEFAULT 1 NOT NULL,
     until_100 boolean DEFAULT false NOT NULL,
     studied integer DEFAULT 0 NOT NULL,
-    show_first character varying(32) DEFAULT 'term'::character varying NOT NULL,
+    show_first character varying(32) DEFAULT 'Term'::character varying NOT NULL,
+    method character varying(32) DEFAULT 'classic'::character varying NOT NULL,
+    CONSTRAINT users_files_method_check CHECK (((method)::text = ANY ((ARRAY['classic'::character varying, 'get100'::character varying])::text[]))),
     CONSTRAINT users_files_percentage_check CHECK (((percentage >= 0) AND (percentage <= 100))),
     CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0)),
-    CONSTRAINT users_files_show_first_check CHECK (((show_first)::text = ANY ((ARRAY['term'::character varying, 'definition'::character varying, 'both'::character varying, 'random'::character varying])::text[]))),
+    CONSTRAINT users_files_show_first_check CHECK (((show_first)::text = ANY ((ARRAY['Term'::character varying, 'Definition'::character varying, 'Random'::character varying, 'Both'::character varying])::text[]))),
     CONSTRAINT users_files_studied_check CHECK ((studied >= 0))
 );
 
@@ -2795,6 +2882,13 @@ ALTER TABLE ONLY files ALTER COLUMN id SET DEFAULT nextval('files_id_seq'::regcl
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY flashcard_orders ALTER COLUMN id SET DEFAULT nextval('flashcard_orders_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY flashcards ALTER COLUMN id SET DEFAULT nextval('flashcards_id_seq'::regclass);
 
 
@@ -2839,6 +2933,22 @@ ALTER TABLE ONLY users_files ALTER COLUMN id SET DEFAULT nextval('users_files_id
 
 ALTER TABLE ONLY files
     ADD CONSTRAINT files_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: flashcard_orders_flashcard_order_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY flashcard_orders
+    ADD CONSTRAINT flashcard_orders_flashcard_order_key UNIQUE (flashcard_order);
+
+
+--
+-- Name: flashcard_orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY flashcard_orders
+    ADD CONSTRAINT flashcard_orders_pkey PRIMARY KEY (id);
 
 
 --
@@ -3060,11 +3170,11 @@ ALTER TABLE ONLY users_files
 
 
 --
--- Name: users_files_study_mode_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: users_files_flashcard_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY users_files
-    ADD CONSTRAINT users_files_study_mode_fkey FOREIGN KEY (study_order_id) REFERENCES study_orders(id) ON DELETE SET DEFAULT;
+    ADD CONSTRAINT users_files_flashcard_order_id_fkey FOREIGN KEY (flashcard_order_id) REFERENCES flashcard_orders(id) ON DELETE SET DEFAULT;
 
 
 --

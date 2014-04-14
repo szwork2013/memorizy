@@ -1,7 +1,7 @@
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
 returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
-               percentage integer, starred boolean, flashcard_order_id integer)
+               percentage integer, starred boolean, flashcard_order_id integer, study_method text)
 as $$
 begin
   if not exists(
@@ -29,8 +29,9 @@ begin
       f.size::INTEGER, 
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
-      coalesce(uf.starred::BOOLEAN, 'f'), 
-      coalesce(uf.flashcard_order_id::INTEGER, 1)
+      coalesce(uf.starred, 'f')::BOOLEAN, 
+      coalesce(uf.flashcard_order_id, 1)::INTEGER,
+      coalesce(uf.study_method, 'classic')::TEXT
     from 
       files f 
       left join users_files uf on f.id = uf.file_id 
@@ -47,7 +48,7 @@ $$ language plpgsql;
 create or replace 
 function get_folder_content (_user_id integer, _path text[]) 
 returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
-               percentage integer, starred boolean, flashcard_order_id integer)
+               percentage integer, starred boolean, flashcard_order_id integer, study_method text)
 as $$
 declare
   _file_id  integer := 0;

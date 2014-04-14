@@ -22,7 +22,7 @@ create or replace function get_file(_user_id integer, _path text[])
 returns table (id integer, owner_id integer, owner_name text, name text,
                size integer, type text, percentage integer, rest_percentage integer,
                starred boolean, flashcard_order_id integer, until_100 boolean,
-               studied integer, show_first text)
+               studied integer, show_first text, study_method text)
 as $$
 	declare
 	_file_id	integer := 0;
@@ -43,6 +43,7 @@ begin
       coalesce(uf.until_100, false)::BOOLEAN,
       coalesce(uf.studied, 0)::INTEGER,
       coalesce(uf.show_first, 'Term')::TEXT
+      coalesce(uf.study_method, 'classic')::TEXT
     from files f 
       left join users_files uf on f.id = uf.file_id 
       join users u on u.id = f.owner_id

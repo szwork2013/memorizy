@@ -21,7 +21,7 @@ $$ language plpgsql;
 create or replace function get_file(_user_id integer, _path text[]) 
 returns table (id integer, owner_id integer, owner_name text, name text,
                size integer, type text, percentage integer, rest_percentage integer,
-               starred boolean, study_order_id integer, until_100 boolean,
+               starred boolean, flashcard_order_id integer, until_100 boolean,
                studied integer, show_first text)
 as $$
 	declare
@@ -39,10 +39,10 @@ begin
       coalesce(uf.percentage, 0)::INTEGER,
       coalesce(uf.rest_percentage, 0)::INTEGER,
       coalesce(uf.starred, false)::BOOLEAN,
-      coalesce(uf.study_order_id, 1)::INTEGER,
+      coalesce(uf.flashcard_order_id, 1)::INTEGER,
       coalesce(uf.until_100, false)::BOOLEAN,
       coalesce(uf.studied, 0)::INTEGER,
-      coalesce(uf.show_first, 'term')::TEXT
+      coalesce(uf.show_first, 'Term')::TEXT
     from files f 
       left join users_files uf on f.id = uf.file_id 
       join users u on u.id = f.owner_id

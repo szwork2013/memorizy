@@ -395,21 +395,21 @@ FileManager.prototype.unstar = function (userId, fileId) {
   });
 };
 
-FileManager.prototype.getFileFlashcards = function (userId, fileId, studyOrderId) {
+FileManager.prototype.getFileFlashcards = function (userId, fileId, flashcardOrderId) {
   if (typeof userId !== 'number') {
     return q.reject('userId = ' + userId + ' (expected a number)');	
   }
   if (typeof fileId !== 'number') {
     return q.reject('fileId = ' + fileId + ' (expected a number)');
   }
-  if (typeof studyOrderId !== 'number') {
-    return q.reject('studyOrderId = ' + studyOrderId + ' (expected a number)');
+  if (typeof flashcardOrderId !== 'number') {
+    return q.reject('flashcardOrderId = ' + flashcardOrderId + ' (expected a number)');
   }
 
   return db.executePreparedStatement({
     name: 'getFileFlashcards',
     text: 'select * from get_flashcards($1, $2, $3)',
-    values: [ userId, fileId, studyOrderId ]
+    values: [ userId, fileId, flashcardOrderId ]
   })
   .then(function (res) {
     return res.rows;

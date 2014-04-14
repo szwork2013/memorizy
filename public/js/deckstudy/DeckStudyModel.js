@@ -32,7 +32,7 @@ DeckStudyModel.prototype = {
     this.deck = deck; 
 
     this.studyOpt = {
-      showFirst: 'term'
+      showFirst: deck.show_first
     };
 
     this.visible = {
@@ -76,15 +76,15 @@ DeckStudyModel.prototype = {
       this.deck.active = index;
       this.visible.answerButtons = false;
       switch(this.studyOpt.showFirst) {
-        case 'term':
+        case 'Term':
           this.visible.term = true;
         this.visible.definition = false;
         break;
-        case 'definition':
+        case 'Definition':
           this.visible.term = false;
         this.visible.definition = true;
         break;
-        case 'random':
+        case 'Random':
           if (Math.random() < 0.5) {
           this.visible.term = true;
           this.visible.definition = false;
@@ -94,13 +94,13 @@ DeckStudyModel.prototype = {
           this.visible.definition = true;
         }
         break;
-        case 'both':
+        case 'Both':
           this.visible.term = true;
         this.visible.definition = true;
         this.visible.answerButtons = true;
         break;
         default:
-          console.log('this.studyOpt.visible.First value cannot be handled');
+          console.log('this.studyOpt.visible.showFirst value cannot be handled');
         break;
       }
     }
@@ -142,21 +142,21 @@ DeckStudyModel.prototype = {
     w.percentage = 100 * w.number / this.stats.answered;
   },
 
-  updateStudyOrder: function (file, studyOrderId) {
+  updateFlashcardOrder: function (flashcardOrderId) {
     return this.$http.put('/api' + this.$location.path(), { 
-      fileId: file.id,
-      studyOrderId: studyOrderId
+      fileId: this.deck.id,
+      flashcardOrderId: flashcardOrderId
     }, { 
       params: {
-        action: 'updateStudyOrder',
+        action: 'updateFlashcardOrder',
       }
     });
   },
 
-  sort: function (studyOrderId) {
-    this.deck.study_order_id = studyOrderId;
-    this.updateStudyOrder(this.deck, studyOrderId);
-    switch (studyOrderId) {
+  sort: function (flashcardOrderId) {
+    this.deck.flashcard_order_id = flashcardOrderId;
+    this.updateFlashcardOrder(flashcardOrderId);
+    switch (flashcardOrderId) {
       case 1: this._sortByIndex(); break; 
       case 2: this._sortByDifficulty(); break; 
       case 3: this._sortByViews(); break; 
@@ -201,6 +201,26 @@ DeckStudyModel.prototype = {
       if (a.index < b.index) { return -1; }
       else { return 1; }
     });
+  },
+
+  updateShowFirst: function (side) {
+    return this.$http.put('/api' + this.$location.path(), { 
+      fileId: this.deck.id,
+      showFirst: side
+    }, { 
+      params: {
+        action: 'updateShowFirst',
+      }
+    });
+  },
+
+  showFirst: function (side) {
+    this.studyOpt.showFirst = side;
+    if (this.visible.term === false || this.visible.definition === false) {
+      this.show(this.deck.active); // refresh display if a side is still hidden
+    }
+
+    this.updateShowFirst(side);
   }
 };
 

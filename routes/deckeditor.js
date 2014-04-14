@@ -5,7 +5,7 @@ module.exports = function (app) {
       return next();
     }
 
-    deckEditor.saveFlashcard(2, req.body)
+    deckEditor.saveFlashcard(req.user.id, req.body)
     .then(function (flashcard) {
       res.json(flashcard);
     })

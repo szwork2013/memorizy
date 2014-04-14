@@ -5,7 +5,7 @@ module.exports = function (app) {
       return next();
     }
 
-    deckStudy.updateStats(2, req.body).then(function () {
+    deckStudy.updateStats(req.user.id, req.body).then(function () {
       res.send(204);
     })
     .catch(function (err) {
@@ -15,11 +15,11 @@ module.exports = function (app) {
   });
 
   app.put('/api/:username/:files?*', function (req, res, next) {
-    if (req.query.action !== 'updateStudyOrder') {
+    if (req.query.action !== 'updateFlashcardOrder') {
       return next();
     }
 
-    deckStudy.updateStudyOrder(2, req.body.fileId, req.body.studyOrderId).
+    deckStudy.updateFlashcardOrder(req.user.id, req.body.fileId, req.body.flashcardOrderId).
       then(function () {
         res.send(204);
       }).
@@ -29,5 +29,19 @@ module.exports = function (app) {
       });
   });
 
+  app.put('/api/:username/:files?*', function (req, res, next) {
+    if (req.query.action !== 'updateShowFirst') {
+      return next();
+    }
+
+    deckStudy.updateShowFirst(req.user.id, req.body.fileId, req.body.showFirst).
+      then(function () {
+        res.send(204);
+      }).
+      catch(function (err) {
+        console.log(err);
+        res.send(400);
+      });
+  });
 };
 

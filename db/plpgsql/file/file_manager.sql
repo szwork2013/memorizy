@@ -1,7 +1,7 @@
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
 returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
-               percentage integer, starred boolean, study_order_id integer)
+               percentage integer, starred boolean, flashcard_order_id integer)
 as $$
 begin
   if not exists(
@@ -30,7 +30,7 @@ begin
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
       coalesce(uf.starred::BOOLEAN, 'f'), 
-      coalesce(uf.study_order_id::INTEGER, 1)
+      coalesce(uf.flashcard_order_id::INTEGER, 1)
     from 
       files f 
       left join users_files uf on f.id = uf.file_id 
@@ -47,7 +47,7 @@ $$ language plpgsql;
 create or replace 
 function get_folder_content (_user_id integer, _path text[]) 
 returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
-               percentage integer, starred boolean, study_order_id integer)
+               percentage integer, starred boolean, flashcard_order_id integer)
 as $$
 declare
   _file_id  integer := 0;
@@ -56,7 +56,7 @@ begin
 
   create temp table tt (
     id integer, owner_id integer, name text, size integer, type text, 
-    percentage integer, starred boolean, study_order_id integer
+    percentage integer, starred boolean, flashcard_order_id integer
   ) on commit drop;
 
   insert into tt 
@@ -645,41 +645,5 @@ begin
     from parents
   );
 
-end;
-$$ language plpgsql;
-
-create or replace function update_study_order (_user_id integer, _file_id integer, _order_id integer)
-returns void as $$
-begin
-  with upsert as (
-    update users_files
-    set study_order_id = _order_id 
-    where user_id = _user_id and 
-    file_id = _file_id
-    returning *
-  )
-  insert into users_files (user_id, file_id, study_order_id)
-  select _user_id, _file_id, _order_id
-  where not exists (
-    select 1 from upsert
-  );
-end;
-$$ language plpgsql;
-
-create or replace function update_until_100 (_user_id integer, _file_id integer, _enable boolean)
-returns void as $$
-begin
-  with upsert as (
-    update users_files
-    set until_100 = _enabled
-    where user_id = _user_id and 
-    file_id = _file_id
-    returning *
-  )
-  insert into users_files (user_id, file_id, until_100)
-  select _user_id, _file_id, _enable
-  where not exists (
-    select 1 from upsert
-  );
 end;
 $$ language plpgsql;

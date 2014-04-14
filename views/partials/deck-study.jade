@@ -42,21 +42,39 @@ append content
             
       #content-right(ng-if="visible.stats == false")
         #study-options
-          p
+          div
             | Study order: 
             .btn-group
               a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
-                | {{stringifyStudyOrder(deck.study_order_id)}}
+                | {{stringifyFlashcardOrder(deck.flashcard_order_id)}}
                 span.caret
               ul.dropdown-menu(role="menu")
-                li(role="presentation" ng-repeat="order in studyOrders")
-                  a(role="menuitem" href="#" ng-bind="order" ng-click="setStudyOrder($index + 1)") 
-          p 
+                li(role="presentation" ng-repeat="order in flashcardOrders")
+                  a(role="menuitem" href="#" ng-bind="order" ng-click="setFlashcardOrder($index + 1)") 
+          div 
             | Show first:
-            select.form-control
-              option(value="term") Term
-              option(value="definition") Definition
-              option(value="random") Random
-              option(value="both") Both
+            .btn-group
+              a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
+                | {{studyOpt.showFirst}}
+                span.caret
+              ul.dropdown-menu(role="menu")
+                li(role="presentation")
+                  a(role="menuitem" href="#" ng-click="showFirst('Term')") Term 
+                  a(role="menuitem" href="#" ng-click="showFirst('Definition')") Definition
+                  a(role="menuitem" href="#" ng-click="showFirst('Random')") Random
+                  a(role="menuitem" href="#" ng-click="showFirst('Both')") Both
+
+          input(type="radio" name="quantity" id="fixed" value="fixed" checked)
+          label(for="fixed") Qt:
+            input.tiny-input(type="number" min="1" ng-max="{{deck.flashcards.length}}" ng-model="studyOpt.quantity")
+          br
+          input(type="radio" name="quantity" id="get-100" value="get-100")
+          label(for="get-100") Get 100%
+          div(ng-show="studyOpt.get100 == true") 
+            | Learn
+            input.tiny-input(type="number" id="packet-size" min="1" ng-max="deck.flashcards.length" ng-model="studyOpt.packetSize")
+            | by 
+            span(ng-bind="studyOpt.packetSize")
+
         #flashcard-info 
 

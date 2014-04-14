@@ -42,19 +42,23 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
       $scope.showNext();
     };
 
-    $scope.studyOrders = [
+    $scope.flashcardOrders = [
       'Classic',
       'Hardest to easiest',
       'Least studied',
       'Wrongs'
     ];
 
-    $scope.stringifyStudyOrder = function (studyOrderId) {
-      return $scope.studyOrders[studyOrderId - 1];
+    $scope.stringifyFlashcardOrder = function (flashcardOrderId) {
+      return $scope.flashcardOrders[flashcardOrderId - 1];
     };
 
-    $scope.setStudyOrder = function (studyOrderId) {
-      DeckStudyModel.sort(studyOrderId);
+    $scope.setFlashcardOrder = function (flashcardOrderId) {
+      DeckStudyModel.sort(flashcardOrderId);
+    };
+
+    $scope.showFirst = function (side) {
+      DeckStudyModel.showFirst(side);
     };
 
     $document.bind('keypress', function (event) {

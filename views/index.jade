@@ -60,6 +60,10 @@ html(ng-app="memorizy")
 
       script(src='/js/encodeURI/encodeURI.js')
       script(src='/js/encodeURI/encodeURIFilter.js')
+
+      script(src='/js/input/Input.js')
+      script(src='/js/input/NumberDirectives.js')
+
   body
     block body 
       div(ng-if="user" ng-include="'/partials/navbar-logged-in'" ng-controller="NavbarCtrl")

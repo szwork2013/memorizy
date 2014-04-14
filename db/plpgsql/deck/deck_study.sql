@@ -81,3 +81,58 @@ begin
   return _percentage;
 end;
 $$ language plpgsql;
+
+create or replace function update_flashcard_order (_user_id integer, _file_id integer, _order_id integer)
+returns void as $$
+begin
+  with upsert as (
+    update users_files
+    set flashcard_order_id = _order_id 
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, flashcard_order_id)
+  select _user_id, _file_id, _order_id
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$ language plpgsql;
+
+create or replace function update_until_100 (_user_id integer, _file_id integer, _enable boolean)
+returns void as $$
+begin
+  with upsert as (
+    update users_files
+    set until_100 = _enabled
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, until_100)
+  select _user_id, _file_id, _enable
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$ language plpgsql;
+
+create or replace function update_show_first (_user_id integer, _file_id integer, 
+                                              _side text)
+returns void as $$
+begin
+  with upsert as (
+    update users_files
+    set show_first = _side 
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, show_first)
+  select _user_id, _file_id, _side
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$ language plpgsql;

@@ -11,6 +11,7 @@ angular.module('memorizy', [
   'memorizy.mouse',
   'memorizy.contenteditable',
   'memorizy.encodeURI',
+  'memorizy.input',
 
   //'http-auth-interceptor',
 

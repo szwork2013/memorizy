@@ -16,7 +16,7 @@ insert into file_tree (ancestor_id, descendant_id, dist) values ( 0, 0, 0 );
 
 -- insert study modes
 
-insert into study_orders (mode) values ('Classic');
-insert into study_orders (mode) values ('Hardest to easiest');
-insert into study_orders (mode) values ('Least studied');
-insert into study_orders (mode) values ('Wrongs');
+insert into flashcard_orders (flashcard_order) values ('Classic');
+insert into flashcard_orders (flashcard_order) values ('Hardest to easiest');
+insert into flashcard_orders (flashcard_order) values ('Least studied');
+insert into flashcard_orders (flashcard_order) values ('Wrongs');

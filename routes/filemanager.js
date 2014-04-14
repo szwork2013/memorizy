@@ -1,8 +1,6 @@
 var fileManager = require('../models/filemanager.js');
 
 function sendFolderContent (req, res, folder) {
-  req.user = { id: 2}; // test code
-
   fileManager.getFolderContentById(req.user.id, folder.id)
   .then(function(rows){
     folder.type = 'folder';
@@ -19,10 +17,10 @@ function sendFolderContent (req, res, folder) {
 
 function sendDeckFlashcards (req, res, deck) {
   var order = req.query.action === 'study' ?
-    deck.study_order_id : 1; // Force classic order on edit mode
+    deck.flashcard_order_id : 1; // Force classic order on edit mode
 
   console.log('order = ' + order);
-  fileManager.getFileFlashcards(2, deck.id, order).
+  fileManager.getFileFlashcards(req.user.id, deck.id, order).
     then(function (flashcards) {
       deck.flashcards = flashcards;
       deck.type = 'deck';
@@ -66,7 +64,7 @@ module.exports = function (app) {
       return next();
     }
     
-    fileManager.getFileTree(2).then(function (tree) {
+    fileManager.getFileTree(req.user.id).then(function (tree) {
       res.json(tree);
     })
     .catch(function (err) {
@@ -82,12 +80,12 @@ module.exports = function (app) {
 
     var file = req.body;
     file.path = req.path.slice('/api'.length);
-		fileManager.createFile(2 /*req.user.id*/, file).then(function (val) {
+		fileManager.createFile(req.user.id, file).then(function (val) {
 			res.json({
 				id: val,
 				type: file.type,
 				name: file.name,
-				ownerId: 2/*req.user.id*/
+				ownerId: req.user.id
 			});
 		}).catch(function(err){
 			console.log(err);
@@ -99,7 +97,7 @@ module.exports = function (app) {
       return next();
     }
 
-    fileManager.moveFile(2, req.body.src, req.body.dest).then(function () {
+    fileManager.moveFile(req.user.id, req.body.src, req.body.dest).then(function () {
       res.send(204);
     })
     .catch(function (err) {
@@ -114,7 +112,7 @@ module.exports = function (app) {
       return next();
     }
 
-    fileManager.copyFile(2, req.body.src, req.body.dest).then(function (id) {
+    fileManager.copyFile(req.user.id, req.body.src, req.body.dest).then(function (id) {
       console.log('send id ' + id);
       res.json({
         fileId: id
@@ -133,7 +131,7 @@ module.exports = function (app) {
     var newName = req.body.newName;
     var fileId = req.body.fileId;
     
-    fileManager.renameFile(2, fileId, newName).then(function () {
+    fileManager.renameFile(req.user.id, fileId, newName).then(function () {
       res.send(204);
     }).catch(function (err) {
       console.log(err);
@@ -147,7 +145,7 @@ module.exports = function (app) {
     }
     
     console.log('delete file ' + req.query.fileId);
-		fileManager.deleteFile(/*req.user.id*/2, parseInt(req.query.fileId)).then(function (val) {
+		fileManager.deleteFile(req.user.id, parseInt(req.query.fileId)).then(function (val) {
 			res.json({
 				id: val,
 			});

@@ -4,9 +4,8 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
   function ($scope, $document, DeckStudyModel) {
     DeckStudyModel.init($scope.deck);
 
-    $scope.studyOpt = DeckStudyModel.studyOpt;
+    $scope.session = DeckStudyModel.session;
     $scope.visible = DeckStudyModel.visible;
-    $scope.stats = DeckStudyModel.stats;
 
     $scope.show = function (index) {
       DeckStudyModel.show(index);
@@ -60,6 +59,15 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
     $scope.showFirst = function (side) {
       DeckStudyModel.showFirst(side);
     };
+
+    $scope.StudyMethods = DeckStudyModel.StudyMethods;
+    $scope.updateStudyMethod = function (method) {
+      DeckStudyModel.updateStudyMethod(method);
+    };
+
+    $scope.$watch('session.options.method', function (newVal, oldVal) {
+      $scope.updateStudyMethod(newVal);
+    });
 
     $document.bind('keypress', function (event) {
       var key = event.which || event.keyCode || event.charCode;

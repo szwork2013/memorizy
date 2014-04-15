@@ -10,29 +10,36 @@ function DeckStudyModel ($rootScope, $http, $location) {
   this.deck = null;
 
   /**
-   * contains every options such as flashcards
-   * order or the side to show first
+   * contains every information about the current
+   * study session, such as options or stats
    */
-  this.studyOpt = null;
-
-  /**
-   * defines visible/hidden content 
-   */
-  this.visible = null;
-
-  /**
-   * contains stats related to current study
-   * session
-   */
-  this.stats = null;
+  this.session = null;
 }
 
 DeckStudyModel.prototype = {
   init: function (deck) { 
     this.deck = deck; 
 
-    this.studyOpt = {
-      showFirst: deck.show_first
+    this.session = {
+      options: {
+        showFirst: deck.show_first,
+        method: deck.study_method,
+        packetSize: 10 // used only if method === StudyMethods.GET100
+      },
+
+      stats: {
+        answered: 0,
+        correct: {
+          number: 0,
+          percentage: 0,
+          flashcardIds: []
+        },
+        wrong: {
+          number: 0,
+          percentage: 0,
+          flashcardIds: []
+        }
+      }
     };
 
     this.visible = {
@@ -42,19 +49,6 @@ DeckStudyModel.prototype = {
       stats: false
     };
 
-    this.stats = {
-      answered: 0,
-      correct: {
-        number: 0,
-        percentage: 0,
-        flashcardIds: []
-      },
-      wrong: {
-        number: 0,
-        percentage: 0,
-        flashcardIds: []
-      }
-    };
     this._initEventListeners();
   },
 
@@ -75,7 +69,7 @@ DeckStudyModel.prototype = {
     else {
       this.deck.active = index;
       this.visible.answerButtons = false;
-      switch(this.studyOpt.showFirst) {
+      switch(this.session.options.showFirst) {
         case 'Term':
           this.visible.term = true;
         this.visible.definition = false;
@@ -100,7 +94,7 @@ DeckStudyModel.prototype = {
         this.visible.answerButtons = true;
         break;
         default:
-          console.log('this.studyOpt.visible.showFirst value cannot be handled');
+          console.log('this.session.options.visible.showFirst value cannot be handled');
         break;
       }
     }
@@ -124,10 +118,10 @@ DeckStudyModel.prototype = {
   },
 
   answer: function (id, correct) {
-    var c = this.stats.correct,
-    w = this.stats.wrong;
+    var c = this.session.stats.correct,
+    w = this.session.stats.wrong;
 
-    this.stats.answered++;
+    this.session.stats.answered++;
 
     if (correct) {
       c.number++;
@@ -138,8 +132,8 @@ DeckStudyModel.prototype = {
       w.flashcardIds.push(id);
     }
 
-    c.percentage = 100 * c.number / this.stats.answered;
-    w.percentage = 100 * w.number / this.stats.answered;
+    c.percentage = 100 * c.number / this.session.stats.answered;
+    w.percentage = 100 * w.number / this.session.stats.answered;
   },
 
   updateFlashcardOrder: function (flashcardOrderId) {
@@ -215,13 +209,39 @@ DeckStudyModel.prototype = {
   },
 
   showFirst: function (side) {
-    this.studyOpt.showFirst = side;
+    this.session.options.showFirst = side;
     if (this.visible.term === false || this.visible.definition === false) {
       this.show(this.deck.active); // refresh display if a side is still hidden
     }
 
     this.updateShowFirst(side);
+  },
+
+  /** @enum */
+  StudyMethods: {
+    CLASSIC: 'classic',
+    GET100 : 'get100'
+  },
+
+  updateStudyMethod: function (method) {
+    switch (method) {
+      case this.StudyMethods.CLASSIC: break;
+      case this.StudyMethods.GET100: break;
+      default: 
+        console.log('unhandled study method: ', method);
+        return;
+    }
+
+    return this.$http.put('/api' + this.$location.path(), { 
+      fileId: this.deck.id,
+      studyMethod: method
+    }, { 
+      params: {
+        action: 'updateStudyMethod'
+      }
+    });
   }
+
 };
 
 angular.module('memorizy.deckstudy.DeckStudyModel', [])

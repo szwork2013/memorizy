@@ -32,11 +32,11 @@ append content
             span(ng-bind="deck.flashcards.length")
           p
             | Correct answers: 
-            span(ng-bind="stats.correct.percentage")
+            span(ng-bind="session.stats.correct.percentage")
             |%
           p
             | Wrong answers: 
-            span(ng-bind="stats.wrong.percentage")
+            span(ng-bind="session.stats.wrong.percentage")
             |%
 
             
@@ -55,7 +55,7 @@ append content
             | Show first:
             .btn-group
               a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
-                | {{studyOpt.showFirst}}
+                | {{session.options.showFirst}}
                 span.caret
               ul.dropdown-menu(role="menu")
                 li(role="presentation")
@@ -64,17 +64,17 @@ append content
                   a(role="menuitem" href="#" ng-click="showFirst('Random')") Random
                   a(role="menuitem" href="#" ng-click="showFirst('Both')") Both
 
-          input(type="radio" name="quantity" id="fixed" value="fixed" checked)
+          input(type="radio" name="quantity" id="fixed" ng-checked="session.options.method == StudyMethods.CLASSIC" ng-model="session.options.method" ng-value="StudyMethods.CLASSIC")
           label(for="fixed") Qt:
-            input.tiny-input(type="number" min="1" ng-max="{{deck.flashcards.length}}" ng-model="studyOpt.quantity")
+            input.tiny-input(type="number" min="1" ng-max="{{deck.flashcards.length}}" ng-model="session.options.quantity")
           br
-          input(type="radio" name="quantity" id="get-100" value="get-100")
+          input(type="radio" name="quantity" id="get-100" ng-checked="session.options.method == StudyMethods.GET100" ng-model="session.options.method" ng-value="StudyMethods.GET100")
           label(for="get-100") Get 100%
-          div(ng-show="studyOpt.get100 == true") 
+          div(ng-show="session.options.method == StudyMethods.GET100") 
             | Learn
-            input.tiny-input(type="number" id="packet-size" min="1" ng-max="deck.flashcards.length" ng-model="studyOpt.packetSize")
+            input.tiny-input(type="number" id="packet-size" ng-model="session.options.packetSize")
             | by 
-            span(ng-bind="studyOpt.packetSize")
+            span(ng-bind="session.options.packetSize")
 
         #flashcard-info 
 

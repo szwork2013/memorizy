@@ -30,6 +30,21 @@ module.exports = function (app) {
   });
 
   app.put('/api/:username/:files?*', function (req, res, next) {
+    if (req.query.action !== 'updateStudyMethod') {
+      return next();
+    }
+
+    deckStudy.updateStudyMethod(req.user.id, req.body.fileId, req.body.studyMethod).
+      then(function () {
+        res.send(204);
+      }).
+      catch(function (err) {
+        console.log(err);
+        res.send(400);
+      });
+  });
+
+  app.put('/api/:username/:files?*', function (req, res, next) {
     if (req.query.action !== 'updateShowFirst') {
       return next();
     }

@@ -136,3 +136,22 @@ begin
   );
 end;
 $$ language plpgsql;
+
+create or replace function update_study_method (_user_id integer, _file_id integer, 
+                                              _method text)
+returns void as $$
+begin
+  with upsert as (
+    update users_files
+    set study_method = _method
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, study_method)
+  select _user_id, _file_id, _method
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$ language plpgsql;

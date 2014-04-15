@@ -24,7 +24,7 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
     };
 
     $scope.showNext = function () {
-      DeckStudyModel.show(DeckStudyModel.deck.active + 1);
+      DeckStudyModel.show(DeckStudyModel.session.index + 1);
 
       if ($scope.$root.$$phase !== '$apply' && $scope.$root.$$phase !== '$digest') {
         $scope.$apply();
@@ -32,7 +32,7 @@ angular.module('memorizy.deckstudy.DeckStudyCtrl', [])
     };
 
     $scope.answer = function (correct) {
-      var active = DeckStudyModel.deck.active;
+      var active = DeckStudyModel.session.index;
       DeckStudyModel.answer(active.id, correct);
       if ($scope.$root.$$phase !== '$apply' && $scope.$root.$$phase !== '$digest') {
         $scope.$apply();

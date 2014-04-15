@@ -5,13 +5,13 @@ append content
   #content
     #flashcard-editor
       #content-left(ng-if="visible.stats == false")
-        span(ng-bind="deck.active + 1") 
+        span(ng-bind="session.index + 1") 
         / 
         span(ng-bind="deck.flashcards.length")
       #content-center
         #flashcard(ng-if="visible.stats == false")
           .term
-            .text(ng-bind="deck.flashcards[deck.active].term_text" spellcheck="false" ng-show="visible.term == true")
+            .text(ng-bind="deck.flashcards[session.index].term_text" spellcheck="false" ng-show="visible.term == true")
           .definition
             //-.media.media-halfsize
               //-.upload-form
@@ -21,7 +21,7 @@ append content
                 //-.MB
               //-canvas.media-canvas
 
-            .text(ng-bind="deck.flashcards[deck.active].definition_text" spellcheck="false" ng-show="visible.definition == true")
+            .text(ng-bind="deck.flashcards[session.index].definition_text" spellcheck="false" ng-show="visible.definition == true")
           .answer-bar.btn-group
             button#btn-wrong.btn.btn-default(type="button" ng-click="answer(false)" ng-show="visible.answerButtons == true") Wrong
             button#btn-turn.btn.btn-default(type="button" ng-click="showAll()" ng-show="visible.answerButtons != true") Turn
@@ -72,9 +72,9 @@ append content
           label(for="get-100") Get 100%
           div(ng-show="session.options.method == StudyMethods.GET100") 
             | Learn
-            input.tiny-input(type="number" id="packet-size" ng-model="session.options.packetSize")
+            input.tiny-input(type="number" id="subdeck-size" ng-model="session.options.subdeckSize")
             | by 
-            span(ng-bind="session.options.packetSize")
+            span(ng-bind="session.options.subdeckSize")
 
         #flashcard-info 
 

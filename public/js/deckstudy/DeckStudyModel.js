@@ -21,10 +21,12 @@ DeckStudyModel.prototype = {
     this.deck = deck; 
 
     this.session = {
+      index: 0,
+
       options: {
         showFirst: deck.show_first,
         method: deck.study_method,
-        packetSize: 10 // used only if method === StudyMethods.GET100
+        subdeckSize: 10 // used only if method === StudyMethods.GET100
       },
 
       stats: {
@@ -39,6 +41,11 @@ DeckStudyModel.prototype = {
           percentage: 0,
           flashcardIds: []
         }
+      },
+
+      subdeck: {
+        index: 0,
+        flashcards: [],
       }
     };
 
@@ -67,7 +74,7 @@ DeckStudyModel.prototype = {
       this.$rootScope.$emit('end');
     }
     else {
-      this.deck.active = index;
+      this.session.index = index;
       this.visible.answerButtons = false;
       switch(this.session.options.showFirst) {
         case 'Term':
@@ -211,7 +218,7 @@ DeckStudyModel.prototype = {
   showFirst: function (side) {
     this.session.options.showFirst = side;
     if (this.visible.term === false || this.visible.definition === false) {
-      this.show(this.deck.active); // refresh display if a side is still hidden
+      this.show(this.session.index); // refresh display if a side is still hidden
     }
 
     this.updateShowFirst(side);

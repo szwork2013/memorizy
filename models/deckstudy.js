@@ -45,4 +45,21 @@ DeckStudy.prototype.updateShowFirst = function (userId, fileId, side) {
   });
 };
 
+DeckStudy.prototype.updateStudyMethod = function (userId, fileId, method) {
+  if (typeof userId !== 'number') {
+    return q.reject('userId = ' + userId + ' (expected a number)');
+  }
+  if (typeof fileId !== 'number') {
+    return q.reject('fileId = ' + fileId + ' (expected a number)');	
+  }
+  if (typeof method !== 'string') {
+    return q.reject('method = ' + method + ' (expected a string)');	
+  }
+
+  return db.executePreparedStatement({
+    name : 'updateStudyMethod',
+    text : 'select update_study_method($1::INTEGER, $2::INTEGER, $3::TEXT)',
+    values : [userId, fileId, method]
+  });
+};
 module.exports = singleton;

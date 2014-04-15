@@ -42,7 +42,7 @@ begin
       coalesce(uf.flashcard_order_id, 1)::INTEGER,
       coalesce(uf.until_100, false)::BOOLEAN,
       coalesce(uf.studied, 0)::INTEGER,
-      coalesce(uf.show_first, 'Term')::TEXT
+      coalesce(uf.show_first, 'Term')::TEXT,
       coalesce(uf.study_method, 'classic')::TEXT
     from files f 
       left join users_files uf on f.id = uf.file_id 

@@ -54,7 +54,7 @@
       <predecessors>
         <predecessor id="1" predecessor-id="6" type="FS"/>
       </predecessors>
-      <task id="8" name="Study modes" note="" work="288000" start="20140419T170000Z" end="20140429T170000Z" work-start="20140420T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="8" name="Study modes" note="" work="288000" start="20140419T170000Z" end="20140429T170000Z" work-start="20140420T080000Z" percent-complete="30" priority="0" type="normal" scheduling="fixed-work"/>
       <task id="9" name="Affichage des infos sur la flashcard" note="" work="86400" start="20140429T170000Z" end="20140502T170000Z" work-start="20140430T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
           <predecessor id="1" predecessor-id="8" type="FS"/>

@@ -46,11 +46,11 @@ append content
             | Study order: 
             .btn-group
               a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
-                | {{stringifyFlashcardOrder(deck.flashcard_order_id)}}
+                | {{stringifyFlashcardOrder(session.options.order)}}
                 span.caret
               ul.dropdown-menu(role="menu")
-                li(role="presentation" ng-repeat="order in flashcardOrders")
-                  a(role="menuitem" href="#" ng-bind="order" ng-click="setFlashcardOrder($index + 1)") 
+                li(role="presentation" ng-repeat="(key, prop) in FlashcardOrders")
+                  a(role="menuitem" href="#" ng-bind="stringifyFlashcardOrder(prop)" ng-click="updateFlashcardOrder(prop)") 
           div 
             | Show first:
             .btn-group
@@ -59,12 +59,16 @@ append content
                 span.caret
               ul.dropdown-menu(role="menu")
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="showFirst('Term')") Term 
-                  a(role="menuitem" href="#" ng-click="showFirst('Definition')") Definition
-                  a(role="menuitem" href="#" ng-click="showFirst('Random')") Random
-                  a(role="menuitem" href="#" ng-click="showFirst('Both')") Both
+                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.TERM)") Term
+                li(role="presentation")
+                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.DEFINITION)") Definition
+                li(role="presentation")
+                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.RANDOM)") Random
+                li(role="presentation")
+                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.BOTH)") Both
 
-          input(type="radio" name="quantity" id="fixed" ng-checked="session.options.method == StudyMethods.CLASSIC" ng-model="session.options.method" ng-value="StudyMethods.CLASSIC")
+          input(type="radio" name="quantity" id="fixed" ng-checked="session.options.method == StudyMethods.CLASSIC" 
+            ng-model="session.options.method" ng-value="StudyMethods.CLASSIC")
           label(for="fixed") Qt:
             input.tiny-input(type="number" min="1" ng-max="{{deck.flashcards.length}}" ng-model="session.options.quantity")
           br

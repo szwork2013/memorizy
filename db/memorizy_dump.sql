@@ -951,7 +951,7 @@ ALTER FUNCTION public.failed_test(thetest text) OWNER TO postgres;
 -- Name: get_file(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, flashcard_order_id integer, until_100 boolean, studied integer, show_first text)
+CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, flashcard_order_id integer, until_100 boolean, studied integer, show_first text, study_method text)
     LANGUAGE plpgsql
     AS $$
 	declare
@@ -972,7 +972,8 @@ begin
       coalesce(uf.flashcard_order_id, 1)::INTEGER,
       coalesce(uf.until_100, false)::BOOLEAN,
       coalesce(uf.studied, 0)::INTEGER,
-      coalesce(uf.show_first, 'Term')::TEXT
+      coalesce(uf.show_first, 'Term')::TEXT,
+      coalesce(uf.study_method, 'classic')::TEXT
     from files f 
       left join users_files uf on f.id = uf.file_id 
       join users u on u.id = f.owner_id
@@ -1154,7 +1155,7 @@ ALTER FUNCTION public.get_flashcards(_user_id integer, _file_id integer, _order_
 -- Name: get_folder_content(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, flashcard_order_id integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _folder_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, flashcard_order_id integer, study_method text)
     LANGUAGE plpgsql
     AS $$
 begin
@@ -1183,8 +1184,9 @@ begin
       f.size::INTEGER, 
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
-      coalesce(uf.starred::BOOLEAN, 'f'), 
-      coalesce(uf.flashcard_order_id::INTEGER, 1)
+      coalesce(uf.starred, 'f')::BOOLEAN, 
+      coalesce(uf.flashcard_order_id, 1)::INTEGER,
+      coalesce(uf.study_method, 'classic')::TEXT
     from 
       files f 
       left join users_files uf on f.id = uf.file_id 
@@ -1205,7 +1207,7 @@ ALTER FUNCTION public.get_folder_content(_user_id integer, _folder_id integer) O
 -- Name: get_folder_content(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, flashcard_order_id integer)
+CREATE FUNCTION get_folder_content(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, starred boolean, flashcard_order_id integer, study_method text)
     LANGUAGE plpgsql
     AS $$
 declare
@@ -2334,6 +2336,32 @@ $$;
 ALTER FUNCTION public.update_show_first(_user_id integer, _file_id integer, _side text) OWNER TO postgres;
 
 --
+-- Name: update_study_method(integer, integer, text); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_study_method(_user_id integer, _file_id integer, _method text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+  with upsert as (
+    update users_files
+    set study_method = _method
+    where user_id = _user_id and 
+    file_id = _file_id
+    returning *
+  )
+  insert into users_files (user_id, file_id, study_method)
+  select _user_id, _file_id, _method
+  where not exists (
+    select 1 from upsert
+  );
+end;
+$$;
+
+
+ALTER FUNCTION public.update_study_method(_user_id integer, _file_id integer, _method text) OWNER TO postgres;
+
+--
 -- Name: update_study_order(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -2842,8 +2870,9 @@ ALTER SEQUENCE users_files_id_seq OWNED BY users_files.id;
 CREATE TABLE users_flashcards (
     user_id integer NOT NULL,
     flashcard_id integer NOT NULL,
-    state_history character(5) DEFAULT '11111'::bpchar NOT NULL,
     studied integer DEFAULT 0 NOT NULL,
+    status integer DEFAULT 0 NOT NULL,
+    CONSTRAINT users_flashcards_status_check CHECK (((status >= (-1)) AND (status <= 3))),
     CONSTRAINT users_flashcards_studied_check CHECK ((studied >= 0))
 );
 

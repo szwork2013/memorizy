@@ -1,123 +1,127 @@
-function DeckStudyModel ($rootScope, $http, $location, studySession) {
-  this.$rootScope = $rootScope;
-  this.$http = $http;
-  this.$location = $location;
+(function () {
+  'use strict';
 
   /**
-   * contains flashcards in the current
-   * order
+   * DeckStudyModel
+   *
+   * @constructor
+   * @param {Object} $rootScope 
+   * @param {Object} $http
+   * @param {Object} $location
+   * @param {StudySession} studySession will contain all information
+   *    about the current study session
    */
-  this.flashcards = null;
+  function DeckStudyModel ($rootScope, $http, $location, studySession) {
+    this.$rootScope = $rootScope;
+    this.$http = $http;
+    this.$location = $location;
+
+    /**
+     * contains flashcards in the current
+     * order
+     */
+    this.flashcards = null;
+
+    /**
+     * contains every information about the current
+     * study session, such as options or stats
+     */
+    this.session = studySession;
+  }
 
   /**
-   * contains every information about the current
-   * study session, such as options or stats
+   * configure
+   *
+   * @param {Object} deck contains information concerning the deck
+   * @param {Object} config contains information about user's stats
    */
-  this.session = studySession;
+  DeckStudyModel.prototype.configure = function (deck, config) { 
+    this.flashcards = deck.flashcards; 
+    this.session.configure(deck, config);
+  };
 
-  this._initEventListeners();
-}
+  /**
+   * _sort
+   *
+   * @param {number} flashcardOrderId specify the order in which
+   *    the flashcards should be displayed, it must be one of 
+   *    this.session.options.FlashcardOrders values
+   */
+  DeckStudyModel.prototype.sort = function (flashcardOrderId) {
+    var Orders = this.session.options.FlashcardOrders;
 
-DeckStudyModel.prototype.configure = function (deck, config) { 
-  this.flashcards = deck.flashcards; 
-  this.session.configure(deck, config);
-};
-
-DeckStudyModel.prototype._initEventListeners = function () {
-  var that = this;
-
-  // show stats at the end of the session
-  this.$rootScope.$on('end', function () {
-    that.updateStats.call(that);
-    that.showStats.call(that);
-  });
-};
-
-DeckStudyModel.prototype.answer = function (id, correct) {
-  var c = this.session.stats.correct,
-  w = this.session.stats.wrong;
-
-  this.session.stats.answered++;
-
-  if (correct) {
-    c.number++;
-    c.flashcardIds.push(id);
-  }
-  else {
-    w.number++;
-    w.flashcardIds.push(id);
-  }
-
-  c.percentage = 100 * c.number / this.session.stats.answered;
-  w.percentage = 100 * w.number / this.session.stats.answered;
-};
-
-DeckStudyModel.prototype.sort = function (flashcardOrderId) {
-  this.deck.flashcard_order_id = flashcardOrderId;
-  this.updateFlashcardOrder(flashcardOrderId);
-  switch (flashcardOrderId) {
-    case 1: this._sortByIndex(); break; 
-    case 2: this._sortByDifficulty(); break; 
-    case 3: this._sortByViews(); break; 
-    default:
-      console.log('unknown order');
-    break;
-  }
-};
-
-/**
- * _sortByDifficulty is used for the 
- * 'Hardest to easiest' order
- */
-DeckStudyModel.prototype._sortByDifficulty = function () {
-  this.deck.flashcards.sort(function (a, b) {
-    if (a.state_history < b.state_history) { return -1; }
-    else if (a.state_history > b.state_history) { return 1;}
-    else if (a.state_history === b.state_history && a.index < b.index) { return -1; }
-    else { return 1; }
-  });
-};
-
-/**
- * _sortByViews is used for the 
- * 'Least studied' order
- */
-DeckStudyModel.prototype._sortByViews = function () {
-  this.deck.flashcards.sort(function (a, b) {
-    if (a.studied < b.studied) { return -1; }
-    else if (a.studied > b.studied) { return 1; }
-    else if (a.studied === b.studied && a.index < b.index) { return -1; }
-    else { return 1; }
-  });
-};
-
-/**
- * _sortByIndex is used for the 
- * 'Classic' order
- */
-DeckStudyModel.prototype._sortByIndex = function () {
-  this.deck.flashcards.sort(function (a, b) {
-    if (a.index < b.index) { return -1; }
-    else { return 1; }
-  });
-};
-
-DeckStudyModel.prototype.showFirst = function (side) {
-  this.session.options.showFirst = side;
-  if (this.visible.term === false || this.visible.definition === false) {
-    this.show(this.session.index); // refresh display if a side is still hidden
-  }
-
-  this.updateShowFirst(side);
-};
-
-angular.module('memorizy.deckstudy.DeckStudyModel', [])
-.provider('DeckStudyModel', function () {
-  this.$get = [
-    '$rootScope', '$http', '$location', 'studySession', 
-    function ($rootScope, $http, $location, studySession) {
-      return new DeckStudyModel ($rootScope, $http, $location, studySession);
+    switch (flashcardOrderId) {
+      case Orders.CLASSIC           : this._sortByIndex(); break; 
+      case Orders.HARDEST_TO_EASIEST: this._sortByDifficulty(); break; 
+      case Orders.LEAST_STUDIED     : this._sortByViews(); break; 
+      default:
+        console.log('unknown order');
+        return;
     }
-  ];
-});
 
+    this.session.options.order = flashcardOrderId;
+    this.updateFlashcardOrder(flashcardOrderId);
+  };
+
+  /**
+   * _sortByDifficulty is used for the 'Hardest to easiest' order
+   * @private
+   */
+  DeckStudyModel.prototype._sortByDifficulty = function () {
+    this.flashcards.sort(function (a, b) {
+      if (a.status < b.status) { return -1; }
+      else if (a.status > b.status) { return 1;}
+      else if (a.status === b.status && a.index < b.index) { return -1; }
+      else { return 1; }
+    });
+  };
+
+  /**
+   * _sortByViews is used for the 'Least studied' order
+   * @private
+   */
+  DeckStudyModel.prototype._sortByViews = function () {
+    this.flashcards.sort(function (a, b) {
+      if (a.studied < b.studied) { return -1; }
+      else if (a.studied > b.studied) { return 1; }
+      else if (a.studied === b.studied && a.index < b.index) { return -1; }
+      else { return 1; }
+    });
+  };
+
+  /**
+   * _sortByIndex is used for the 'Classic' order
+   * @private
+   */
+  DeckStudyModel.prototype._sortByIndex = function () {
+    this.flashcards.sort(function (a, b) {
+      if (a.index < b.index) { return -1; }
+      else { return 1; }
+    });
+  };
+
+  /**
+   * updateShowFirst
+   *
+   * @param {string} side the side which must be displayed first,
+   *    can be one of this.session.options.Sides values
+   */
+  DeckStudyModel.prototype.updateShowFirst = function (side) {
+    // TODO check side value and move this.show to the controller
+    this.session.options.showFirst = side;
+    if (this.visible.term === false || this.visible.definition === false) {
+      this.show(this.session.index); // refresh display if a side is still hidden
+    }
+  };
+
+  angular.module('memorizy.deckstudy.DeckStudyModel', [])
+  .provider('DeckStudyModel', function () {
+    this.$get = [
+      '$rootScope', '$http', '$location', 'studySession', 
+      function ($rootScope, $http, $location, studySession) {
+        return new DeckStudyModel ($rootScope, $http, $location, studySession);
+      }
+    ];
+  });
+
+})();

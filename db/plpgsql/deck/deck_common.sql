@@ -3,7 +3,7 @@ function get_flashcards (_user_id integer, _file_id integer, _order_id integer)
 returns table(id integer, owner_id integer, deck_id integer,
               term_text text, term_media_id integer, term_media_position integer, 
               definition_text text, definition_media_id integer,
-              definition_media_position integer, index integer, state_history text,
+              definition_media_position integer, index integer, status integer,
               studied integer)
 as $$
 -- TODO return flashcards of all file's decks if the file
@@ -13,7 +13,7 @@ begin
     id integer, owner_id integer, deck_id integer,
     term_text text, term_media_id integer, term_media_position integer, 
     definition_text text, definition_media_id integer,
-    definition_media_position integer, index integer, state_history text,
+    definition_media_position integer, index integer, status integer,
     studied integer
   ) on commit drop;
 
@@ -29,10 +29,7 @@ begin
     f.definition_media_id::INTEGER,   
     f.definition_media_position::INTEGER,   
     f.index,   
-    coalesce(   
-      uf.state_history,    
-      '11111'    
-    )::TEXT state_history,
+    coalesce(uf.status, 0)::INTEGER status,
     coalesce(uf.studied, 0)::INTEGER
   from   
     flashcards f left join users_flashcards uf 
@@ -52,7 +49,7 @@ begin
     when _order_id =  2 then -- Hardest to easiest
       return query 
         select * from t 
-        order by state_history desc, index asc;
+        order by status asc, index asc;
     when _order_id =  3 then -- Least studied
       return query 
         select * from t 
@@ -60,7 +57,7 @@ begin
     when _order_id =  4 then -- Wrongs
       return query 
         select * from t
-        where left(t.state_history, 3) <> '000'
+        where status = -1
         order by t.index asc;
     else 
       raise invalid_parameter_value 

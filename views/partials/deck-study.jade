@@ -7,11 +7,11 @@ append content
       #content-left(ng-if="visible.stats == false")
         span(ng-bind="session.index + 1") 
         / 
-        span(ng-bind="deck.flashcards.length")
+        span(ng-bind="flashcards.length")
       #content-center
         #flashcard(ng-if="visible.stats == false")
           .term
-            .text(ng-bind="deck.flashcards[session.index].term_text" spellcheck="false" ng-show="visible.term == true")
+            .text(ng-bind="flashcards[session.index].term_text" spellcheck="false" ng-show="visible.term == true")
           .definition
             //-.media.media-halfsize
               //-.upload-form
@@ -21,24 +21,18 @@ append content
                 //-.MB
               //-canvas.media-canvas
 
-            .text(ng-bind="deck.flashcards[session.index].definition_text" spellcheck="false" ng-show="visible.definition == true")
+            .text(ng-bind="flashcards[session.index].definition_text" spellcheck="false" ng-show="visible.definition == true")
           .answer-bar.btn-group
-            button#btn-wrong.btn.btn-default(type="button" ng-click="answer(false)" ng-show="visible.answerButtons == true") Wrong
+            button#btn-wrong.btn.btn-default(type="button" ng-click="session.addAnswer(flashcards[session.index], false)" 
+                                             ng-show="visible.answerButtons == true") Wrong
             button#btn-turn.btn.btn-default(type="button" ng-click="showAll()" ng-show="visible.answerButtons != true") Turn
-            button#btn-right.btn.btn-default(type="button" ng-click="answer(true)" ng-show="visible.answerButtons == true") Right
+            button#btn-right.btn.btn-default(type="button" ng-click="session.addAnswer(flashcards[session.index], true)"
+                                             ng-show="visible.answerButtons == true") Right
+
         #stats(ng-if="visible.stats == true")
           p
             | Cards: 
-            span(ng-bind="deck.flashcards.length")
-          p
-            | Correct answers: 
-            span(ng-bind="session.stats.correct.percentage")
-            |%
-          p
-            | Wrong answers: 
-            span(ng-bind="session.stats.wrong.percentage")
-            |%
-
+            span(ng-bind="flashcards.length")
             
       #content-right(ng-if="visible.stats == false")
         #study-options
@@ -46,39 +40,40 @@ append content
             | Study order: 
             .btn-group
               a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
-                | {{stringifyFlashcardOrder(session.options.order)}}
+                | {{stringifyFlashcardOrder(options.order)}}
                 span.caret
               ul.dropdown-menu(role="menu")
-                li(role="presentation" ng-repeat="(key, prop) in FlashcardOrders")
-                  a(role="menuitem" href="#" ng-bind="stringifyFlashcardOrder(prop)" ng-click="updateFlashcardOrder(prop)") 
+                li(role="presentation" ng-repeat="(key, prop) in options.FlashcardOrders")
+                  a(role="menuitem" href="#" ng-bind="stringifyFlashcardOrder(prop)" ng-click="options.order = prop") 
           div 
             | Show first:
             .btn-group
               a#dropdownMenu(href="#" class="dropdown-toggle" data-toggle="dropdown")
-                | {{session.options.showFirst}}
+                | {{options.showFirst}}
                 span.caret
               ul.dropdown-menu(role="menu")
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.TERM)") Term
+                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.TERM") Term
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.DEFINITION)") Definition
+                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.DEFINITION") Definition
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.RANDOM)") Random
+                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.RANDOM") Random
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="updateShowFirst(Sides.BOTH)") Both
+                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.BOTH") Both
 
-          input(type="radio" name="quantity" id="fixed" ng-checked="session.options.method == StudyMethods.CLASSIC" 
-            ng-model="session.options.method" ng-value="StudyMethods.CLASSIC")
+          input(type="radio" name="quantity" id="fixed" ng-checked="options.method == options.Methods.CLASSIC" 
+            ng-model="options.method" ng-value="options.Methods.CLASSIC")
           label(for="fixed") Qt:
-            input.tiny-input(type="number" min="1" ng-max="{{deck.flashcards.length}}" ng-model="session.options.quantity")
+            input.tiny-input(type="number" min="1" ng-model="options.quantity")
           br
-          input(type="radio" name="quantity" id="get-100" ng-checked="session.options.method == StudyMethods.GET100" ng-model="session.options.method" ng-value="StudyMethods.GET100")
+          input(type="radio" name="quantity" id="get-100" ng-checked="options.method == options.Methods.GET100" 
+            ng-model="options.method" ng-value="options.Methods.GET100")
           label(for="get-100") Get 100%
-          div(ng-show="session.options.method == StudyMethods.GET100") 
+          div(ng-show="options.method == options.method.GET100") 
             | Learn
-            input.tiny-input(type="number" id="subdeck-size" ng-model="session.options.subdeckSize")
+            input.tiny-input(type="number" id="subdeck-size" ng-model="options.subdeckSize")
             | by 
-            span(ng-bind="session.options.subdeckSize")
+            span(ng-bind="options.subdeckSize")
 
         #flashcard-info 
 

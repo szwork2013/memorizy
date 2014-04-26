@@ -1,7 +1,12 @@
 -- Missing schema dump !
+-- \i ./db/memorizy_dump.sql;
+
+-- commit;
 
 -- Setup all plpgsql functions
-\i ./plpgsql/all.sql 
+\i ./db/plpgsql/all.sql; 
+
+commit;
 
 delete from files;
 delete from users;
@@ -20,3 +25,5 @@ insert into flashcard_orders (flashcard_order) values ('Classic');
 insert into flashcard_orders (flashcard_order) values ('Hardest to easiest');
 insert into flashcard_orders (flashcard_order) values ('Least studied');
 insert into flashcard_orders (flashcard_order) values ('Wrongs');
+
+commit;

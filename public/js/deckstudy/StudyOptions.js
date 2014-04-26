@@ -1,7 +1,8 @@
 (function () {
   'use strict';
 
-  function StudyOptions ($http, $location) {
+  function StudyOptions ($rootScope, $http, $location) {
+		this.$rootScope = $rootScope;
     this.$http = $http;
     this.$location = $location;
 
@@ -35,6 +36,9 @@
 
     var _updateShowFirst = function (side) {
       _showFirst = side;
+
+			this.$rootScope.$emit('showFirst', side);
+
       return this.$http.put('/api' + this.$location.path(), { 
         fileId: this.session.deck.id,
         showFirst: side
@@ -48,6 +52,8 @@
     var _updateMethod = function (method) {
       _method = method;
 
+			this.$rootScope.$emit('method', method);
+
       return this.$http.put('/api' + this.$location.path(), { 
         fileId: this.session.deck.id,
         studyMethod: method
@@ -60,6 +66,9 @@
 
     var _updateOrder = function (flashcardOrderId) {
       _order = flashcardOrderId;
+
+			this.$rootScope.$emit('order', flashcardOrderId);
+			
       return this.$http.put('/api' + this.$location.path(), { 
         fileId: this.session.deck.id,
         flashcardOrderId: flashcardOrderId
@@ -99,13 +108,12 @@
     this.showFirst = config.showFirst || this.Sides.TERM;
     this.method = config.method || this.Methods.CLASSIC;
     this.order = config.order || this.FlashcardOrders.CLASSIC;
-    this.subdeckSize = 10; // used only in get100 mode
   };
 
   angular.module('memorizy.deckstudy.StudyOptions', []). 
     provider('studyOptions', function () {
-    this.$get = ['$http', '$location', function ($http, $location) {
-      return new StudyOptions($http, $location);
+    this.$get = ['$rootScope', '$http', '$location', function ($rootScope, $http, $location) {
+      return new StudyOptions($rootScope, $http, $location);
     }];
   });
 

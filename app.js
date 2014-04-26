@@ -18,9 +18,9 @@ var jwt = require('jsonwebtoken');
 
 
 // Session storage
-var db = require('./models/db'),
-    PGStore = require('connect-pg'),
-    sessionStore = new PGStore(db.pgConnect);
+var db = require('./models/db');
+    //PGStore = require('connect-pg'),
+    //sessionStore = new PGStore(db.pgConnect);
 
 // Used for less file compilation 
 var lessMiddleware = require('less-middleware');
@@ -71,12 +71,12 @@ app.use(express.logger('dev'));
 app.use(express.cookieParser());
 app.use(express.bodyParser());
 app.use(express.methodOverride());
-app.use(express.session({ 
-	store : sessionStore,
-	key : 'express.sid',
-	secret: 'keyboard cat', 
-	//cookie: { httpOnly: false}
-}));
+//app.use(express.session({ 
+	//store : sessionStore,
+	//key : 'express.sid',
+	//secret: 'keyboard cat', 
+	////cookie: { httpOnly: false}
+//}));
 
 app.use('/api', expressJwt({secret: 'hello world !'}));
 app.use(express.json());

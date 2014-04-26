@@ -15,22 +15,50 @@
     var that = this;
     $rootScope.$on('answered', function (event, answer) {
       var f = answer.flashcard;
+			console.log('f = ', f);
       if (answer.correct === false) { f.status = -1; }
       else if (f.status === -1 && answer.correct === true) { f.status = 1; }
-      else if (f.status < 3) { f.status++; }
-      else if (this.subdeck) { 
+      else { f.status++; }
+
+      if (f.status === 3) { 
+				console.log('remove index ' + that.subdeck.index);
         // the flashcard is at 100%, we remove it from the subdeck
-        this.subdeck.cards = this.subdeck.cards.splice(this.subdeck.index, 1);
+        /*that.subdeck.indexes = */that.subdeck.indexes.splice(that.subdeck.index, 1);
         // we add the next flashcard to the subdeck
-        if (this.subdeck.end + 1 < this.deck.flashcards.length) {
-          this.subdeck.end++; // increment the index of the subdeck's last flashcard 
-          this.subdeck.cards.push(this.deck.flashcards[this.subdeck.end]);
+        if (that.subdeck.end + 1 < that.deck.flashcards.length) {
+          that.subdeck.end++; // increment the index of the subdeck's last flashcard 
+          that.subdeck.indexes.push(that.subdeck.end);
         }
+
+				// decrements the index because an index has been removed
+				// from subdeck.indexes
+				that.subdeck.index--;
       }
       
       that.next.call(that);
     });
+
+		$rootScope.$on('method', function (event, method) {
+			if (method === that.options.Methods.GET100) {
+				that.subdeck = {
+					index: 0,
+					begin: that.index,
+					end  : that.index + that.SUBDECK_MAX_LENGTH - 1,
+					indexes: []
+				};
+				for (var i = 0; i < that.SUBDECK_MAX_LENGTH; i++) {
+					that.subdeck.indexes[i] = that.index + i;
+				}
+				console.log('subdeck set to ', that.subdeck);
+			}
+			else {
+				console.log('set subdeck to null');
+				that.subdeck = null;
+			}
+		});
   }
+
+	StudySession.prototype.SUBDECK_MAX_LENGTH = 2;
 
   StudySession.prototype.configure = function (deck, config) {
     this.deck = deck;
@@ -42,9 +70,12 @@
       this.subdeck = {
         index: 0,
         begin: 0,
-        end  : 10,
-        cards: this.deck.flashcards.slice(0, 10)
+        end  : this.SUBDECK_MAX_LENGTH - 1,
+        indexes: []
       };
+			for (var i = 0; i < this.SUBDECK_MAX_LENGTH; i++) {
+				this.subdeck.indexes[i] = i;
+			}
     }
     else {
       this.subdeck = null;
@@ -61,11 +92,12 @@
       else { this.$rootScope.$emit('end'); }
     }
     else { // get 100 method
-      if (this.subdeck.cards.length === 0) {
+      if (this.subdeck.indexes.length === 0) {
         this.$rootScope.$emit('end');
       }
       else {
-        this.subdeck.index = (this.subdeck.index + 1) % this.subdeck.cards.length;
+        this.subdeck.index = (this.subdeck.index + 1) % this.subdeck.indexes.length;
+				this.index = this.subdeck.indexes[this.subdeck.index];
       }
     }
   };

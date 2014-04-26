@@ -48,35 +48,6 @@ COMMENT ON EXTENSION pgtap IS 'Unit testing for PostgreSQL';
 SET search_path = public, pg_catalog;
 
 --
--- Name: _state_history_to_percentage(character); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION _state_history_to_percentage(_state_history character) RETURNS integer
-    LANGUAGE plpgsql
-    AS $$ 
-declare 
-  _percentage  integer := 0;
-begin
-  -- The state '0' means that the answer was correct
-  if substr(_state_history, 1, 1) = '0' then 
-    _percentage := _percentage + 50;
-  end if;
-  if substr(_state_history, 2, 1) = '0' then 
-    _percentage := _percentage + 30;
-  end if;
-  if substr(_state_history, 3, 1) = '0' then 
-    _percentage := _percentage + 20;
-  end if;
-
-  raise notice '% -> %', _state_history, _percentage;
-  return _percentage;
-end;
-$$;
-
-
-ALTER FUNCTION public._state_history_to_percentage(_state_history character) OWNER TO postgres;
-
---
 -- Name: _update_file_size(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 

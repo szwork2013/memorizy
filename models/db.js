@@ -2,7 +2,7 @@ var pg = require('pg');
 var q = require('q');
 
 function Db() {
-	this.conn = 'postgres://postgres:cL1475369!@localhost:5432/memorizy';
+	this.conn = 'postgres://postgres:postgres@localhost:5432/memorizy';
 }
 
 var singleton = new Db();

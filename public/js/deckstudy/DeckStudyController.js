@@ -67,6 +67,7 @@
       }
 
       if (!$scope.$$phase) { $scope.$apply(); }
+			return false;
     });
   }
 

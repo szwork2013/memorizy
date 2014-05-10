@@ -1,11 +1,11 @@
 var deckStudy = require('../models/deckstudy.js');
 module.exports = function (app) {
-  app.post('/api/:username/:files?*', function (req, res, next) {
-    if (req.query.action !== 'updateStats') {
+  app.put('/api/:username/:files?*', function (req, res, next) {
+    if (req.query.action !== 'updateStatus') {
       return next();
     }
 
-    deckStudy.updateStats(req.user.id, req.body).then(function () {
+    deckStudy.updateStatus(req.user.id, req.body).then(function () {
       res.send(204);
     })
     .catch(function (err) {

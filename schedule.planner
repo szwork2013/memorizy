@@ -50,148 +50,138 @@
         <predecessor id="1" predecessor-id="5" type="FS"/>
       </predecessors>
     </task>
-    <task id="7" name="Deck Study" note="" work="633600" start="20140419T170000Z" end="20140511T170000Z" work-start="20140420T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="7" name="Deck Study" note="" work="432000" start="20140419T170000Z" end="20140504T170000Z" work-start="20140420T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
         <predecessor id="1" predecessor-id="6" type="FS"/>
       </predecessors>
-      <task id="8" name="Study modes" note="" work="288000" start="20140419T170000Z" end="20140429T170000Z" work-start="20140420T080000Z" percent-complete="30" priority="0" type="normal" scheduling="fixed-work"/>
-      <task id="9" name="Affichage des infos sur la flashcard" note="" work="86400" start="20140429T170000Z" end="20140502T170000Z" work-start="20140430T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="8" name="Study modes" note="" work="288000" start="20140419T170000Z" end="20140429T170000Z" work-start="20140420T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="9" name="Affichage des infos sur la flashcard" note="" work="86400" start="20140429T170000Z" end="20140502T170000Z" work-start="20140430T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
           <predecessor id="1" predecessor-id="8" type="FS"/>
         </predecessors>
       </task>
-      <task id="10" name="Conservation des stats" note="" work="57600" start="20140502T170000Z" end="20140504T170000Z" work-start="20140503T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="10" name="Conservation des stats" note="" work="57600" start="20140502T170000Z" end="20140504T170000Z" work-start="20140503T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
           <predecessor id="1" predecessor-id="9" type="FS"/>
         </predecessors>
       </task>
-      <task id="11" name="Passage en mode edition" note="" work="201600" start="20140504T170000Z" end="20140511T170000Z" work-start="20140505T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-        <predecessors>
-          <predecessor id="1" predecessor-id="10" type="FS"/>
-        </predecessors>
-      </task>
     </task>
-    <task id="12" name="Calendrier" note="" work="777600" start="20140511T170000Z" end="20140607T170000Z" work-start="20140512T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="11" name="Calendrier" note="" work="748800" start="20140504T170000Z" end="20140530T170000Z" work-start="20140505T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
         <predecessor id="1" predecessor-id="7" type="FS"/>
       </predecessors>
-      <task id="13" name="Creer tables bdd" note="" work="28800" start="20140511T170000Z" end="20140512T170000Z" work-start="20140512T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
-      <task id="14" name="fonction pl/pgsql" note="" work="86400" start="20140512T170000Z" end="20140515T170000Z" work-start="20140513T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="12" name="fonction pl/pgsql" note="" work="86400" start="20140504T170000Z" end="20140507T170000Z" work-start="20140505T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="13" name="Page client" note="" work="547200" start="20140507T170000Z" end="20140526T170000Z" work-start="20140508T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="12" type="FS"/>
+        </predecessors>
+        <task id="14" name="Affichage de base" note="" work="201600" start="20140507T170000Z" end="20140514T170000Z" work-start="20140508T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
+        <task id="15" name="Fonction de recherche" note="" work="201600" start="20140514T170000Z" end="20140521T170000Z" work-start="20140515T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="14" type="FS"/>
+          </predecessors>
+        </task>
+        <task id="16" name="Etudier les flashcards pr&#xE9;vues" note="" work="144000" start="20140521T170000Z" end="20140526T170000Z" work-start="20140522T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+          <predecessors>
+            <predecessor id="1" predecessor-id="15" type="FS"/>
+          </predecessors>
+          <task id="17" name="pl/pgsql pour recup les flashcard de different fichiers" note="" work="144000" start="20140521T170000Z" end="20140526T170000Z" work-start="20140522T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+        </task>
+      </task>
+      <task id="18" name="File tracker" note="" work="115200" start="20140526T170000Z" end="20140530T170000Z" work-start="20140527T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
           <predecessor id="1" predecessor-id="13" type="FS"/>
         </predecessors>
       </task>
-      <task id="15" name="Page client" note="" work="547200" start="20140515T170000Z" end="20140603T170000Z" work-start="20140516T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-        <predecessors>
-          <predecessor id="1" predecessor-id="14" type="FS"/>
-        </predecessors>
-        <task id="16" name="Affichage de base" note="" work="201600" start="20140515T170000Z" end="20140522T170000Z" work-start="20140516T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
-        <task id="17" name="Fonction de recherche" note="" work="201600" start="20140522T170000Z" end="20140529T170000Z" work-start="20140523T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-          <predecessors>
-            <predecessor id="1" predecessor-id="16" type="FS"/>
-          </predecessors>
-        </task>
-        <task id="18" name="Etudier les flashcards pr&#xE9;vues" note="" work="144000" start="20140529T170000Z" end="20140603T170000Z" work-start="20140530T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-          <predecessors>
-            <predecessor id="1" predecessor-id="17" type="FS"/>
-          </predecessors>
-          <task id="19" name="pl/pgsql pour recup les flashcard de different fichiers" note="" work="144000" start="20140529T170000Z" end="20140603T170000Z" work-start="20140530T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
-        </task>
-      </task>
-      <task id="20" name="File tracker" note="" work="115200" start="20140603T170000Z" end="20140607T170000Z" work-start="20140604T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-        <predecessors>
-          <predecessor id="1" predecessor-id="15" type="FS"/>
-        </predecessors>
-      </task>
     </task>
-    <task id="21" name="Deck Editor" note="" work="1008000" start="20140607T170000Z" end="20140712T170000Z" work-start="20140608T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="19" name="Deck Editor" note="" work="1008000" start="20140530T170000Z" end="20140704T170000Z" work-start="20140531T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
-        <predecessor id="1" predecessor-id="12" type="FS"/>
+        <predecessor id="1" predecessor-id="11" type="FS"/>
       </predecessors>
-      <task id="22" name="Information sur la flashcard" note="" work="28800" start="20140607T170000Z" end="20140608T170000Z" work-start="20140608T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
-      <task id="23" name="Bold/Italic" note="" work="57600" start="20140608T170000Z" end="20140610T170000Z" work-start="20140609T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="20" name="Information sur la flashcard" note="" work="28800" start="20140530T170000Z" end="20140531T170000Z" work-start="20140531T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="21" name="Bold/Italic" note="" work="57600" start="20140531T170000Z" end="20140602T170000Z" work-start="20140601T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="20" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="22" name="Images" note="" work="201600" start="20140602T170000Z" end="20140609T170000Z" work-start="20140603T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="21" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="23" name="LaTeX" note="" work="288000" start="20140609T170000Z" end="20140619T170000Z" work-start="20140610T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
           <predecessor id="1" predecessor-id="22" type="FS"/>
         </predecessors>
       </task>
-      <task id="24" name="Images" note="" work="201600" start="20140610T170000Z" end="20140617T170000Z" work-start="20140611T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="24" name="Ouvrir un document a cot&#xE9;" note="" work="432000" start="20140619T170000Z" end="20140704T170000Z" work-start="20140620T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
           <predecessor id="1" predecessor-id="23" type="FS"/>
         </predecessors>
       </task>
-      <task id="25" name="LaTeX" note="" work="288000" start="20140617T170000Z" end="20140627T170000Z" work-start="20140618T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-        <predecessors>
-          <predecessor id="1" predecessor-id="24" type="FS"/>
-        </predecessors>
-      </task>
-      <task id="26" name="Ouvrir un document a cot&#xE9;" note="" work="432000" start="20140627T170000Z" end="20140712T170000Z" work-start="20140628T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-        <predecessors>
-          <predecessor id="1" predecessor-id="25" type="FS"/>
-        </predecessors>
-      </task>
     </task>
-    <task id="27" name="File Navigation" note="" work="432000" start="20140712T170000Z" end="20140727T170000Z" work-start="20140713T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="25" name="File Navigation" note="" work="432000" start="20140704T170000Z" end="20140719T170000Z" work-start="20140705T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
-        <predecessor id="1" predecessor-id="21" type="FS"/>
+        <predecessor id="1" predecessor-id="19" type="FS"/>
       </predecessors>
-      <task id="28" name="Ajout graph + d&#xE9;tails &#xE0; droite" note="" work="432000" start="20140712T170000Z" end="20140727T170000Z" work-start="20140713T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="26" name="Ajout graph + d&#xE9;tails &#xE0; droite" note="" work="432000" start="20140704T170000Z" end="20140719T170000Z" work-start="20140705T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
     </task>
-    <task id="29" name="Visibilit&#xE9;" note="" work="432000" start="20140727T170000Z" end="20140811T170000Z" work-start="20140728T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="27" name="Visibilit&#xE9;" note="" work="432000" start="20140719T170000Z" end="20140803T170000Z" work-start="20140720T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <predecessors>
+        <predecessor id="1" predecessor-id="25" type="FS"/>
+      </predecessors>
+      <task id="28" name="Ajouter un systeme de visibilit&#xE9;" note="" work="432000" start="20140719T170000Z" end="20140803T170000Z" work-start="20140720T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+    </task>
+    <task id="29" name="Login/Registration page" note="" work="288000" start="20140803T170000Z" end="20140813T170000Z" work-start="20140804T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
         <predecessor id="1" predecessor-id="27" type="FS"/>
       </predecessors>
-      <task id="30" name="Ajouter un systeme de visibilit&#xE9;" note="" work="432000" start="20140727T170000Z" end="20140811T170000Z" work-start="20140728T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="30" name="Enregistrement" note="" work="57600" start="20140803T170000Z" end="20140805T170000Z" work-start="20140804T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="31" name="Confirmation par mail" note="" work="86400" start="20140805T170000Z" end="20140808T170000Z" work-start="20140806T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="30" type="FS"/>
+        </predecessors>
+      </task>
+      <task id="32" name="Mdp perdu" note="" work="144000" start="20140808T170000Z" end="20140813T170000Z" work-start="20140809T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+        <predecessors>
+          <predecessor id="1" predecessor-id="31" type="FS"/>
+        </predecessors>
+      </task>
     </task>
-    <task id="31" name="Login/Registration page" note="" work="288000" start="20140811T170000Z" end="20140821T170000Z" work-start="20140812T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="33" name="Fonction symlink" note="" work="57600" start="20140813T170000Z" end="20140815T170000Z" work-start="20140814T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
         <predecessor id="1" predecessor-id="29" type="FS"/>
       </predecessors>
-      <task id="32" name="Enregistrement" note="" work="57600" start="20140811T170000Z" end="20140813T170000Z" work-start="20140812T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
-      <task id="33" name="Confirmation par mail" note="" work="86400" start="20140813T170000Z" end="20140816T170000Z" work-start="20140814T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-        <predecessors>
-          <predecessor id="1" predecessor-id="32" type="FS"/>
-        </predecessors>
-      </task>
-      <task id="34" name="Mdp perdu" note="" work="144000" start="20140816T170000Z" end="20140821T170000Z" work-start="20140817T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-        <predecessors>
-          <predecessor id="1" predecessor-id="33" type="FS"/>
-        </predecessors>
-      </task>
     </task>
-    <task id="35" name="Fonction symlink" note="" work="57600" start="20140821T170000Z" end="20140823T170000Z" work-start="20140822T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="34" name="Gerer starred completement" note="" work="86400" start="20140815T170000Z" end="20140818T170000Z" work-start="20140816T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
-        <predecessor id="1" predecessor-id="31" type="FS"/>
+        <predecessor id="1" predecessor-id="33" type="FS"/>
       </predecessors>
-    </task>
-    <task id="36" name="Gerer starred completement" note="" work="86400" start="20140823T170000Z" end="20140826T170000Z" work-start="20140824T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
-      <predecessors>
-        <predecessor id="1" predecessor-id="35" type="FS"/>
-      </predecessors>
-      <task id="37" name="Autoriser doublons" note="" work="28800" start="20140823T170000Z" end="20140824T170000Z" work-start="20140824T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
-      <task id="38" name="Afficher etoile jaune sur tous" note="" work="28800" start="20140824T170000Z" end="20140825T170000Z" work-start="20140825T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="35" name="Autoriser doublons" note="" work="28800" start="20140815T170000Z" end="20140816T170000Z" work-start="20140816T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+      <task id="36" name="Afficher etoile jaune sur tous" note="" work="28800" start="20140816T170000Z" end="20140817T170000Z" work-start="20140817T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
-          <predecessor id="1" predecessor-id="37" type="FS"/>
+          <predecessor id="1" predecessor-id="35" type="FS"/>
         </predecessors>
       </task>
-      <task id="39" name="Link sur le fichier d'origine " note="" work="28800" start="20140825T170000Z" end="20140826T170000Z" work-start="20140826T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="37" name="Link sur le fichier d'origine " note="" work="28800" start="20140817T170000Z" end="20140818T170000Z" work-start="20140818T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
-          <predecessor id="1" predecessor-id="38" type="FS"/>
+          <predecessor id="1" predecessor-id="36" type="FS"/>
         </predecessors>
       </task>
     </task>
-    <task id="40" name="Design" note="" work="432000" start="20140821T170000Z" end="20140905T170000Z" work-start="20140822T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="38" name="Design" note="" work="432000" start="20140813T170000Z" end="20140828T170000Z" work-start="20140814T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
-        <predecessor id="1" predecessor-id="31" type="FS"/>
+        <predecessor id="1" predecessor-id="29" type="FS"/>
       </predecessors>
     </task>
-    <task id="41" name="Page d'accueil" note="" work="288000" start="20140905T170000Z" end="20140915T170000Z" work-start="20140906T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="39" name="Page d'accueil" note="" work="288000" start="20140828T170000Z" end="20140907T170000Z" work-start="20140829T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
-        <predecessor id="1" predecessor-id="40" type="FS"/>
+        <predecessor id="1" predecessor-id="38" type="FS"/>
       </predecessors>
     </task>
-    <task id="42" name="Tests" note="" work="864000" start="20140915T170000Z" end="20141015T170000Z" work-start="20140916T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+    <task id="40" name="Tests" note="" work="864000" start="20140907T170000Z" end="20141007T170000Z" work-start="20140908T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
       <predecessors>
-        <predecessor id="1" predecessor-id="41" type="FS"/>
+        <predecessor id="1" predecessor-id="39" type="FS"/>
       </predecessors>
     </task>
   </tasks>

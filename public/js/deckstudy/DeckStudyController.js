@@ -1,6 +1,7 @@
 (function () {
   'use strict';
-  function DeckStudyController ($rootScope, $scope, $document, DeckStudyModel) {
+  function DeckStudyController ($rootScope, $scope, $document, 
+                                DeckStudyModel, keyboardManager) {
     this.$scope = $scope;
 
     // $scope.deck is inherited from a parent scope
@@ -41,33 +42,30 @@
     $scope.stringifyFlashcardOrder = this.stringifyFlashcardOrder.bind(this);
 
     /* watchers */
-    $scope.$watch('session.index', this.show.bind(this));
     $scope.$watch('session.options.showFirst', function () {
       this.show(this.$scope.session.index);
     }.bind(this));
 
     /* events */
+    $rootScope.$on('answered', this.show.bind(this));
     $rootScope.$on('end', this.showStats.bind(this));
 
-    $document.bind('keypress', function (event) {
-      var key = event.which || event.keyCode || event.charCode;
+    keyboardManager.bind('space', function () {
+      $scope.showAll();
+    });
+    keyboardManager.bind('right', function () {
       var flashcard = $scope.flashcards[$scope.session.index];
-      switch (key) {
-        case 32: // Space bar
-          $scope.showAll();
-        break;
-        case 37: // Left arrow, wrong answer
-          $scope.session.addAnswer(flashcard, false);
-        break;
-        case 39: // Right arrow, right answer
-          $scope.session.addAnswer(flashcard, true);
-        break;
-        default:
-          return;
-      }
+      $scope.session.addAnswer(flashcard, true);
+    });
+    keyboardManager.bind('left', function () {
+      var flashcard = $scope.flashcards[$scope.session.index];
+      $scope.session.addAnswer(flashcard, false);
+    });
 
-      if (!$scope.$$phase) { $scope.$apply(); }
-			return false;
+    $scope.$on('$destroy', function () {
+      keyboardManager.unbind('space');
+      keyboardManager.unbind('right');
+      keyboardManager.unbind('left');
     });
   }
 
@@ -136,6 +134,7 @@
     '$scope',
     '$document',
     'DeckStudyModel',
+    'keyboardManager',
     DeckStudyController
   ]);
 

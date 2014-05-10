@@ -27,6 +27,11 @@
      * study session, such as options or stats
      */
     this.session = studySession;
+
+    var that = this;
+    $rootScope.$on('order', function (event, order) {
+      that.sort(order);
+    });
   }
 
   /**
@@ -41,7 +46,7 @@
   };
 
   /**
-   * _sort
+   * sort
    *
    * @param {number} flashcardOrderId specify the order in which
    *    the flashcards should be displayed, it must be one of 
@@ -58,9 +63,6 @@
         console.log('unknown order');
         return;
     }
-
-    this.session.options.order = flashcardOrderId;
-    this.updateFlashcardOrder(flashcardOrderId);
   };
 
   /**

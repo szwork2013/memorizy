@@ -5,8 +5,22 @@ function DeckStudy () {}
 
 var singleton = new DeckStudy();
 
-DeckStudy.prototype.updateStats = function (userId, stats) {
+DeckStudy.prototype.updateStatus = function (userId, stats) {
+  if (typeof userId !== 'number') {
+    return q.reject('userId = ' + userId + ' (expected a number)');
+  }
+  if (Object.prototype.toString.call(stats) !== '[object Object]') {
+    return q.reject('stats = ' + stats + ' (expected an object)');
+  }
 
+  return db.executePreparedStatement({
+    name : 'updateStatus',
+    text : 'select update_status($1::INTEGER, $2::JSON)',
+    values : [
+      userId, 
+      stats
+    ]
+  });
 };
 
 DeckStudy.prototype.updateFlashcardOrder = function (userId, fileId, orderId) {

@@ -3,7 +3,7 @@
 --
 
 SET statement_timeout = 0;
-SET client_encoding = 'UTF8';
+SET client_encoding = 'SQL_ASCII';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
@@ -29,20 +29,6 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
---
--- Name: pgtap; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA public;
-
-
---
--- Name: EXTENSION pgtap; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION pgtap IS 'Unit testing for PostgreSQL';
 
 
 SET search_path = public, pg_catalog;
@@ -1052,7 +1038,7 @@ ALTER FUNCTION public.get_file_tree(_user_id integer) OWNER TO postgres;
 -- Name: get_flashcards(integer, integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_flashcards(_user_id integer, _file_id integer, _order_id integer) RETURNS TABLE(id integer, owner_id integer, deck_id integer, term_text text, term_media_id integer, term_media_position integer, definition_text text, definition_media_id integer, definition_media_position integer, index integer, state_history text, studied integer)
+CREATE FUNCTION get_flashcards(_user_id integer, _file_id integer, _order_id integer) RETURNS TABLE(id integer, owner_id integer, deck_id integer, term_text text, term_media_id integer, term_media_position integer, definition_text text, definition_media_id integer, definition_media_position integer, index integer, status integer, studied integer)
     LANGUAGE plpgsql
     AS $$
 -- TODO return flashcards of all file's decks if the file
@@ -1062,7 +1048,7 @@ begin
     id integer, owner_id integer, deck_id integer,
     term_text text, term_media_id integer, term_media_position integer, 
     definition_text text, definition_media_id integer,
-    definition_media_position integer, index integer, state_history text,
+    definition_media_position integer, index integer, status integer,
     studied integer
   ) on commit drop;
 
@@ -1078,10 +1064,7 @@ begin
     f.definition_media_id::INTEGER,   
     f.definition_media_position::INTEGER,   
     f.index,   
-    coalesce(   
-      uf.state_history,    
-      '11111'    
-    )::TEXT state_history,
+    coalesce(uf.status, 0)::INTEGER status,
     coalesce(uf.studied, 0)::INTEGER
   from   
     flashcards f left join users_flashcards uf 
@@ -1101,7 +1084,7 @@ begin
     when _order_id =  2 then -- Hardest to easiest
       return query 
         select * from t 
-        order by state_history desc, index asc;
+        order by status asc, index asc;
     when _order_id =  3 then -- Least studied
       return query 
         select * from t 
@@ -1109,7 +1092,7 @@ begin
     when _order_id =  4 then -- Wrongs
       return query 
         select * from t
-        where left(t.state_history, 3) <> '000'
+        where status = -1
         order by t.index asc;
     else 
       raise invalid_parameter_value 
@@ -2281,6 +2264,63 @@ $$;
 ALTER FUNCTION public.update_flashcard_status(_user_id integer, _flashcard_id integer, _last_state character) OWNER TO postgres;
 
 --
+-- Name: update_flashcard_status(integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_flashcard_status(_user_id integer, _flashcard_id integer, _correct boolean) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+declare
+  _deck_id         integer;
+begin
+  select deck_id from flashcards 
+  where id = _flashcard_id 
+  into _deck_id;
+
+  if not found then 
+    raise exception 'Flashcard does not exist' 
+		using errcode = '22023'; /*invalid_parameter_value*/
+  end if;
+
+  if _correct = false then 
+    update users_flashcards 
+    set status = -1
+    where flashcard_id = _flashcard_id and 
+    user_id = _user_id;
+  else 
+    update users_flashcards 
+    set status = (
+      case 
+        when status = -1 then 1
+        when status < 3  then status + 1
+        else status 
+      end
+    )
+    where flashcard_id = _flashcard_id and 
+    user_id = _user_id;
+  end if;
+
+  insert into users_flashcards (user_id, flashcard_id, status) 
+  select 
+    _user_id, 
+    _flashcard_id, 
+    (case _correct when true then 1 when false then -1 end)
+  where not exists (
+    select 1 from users_flashcards uf 
+    where uf.flashcard_id = _flashcard_id and 
+    uf.user_id = _user_id 
+  );
+
+	-- perform _update_file_status(_user_id, _deck_id, 
+		-- (select _state_history_to_percentage(_new_history)) -
+		-- (select _state_history_to_percentage(_old_history)));
+end;
+$$;
+
+
+ALTER FUNCTION public.update_flashcard_status(_user_id integer, _flashcard_id integer, _correct boolean) OWNER TO postgres;
+
+--
 -- Name: update_show_first(integer, integer, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -2305,6 +2345,95 @@ $$;
 
 
 ALTER FUNCTION public.update_show_first(_user_id integer, _file_id integer, _side text) OWNER TO postgres;
+
+--
+-- Name: update_status(integer, integer[], integer[], integer[], integer[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_status(_user_id integer, _wrongs integer[], _correct1 integer[], _correct2 integer[], _correct3 integer[]) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+  update users_flashcards 
+  set status = -1
+  where flashcard_id in (
+    select unnest(_wrongs)
+  )
+  and user_id = _user_id;
+
+  insert into users_flashcards (user_id, flashcard_id, status) 
+  select 
+    _user_id, 
+    flashcard_id,
+    -1
+  from unnest(_wrongs) flashcard_id
+  where not exists (
+    select 1 from users_flashcards uf 
+    where uf.flashcard_id = flashcard_id and 
+    uf.user_id = _user_id 
+  );
+  
+  update users_flashcards 
+  set status = 1
+  where flashcard_id in (
+    select unnest(_correct1)
+  )
+  and user_id = _user_id;
+
+  insert into users_flashcards (user_id, flashcard_id, status) 
+  select 
+    _user_id, 
+    flashcard_id,
+    1 
+  from unnest(_correct1) flashcard_id
+  where not exists (
+    select 1 from users_flashcards uf 
+    where uf.flashcard_id = flashcard_id and 
+    uf.user_id = _user_id 
+  );
+
+  update users_flashcards 
+  set status = 2
+  where flashcard_id in (
+    select unnest(_correct2)
+  )
+  and user_id = _user_id;
+
+  insert into users_flashcards (user_id, flashcard_id, status) 
+  select 
+    _user_id, 
+    flashcard_id,
+    2 
+  from unnest(_correct2) flashcard_id
+  where not exists (
+    select 1 from users_flashcards uf 
+    where uf.flashcard_id = flashcard_id and 
+    uf.user_id = _user_id 
+  );
+
+  update users_flashcards 
+  set status = 3
+  where flashcard_id in (
+    select unnest(_correct3)
+  )
+  and user_id = _user_id;
+
+  insert into users_flashcards (user_id, flashcard_id, status) 
+  select 
+    _user_id, 
+    flashcard_id,
+    3 
+  from unnest(_correct3) flashcard_id
+  where not exists (
+    select 1 from users_flashcards uf 
+    where uf.flashcard_id = flashcard_id and 
+    uf.user_id = _user_id 
+  );
+end;
+$$;
+
+
+ALTER FUNCTION public.update_status(_user_id integer, _wrongs integer[], _correct1 integer[], _correct2 integer[], _correct3 integer[]) OWNER TO postgres;
 
 --
 -- Name: update_study_method(integer, integer, text); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2569,7 +2698,7 @@ CREATE TABLE files (
     symlink_of integer,
     copy_of integer,
     CONSTRAINT files_size_check CHECK ((size >= 0)),
-    CONSTRAINT files_type_check CHECK (((type)::text = ANY ((ARRAY['folder'::character varying, 'deck'::character varying])::text[])))
+    CONSTRAINT files_type_check CHECK (((type)::text = ANY (ARRAY[('folder'::character varying)::text, ('deck'::character varying)::text])))
 );
 
 
@@ -2803,10 +2932,10 @@ CREATE TABLE users_files (
     studied integer DEFAULT 0 NOT NULL,
     show_first character varying(32) DEFAULT 'Term'::character varying NOT NULL,
     study_method character varying(32) DEFAULT 'classic'::character varying NOT NULL,
-    CONSTRAINT users_files_method_check CHECK (((study_method)::text = ANY ((ARRAY['classic'::character varying, 'get100'::character varying])::text[]))),
+    CONSTRAINT users_files_method_check CHECK (((study_method)::text = ANY (ARRAY[('classic'::character varying)::text, ('get100'::character varying)::text]))),
     CONSTRAINT users_files_percentage_check CHECK (((percentage >= 0) AND (percentage <= 100))),
     CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0)),
-    CONSTRAINT users_files_show_first_check CHECK (((show_first)::text = ANY ((ARRAY['Term'::character varying, 'Definition'::character varying, 'Random'::character varying, 'Both'::character varying])::text[]))),
+    CONSTRAINT users_files_show_first_check CHECK (((show_first)::text = ANY (ARRAY[('Term'::character varying)::text, ('Definition'::character varying)::text, ('Random'::character varying)::text, ('Both'::character varying)::text]))),
     CONSTRAINT users_files_studied_check CHECK ((studied >= 0))
 );
 
@@ -3218,7 +3347,6 @@ GRANT ALL ON SCHEMA public TO PUBLIC;
 REVOKE ALL ON SCHEMA web FROM PUBLIC;
 REVOKE ALL ON SCHEMA web FROM postgres;
 GRANT ALL ON SCHEMA web TO postgres;
-GRANT USAGE ON SCHEMA web TO nodepg;
 
 
 SET search_path = web, pg_catalog;
@@ -3230,7 +3358,6 @@ SET search_path = web, pg_catalog;
 REVOKE ALL ON FUNCTION clear_sessions() FROM PUBLIC;
 REVOKE ALL ON FUNCTION clear_sessions() FROM postgres;
 GRANT ALL ON FUNCTION clear_sessions() TO postgres;
-GRANT ALL ON FUNCTION clear_sessions() TO nodepg;
 
 
 --
@@ -3240,7 +3367,6 @@ GRANT ALL ON FUNCTION clear_sessions() TO nodepg;
 REVOKE ALL ON FUNCTION count_sessions() FROM PUBLIC;
 REVOKE ALL ON FUNCTION count_sessions() FROM postgres;
 GRANT ALL ON FUNCTION count_sessions() TO postgres;
-GRANT ALL ON FUNCTION count_sessions() TO nodepg;
 
 
 --
@@ -3250,7 +3376,6 @@ GRANT ALL ON FUNCTION count_sessions() TO nodepg;
 REVOKE ALL ON FUNCTION destroy_session(sessid text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION destroy_session(sessid text) FROM postgres;
 GRANT ALL ON FUNCTION destroy_session(sessid text) TO postgres;
-GRANT ALL ON FUNCTION destroy_session(sessid text) TO nodepg;
 
 
 --
@@ -3260,7 +3385,6 @@ GRANT ALL ON FUNCTION destroy_session(sessid text) TO nodepg;
 REVOKE ALL ON FUNCTION get_session_data(sessid text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION get_session_data(sessid text) FROM postgres;
 GRANT ALL ON FUNCTION get_session_data(sessid text) TO postgres;
-GRANT ALL ON FUNCTION get_session_data(sessid text) TO nodepg;
 
 
 --
@@ -3279,7 +3403,6 @@ GRANT ALL ON FUNCTION remove_expired() TO postgres;
 REVOKE ALL ON FUNCTION set_session_data(sessid text, sessdata text, expire timestamp with time zone) FROM PUBLIC;
 REVOKE ALL ON FUNCTION set_session_data(sessid text, sessdata text, expire timestamp with time zone) FROM postgres;
 GRANT ALL ON FUNCTION set_session_data(sessid text, sessdata text, expire timestamp with time zone) TO postgres;
-GRANT ALL ON FUNCTION set_session_data(sessid text, sessdata text, expire timestamp with time zone) TO nodepg;
 
 
 --

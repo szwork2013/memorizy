@@ -6,33 +6,26 @@
     this.$http = $http;
     this.$location = $location;
 
-    var _answers = [];
+    var _answers = {};
 
-    // Not in the prototype since it needs access
-    // to a private property
-    this.reset = function () { _answers= []; };
+    this.reset = function () { _answers= {}; };
 
-    // Allow getters only for these properties, 
-    // thus, their addresses cannot be modified
     Object.defineProperties(this, {
       answers: { get: function () { return _answers; } }
     });
+
+    $rootScope.$on('end', this.update.bind(this));
   }
 
-  StudyStats.prototype.addAnswer = function (flashcard, correct) {
-    console.log('stats: flashcard = ', flashcard);
-    this.answers.push({
-      id: flashcard.id,
-      correct: correct
-    });
-
-    this.$rootScope.$emit('answered', { flashcard: flashcard, correct: correct });
+  StudyStats.prototype.setStatus = function (flashcard, status) {
+    this.answers[flashcard.id] = status;
+    this.$rootScope.$emit('answered', { flashcard: flashcard, status: status});
   };
 
   // update stats on remote server
   StudyStats.prototype.update = function () {
-    return this.$http.post('/api' + this.$location.path(), this.answers, {
-      params: { action: 'updateStats' }
+    return this.$http.put('/api' + this.$location.path(), this.answers, {
+      params: { action: 'updateStatus' }
     });
   };
 

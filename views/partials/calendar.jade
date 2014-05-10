@@ -1,0 +1,50 @@
+append head 
+  link(rel="stylesheet", href="/stylesheets/calendar.css")
+
+append content
+  #content
+    #week 
+      .day 
+        span(ng-bind="getDate(0)")
+        ul
+          li(ng-repeat="deck in week[0]").
+            {{deck.file_name}} ({{deck.size}})
+      .day
+        span(ng-bind="getDate(1)")
+        ul
+          li(ng-repeat="deck in week[1]").
+            {{deck.file_name}} ({{deck.size}})
+      .day
+        span(ng-bind="getDate(2)")
+        ul
+          li(ng-repeat="deck in week[2]").
+            {{deck.file_name}} ({{deck.size}})
+      .day
+        span(ng-bind="getDate(3)")
+        ul
+          li(ng-repeat="deck in week[3]").
+            {{deck.file_name}} ({{deck.size}})
+      .day
+        span(ng-bind="getDate(4)")
+        ul
+          li(ng-repeat="deck in week[4]").
+            {{deck.file_name}} ({{deck.size}})
+      .day
+        span(ng-bind="getDate(5)")
+        ul
+          li(ng-repeat="deck in week[5]").
+            {{deck.file_name}} ({{deck.size}})
+      .day
+        span(ng-bind="getDate(6)")
+        ul
+          li(ng-repeat="deck in week[6]").
+            {{deck.file_name}} ({{deck.size}})
+
+    cal-heat-map#cal-heatmap(config="calHeatMapConfig")
+
+  //-script.
+    //-var cal = new CalHeatMap();
+    //-cal.init({
+      //-domain: 'month',
+      //-data: $('[ng-controller="CalendarController"]').scope().calHeatMap 
+    //-});

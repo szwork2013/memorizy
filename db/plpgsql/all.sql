@@ -5,3 +5,4 @@
 \i ./db/plpgsql/file/file_navigation.sql
 \i ./db/plpgsql/file/file_manager.sql
 \i ./db/plpgsql/user/users.sql
+\i ./db/plpgsql/calendar/calendar.sql

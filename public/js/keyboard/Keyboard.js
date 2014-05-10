@@ -1,2 +1,5 @@
-angular.module('memorizy.keyboard', ['memorizy.keyboard.KeyboardDirectives']);
+angular.module('memorizy.keyboard', [
+  'memorizy.keyboard.KeyboardDirectives',
+  'memorizy.keyboard.KeyboardManager'
+]);
 

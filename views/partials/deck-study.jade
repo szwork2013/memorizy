@@ -1,10 +1,12 @@
 append head
   link(rel="stylesheet", href="/stylesheets/deck-edit.css")
+  link(rel="stylesheet", href="/stylesheets/deck-study.css")
 
 append content
   #content
     #flashcard-editor
       #content-left(ng-if="visible.stats == false")
+        button.btn.btn-primary(ng-click="session.end()") Done
         span(ng-bind="session.index + 1") 
         / 
         span(ng-bind="flashcards.length")
@@ -22,12 +24,22 @@ append content
               //-canvas.media-canvas
 
             .text(ng-bind="flashcards[session.index].definition_text" spellcheck="false" ng-show="visible.definition == true")
-          .answer-bar.btn-group
-            button#btn-wrong.btn.btn-default(type="button" ng-click="session.addAnswer(flashcards[session.index], false)" 
-                                             ng-show="visible.answerButtons == true") Wrong
-            button#btn-turn.btn.btn-default(type="button" ng-click="showAll()" ng-show="visible.answerButtons != true") Turn
-            button#btn-right.btn.btn-default(type="button" ng-click="session.addAnswer(flashcards[session.index], true)"
-                                             ng-show="visible.answerButtons == true") Right
+
+          .status-list
+            .status(ng-repeat="flashcard in deck.flashcards")
+              span(ng-if="flashcard.status == -1") -1
+              span(ng-if="flashcard.status == 0") 0
+              span(ng-if="flashcard.status == 1") 1
+              span(ng-if="flashcard.status == 2") 2
+              span(ng-if="flashcard.status == 3") 3
+
+
+          .answer-bar
+            span#btn-wrong.glyphicon.glyphicon-remove(ng-click="session.addAnswer(flashcards[session.index], false)" 
+                                             ng-show="visible.answerButtons == true")
+            span#btn-turn.glyphicon.glyphicon-refresh(ng-click="showAll()" ng-show="visible.answerButtons != true")
+            span#btn-right.glyphicon.glyphicon-ok(ng-click="session.addAnswer(flashcards[session.index], true)"
+                                             ng-show="visible.answerButtons == true")
 
         #stats(ng-if="visible.stats == true")
           p

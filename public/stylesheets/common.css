@@ -30,3 +30,9 @@ body {
 .italic {
   font-style: italic;
 }
+#content {
+  height: calc(100% - 80px);
+  width: 90%;
+  margin: auto;
+  box-sizing: border-box;
+}

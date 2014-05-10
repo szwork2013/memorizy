@@ -35,48 +35,57 @@
     });
 
     var _updateShowFirst = function (side) {
+      if (_showFirst === side) { return; }
+
+      if (_showFirst) {
+        this.$http.put('/api' + this.$location.path(), { 
+          fileId: this.session.deck.id,
+          showFirst: side
+        }, { 
+          params: {
+            action: 'updateShowFirst',
+          }
+        });
+      }
+
       _showFirst = side;
-
-			this.$rootScope.$emit('showFirst', side);
-
-      return this.$http.put('/api' + this.$location.path(), { 
-        fileId: this.session.deck.id,
-        showFirst: side
-      }, { 
-        params: {
-          action: 'updateShowFirst',
-        }
-      });
+      this.$rootScope.$emit('showFirst', side);
     };
 
     var _updateMethod = function (method) {
+      if (_method === method) { return; }
+
+      if (_method) {
+        this.$http.put('/api' + this.$location.path(), { 
+          fileId: this.session.deck.id,
+          studyMethod: method
+        }, { 
+          params: {
+            action: 'updateStudyMethod'
+          }
+        });
+      }
+
       _method = method;
-
-			this.$rootScope.$emit('method', method);
-
-      return this.$http.put('/api' + this.$location.path(), { 
-        fileId: this.session.deck.id,
-        studyMethod: method
-      }, { 
-        params: {
-          action: 'updateStudyMethod'
-        }
-      });
+      this.$rootScope.$emit('method', method);
     };
 
     var _updateOrder = function (flashcardOrderId) {
-      _order = flashcardOrderId;
+      if (_order === flashcardOrderId) { return; }
 
-			this.$rootScope.$emit('order', flashcardOrderId);
-			
-      return this.$http.put('/api' + this.$location.path(), { 
-        fileId: this.session.deck.id,
-        flashcardOrderId: flashcardOrderId
-      }, { 
-        params: {
-          action: 'updateFlashcardOrder',
-        }
-      });
+      if (_order) {
+        this.$http.put('/api' + this.$location.path(), { 
+          fileId: this.session.deck.id,
+          flashcardOrderId: flashcardOrderId
+        }, { 
+          params: {
+            action: 'updateFlashcardOrder',
+          }
+        });
+      }
+
+      _order = flashcardOrderId;
+      this.$rootScope.$emit('order', flashcardOrderId);
     };
   }
 

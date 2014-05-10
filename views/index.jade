@@ -7,8 +7,12 @@ html(ng-app="memorizy")
       link(rel="stylesheet", href="/stylesheets/bootstrap.css")
       link(rel="stylesheet", href="/stylesheets/bootstrap-theme.css")
       link(rel="stylesheet", href="/stylesheets/common.css")
+      link(rel="stylesheet" href="/stylesheets/cal-heatmap.css")
+
       script(src="/js/lib/jquery-2.0.3.js")
       script(src="/js/lib/bootstrap.js")
+      script(src="/js/d3/d3.js")
+      script(src="/js/calendar/cal-heatmap.js")
 
       script(src='/js/lib/angular/angular.js')
       script(src='/js/lib/angular/angular-route.js')
@@ -45,6 +49,11 @@ html(ng-app="memorizy")
       script(src='/js/deckstudy/StudyOptions.js')
       script(src='/js/deckstudy/StudyStats.js')
 
+      script(src='/js/calendar/Calendar.js')
+      script(src='/js/calendar/CalendarController.js')
+      script(src='/js/calendar/CalendarModel.js')
+      script(src='/js/calendar/CalendarDirectives.js')
+
       script(src='/js/flashcard/Flashcard.js')
       script(src='/js/flashcard/FlashcardService.js')
 
@@ -54,6 +63,7 @@ html(ng-app="memorizy")
 
       script(src='/js/keyboard/Keyboard.js')
       script(src='/js/keyboard/KeyboardDirectives.js')
+      script(src='/js/keyboard/KeyboardManager.js')
 
       script(src='/js/mouse/Mouse.js')
       script(src='/js/mouse/MouseDirectives.js')

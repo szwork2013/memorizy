@@ -349,17 +349,17 @@ begin
   end if;
 
   -- Update file hierarchy
-  DELETE FROM file_tree
-  WHERE descendant_id IN (SELECT descendant_id FROM file_tree WHERE ancestor_id = _file_id)
-  AND ancestor_id NOT IN (SELECT descendant_id FROM file_tree WHERE ancestor_id = _file_id);
+  delete from file_tree
+  where descendant_id in (select descendant_id from file_tree where ancestor_id = _file_id)
+  and ancestor_id not in (select descendant_id from file_tree where ancestor_id = _file_id);
 
-  -- Insert subtree to its new location
-  INSERT INTO file_tree (ancestor_id, descendant_id, dist)
-  SELECT supertree.ancestor_id, subtree.descendant_id,
+  -- insert subtree to its new location
+  insert into file_tree (ancestor_id, descendant_id, dist)
+  select supertree.ancestor_id, subtree.descendant_id,
   supertree.dist+subtree.dist+1
-  FROM file_tree AS supertree, file_tree AS subtree
-  WHERE subtree.ancestor_id = _file_id
-  AND supertree.descendant_id = _new_parent_id;
+  from file_tree as supertree, file_tree as subtree
+  where subtree.ancestor_id = _file_id
+  and supertree.descendant_id = _new_parent_id;
 
 end;
 $$ language plpgsql;
@@ -489,109 +489,6 @@ begin
       -- )
     -- )
     and ancestor_id = _file_id
-  );
-end;
-$$ language plpgsql;
-
-create or replace function inc_number_of_cards(file_id integer) returns void as $$
-begin
-  -- Increment number of cards
-  execute 'withparents as ('
-    || ' select ancestor_id'
-    || ' from file_tree'
-    || ' where descendant_id = ' || file_id || ')'
-    || ' update files'
-    || ' set size = size + 1'
-    || ' where id in parents';
-
-  -- Update success percentages
-  execute 'with parents as ('
-    || ' select ancestor_id'
-    || ' from file_tree'
-    || ' where descendant_id = ' || file_id || ')'
-    || ' update users_files'
-    || ' set percentage = percentage * (size - 1) / size'
-    || ' from users_files ufs join files f on f.id = ufs.file_id' 
-    || ' where file_id in parents';
-end;
-$$ language plpgsql;
-
-create or replace function dec_number_of_cards(deck_id integer, deleted_flashcard_id integer) returns void as $$
-begin
-  -- Decrement number of cards
-  execute 'with parents as ('
-    || ' select ancestor_id'
-    || ' from file_tree'
-    || ' where descendant_id = ' || deck_id || ')'
-    || ' update files'
-    || ' set size = size - 1'
-    || ' where id in parents';
-
-  -- Update percentages
-  execute 'with parents as ('
-    || ' select ancestor_id'
-    || ' from file_tree'
-    || ' where descendant_id = ' || deck_id || '),'
-  || ' percentages as ('
-    || ' select percentage'
-    || ' from users_flashcards_status ufl'
-    || ' where ufl.flashcard_id = ' || deleted_flashcard_id || ')'
-    || ' update users_files ufi'
-    || ' set percentage = (percentage * (size + 1) + rest_percentage - '
-      || '(select coalesce((select percentage from percentages p where p.user_id = ufi.user_id), 0))) / size'
-    || ',rest_percentage = (percentage * (size + 1) + rest_percentage - '
-      || '(select coalesce((select percentage from percentages p where p.user_id = ufi.user_id), 0))) % size'
-    || ' from files f'
-    || ' where f.id = ufi.file_id and ufi.file_id in parents';
-end;
-$$ language plpgsql;
-
-create or replace function _update_file_status (
-  _user_id integer, _file_id integer, _percentage_difference integer
-) returns void as $$
-declare 
-begin
-  -- Upsert percentages of the file and all of its parents 
-  with parents as (
-    select ancestor_id
-    from file_tree
-    where descendant_id = _file_id 
-  ),
-  u as (
-    update users_files uf
-    set 
-      percentage = 
-        (percentage * f.size + rest_percentage + _percentage_difference) / f.size,
-      rest_percentage = 
-        (percentage * f.size + rest_percentage +  _percentage_difference) % f.size
-    from files f
-    where file_id in (
-      select ancestor_id 
-      from parents
-    ) 
-    and uf.user_id = _user_id
-    and f.id = uf.file_id
-  )
-  insert into users_files (
-    user_id, 
-    file_id, 
-    percentage, 
-    rest_percentage
-  ) 
-  select 
-    _user_id, 
-    f.id, 
-    _percentage_difference / f.size, 
-    _percentage_difference % f.size
-  from files f 
-  where f.id in (
-    select ancestor_id 
-    from parents 
-  )
-  and not exists (
-    select 1 from users_files 
-    where user_id = _user_id and 
-    file_id = _file_id
   );
 end;
 $$ language plpgsql;

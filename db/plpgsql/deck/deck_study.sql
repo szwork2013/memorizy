@@ -1,55 +1,104 @@
--- A flashcard state can be '0', '1' or '2'
--- '0' means a correct answer, '1' means no answer 
--- and '2' means a wrong answer
-create or replace 
-function update_flashcard_status (_user_id integer, 
-                                  _flashcard_id integer, 
-                                  _correct boolean) 
+create or replace
+function update_status (_user_id integer, _status json)
 returns void as $$
-declare
-  _deck_id         integer;
 begin
-  select deck_id from flashcards 
-  where id = _flashcard_id 
-  into _deck_id;
-
-  if not found then 
-    raise exception 'Flashcard does not exist' 
-		using errcode = '22023'; /*invalid_parameter_value*/
-  end if;
-
-  if _correct = false then 
-    update users_flashcards 
-    set status = -1
-    where flashcard_id = _flashcard_id and 
-    user_id = _user_id;
-  else 
-    update users_flashcards 
-    set status = (
-      case 
-        when status = -1 then 1
-        when status < 3  then status + 1
-        else status 
-      end
+  with per_flashcard as (  
+    select 
+      fi.id as deck_id,
+      s.key::integer as flashcard_id, 
+      s.value::integer as new_status,
+      coalesce(uf.status, 0) as old_status,
+      (status_to_percentage(s.value::integer) - status_to_percentage(coalesce(uf.status, 0)))::integer as percentage_difference 
+    from json_each_text(_status) s
+      left join users_flashcards uf on s.key::integer = uf.flashcard_id 
+      join flashcards f on f.id = s.key::integer 
+      join files fi on fi.id = f.deck_id
+    where uf.user_id = _user_id
+    or uf.user_id is null
+  ), per_deck as (
+    select 
+      p.deck_id, 
+      sum(p.percentage_difference)::integer as percentage_difference 
+    from per_flashcard p
+    group by p.deck_id
+  ), per_file as ( 
+    select 
+      ft.ancestor_id as file_id,
+      sum(p.percentage_difference)::integer as percentage_difference 
+    from per_deck p 
+      join file_tree ft on p.deck_id = ft.descendant_id
+    group by ft.ancestor_id
+  ), update_files_status as (
+    update users_files uf
+    set 
+      percentage = 
+        (percentage * f.size + rest_percentage + p.percentage_difference::integer) / f.size,
+      rest_percentage = 
+        (percentage * f.size + rest_percentage +  p.percentage_difference::integer) % f.size,
+      next_session = (
+        case 
+          when last_session < CURRENT_DATE then CURRENT_DATE + (CURRENT_DATE - last_session) * 2
+          else CURRENT_DATE + 1
+        end
+      ),
+      last_session = CURRENT_DATE
+    from files f 
+      join per_file p on f.id = p.file_id
+    where uf.file_id = p.file_id
+    and uf.user_id = _user_id
+  ), insert_file_status as (
+    insert into users_files (
+      user_id, 
+      file_id, 
+      percentage, 
+      rest_percentage
+    ) 
+    select 
+      _user_id, 
+      f.id, 
+      p.percentage_difference::integer / f.size, 
+      p.percentage_difference::integer % f.size
+    from files f 
+      join per_file p on f.id = p.file_id
+    where not exists (
+      select 1 from users_files uf
+      where uf.user_id = _user_id and 
+      file_id = f.id
     )
-    where flashcard_id = _flashcard_id and 
-    user_id = _user_id;
-  end if;
-
+  ), update_flashcard_status as (
+    update users_flashcards uf1
+    set status = p.new_status 
+    from per_flashcard p 
+      join users_flashcards uf2 on p.flashcard_id = uf2.flashcard_id
+    where uf1.flashcard_id = p.flashcard_id
+    and uf1.user_id = _user_id
+  )
   insert into users_flashcards (user_id, flashcard_id, status) 
   select 
     _user_id, 
-    _flashcard_id, 
-    (case _correct when true then 1 when false then -1 end)
+    p.flashcard_id,
+    p.new_status
+  from per_flashcard p
   where not exists (
     select 1 from users_flashcards uf 
-    where uf.flashcard_id = _flashcard_id and 
+    where uf.flashcard_id = p.flashcard_id and 
     uf.user_id = _user_id 
   );
+end;
+$$ language plpgsql;
 
-	-- perform _update_file_status(_user_id, _deck_id, 
-		-- (select _state_history_to_percentage(_new_history)) -
-		-- (select _state_history_to_percentage(_old_history)));
+create or replace function status_to_percentage (_status integer) 
+returns integer as $$
+begin
+  raise notice 'converting %', _status;
+  return case _status 
+    when -1 then 0
+    when 0  then 0
+    when 1  then 50
+    when 2  then 80
+    when 3  then 100
+    else    0
+  end;
 end;
 $$ language plpgsql;
 

@@ -114,6 +114,7 @@ routes.partials(app);
 routes.api.filemanager(app);
 routes.api.deckeditor(app);
 routes.api.deckstudy(app);
+routes.api.calendar(app);
 
 routes.index(app);
 

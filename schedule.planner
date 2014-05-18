@@ -85,7 +85,7 @@
           <predecessors>
             <predecessor id="1" predecessor-id="15" type="FS"/>
           </predecessors>
-          <task id="17" name="pl/pgsql pour recup les flashcard de different fichiers" note="" work="144000" start="20140521T170000Z" end="20140526T170000Z" work-start="20140522T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
+          <task id="17" name="pl/pgsql pour recup les flashcard de different fichiers" note="" work="144000" start="20140521T170000Z" end="20140526T170000Z" work-start="20140522T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work"/>
         </task>
       </task>
       <task id="18" name="File tracker" note="" work="115200" start="20140526T170000Z" end="20140530T170000Z" work-start="20140527T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">

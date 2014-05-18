@@ -2,13 +2,14 @@ append head
   link(rel="stylesheet", href="/stylesheets/calendar.css")
 
 append content
-  #content
+  #content(ng-if="!decks")
     #week 
       .day 
         span(ng-bind="getDate(0)")
         ul
           li(ng-repeat="deck in week[0]").
             {{deck.file_name}} ({{deck.size}})
+        button.btn.btn-default(ng-click="studyFiles(week[0])") Study
       .day
         span(ng-bind="getDate(1)")
         ul
@@ -48,3 +49,5 @@ append content
       //-domain: 'month',
       //-data: $('[ng-controller="CalendarController"]').scope().calHeatMap 
     //-});
+  #content(ng-if="decks" ng-cloak ng-include="'/partials/deck-study'" ng-controller="DeckStudyController")
+    p Hello

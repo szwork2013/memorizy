@@ -25,6 +25,7 @@
 	"noempty" : true,
 	"quotmark" : "single",
 	"smarttabs": true,
-  "strict": true
+  "strict": true,
+  "validthis": true
                                                                       
 }

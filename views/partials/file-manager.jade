@@ -2,6 +2,6 @@ append head
   link(rel="stylesheet", href="/stylesheets/style.css")
 append content
   #content(ng-if="folder" ng-cloak ng-include="'/partials/file-navigation'" ng-controller="FileNavigationCtrl")
-  #content(ng-if="deck && action == 'edit'" ng-cloak ng-include="'/partials/deck-editor'" ng-controller="DeckEditorCtrl")
-  #content(ng-if="deck && action != 'edit'" ng-cloak ng-include="'/partials/deck-study'" ng-controller="DeckStudyController")
+  #content(ng-if="decks && action == 'edit'" ng-cloak ng-include="'/partials/deck-editor'" ng-controller="DeckEditorCtrl")
+  #content(ng-if="decks && action != 'edit'" ng-cloak ng-include="'/partials/deck-study'" ng-controller="DeckStudyController")
 

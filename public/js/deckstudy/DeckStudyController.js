@@ -1,35 +1,12 @@
 (function () {
   'use strict';
-  function DeckStudyController ($rootScope, $scope, $document, 
-                                DeckStudyModel, keyboardManager) {
+  function DeckStudyController ($rootScope, $scope, $document, SessionManager, keyboardManager) {
     this.$scope = $scope;
 
-    // $scope.deck is inherited from a parent scope
+    // $scope.decks is inherited from a parent scope
     
-    // Split deck data and user's data for modularity
-    var deck = {
-      id: $scope.deck.id,
-      name: $scope.deck.name,
-      ownerId: $scope.deck.owner_id,
-      ownerName: $scope.deck.owner_name,
-      flashcards: $scope.deck.flashcards,
-      size: $scope.deck.size 
-    };
-    var config = {
-      order: $scope.deck.flashcard_order_id,
-      showFirst: $scope.deck.show_first,
-      starred: $scope.deck.starred,
-      studied: $scope.deck.studied,
-      method: $scope.deck.study_method,
-      percentage: $scope.deck.percentage,
-      restPercentage: $scope.deck.rest_percentage
-    };
-
-    DeckStudyModel.configure(deck, config);
-    $scope.flashcards = DeckStudyModel.flashcards;
-    $scope.session    = DeckStudyModel.session;
-    $scope.options    = DeckStudyModel.session.options;
-    $scope.stats      = DeckStudyModel.session.stats;
+    SessionManager.configure($scope.decks);
+    $scope.SessionManager = SessionManager;
 
     $scope.visible = {
       term: false,
@@ -41,13 +18,21 @@
     $scope.showAll = this.showAll.bind(this);
     $scope.stringifyFlashcardOrder = this.stringifyFlashcardOrder.bind(this);
 
+    $scope.$watch('SessionManager.activeSessionIdx', function (n, o) {
+      $scope.session = SessionManager.sessions[SessionManager.activeSessionIdx];
+      $scope.flashcards = SessionManager.
+        sessions[SessionManager.activeSessionIdx].deck.flashcards;
+      $scope.options = SessionManager.
+        sessions[SessionManager.activeSessionIdx].options;
+    });
+
     /* watchers */
     $scope.$watch('session.options.showFirst', function () {
       this.show(this.$scope.session.index);
     }.bind(this));
 
     /* events */
-    $rootScope.$on('answered', this.show.bind(this));
+    $rootScope.$on('nextFlashcard', this.show.bind(this));
     $rootScope.$on('end', this.showStats.bind(this));
 
     keyboardManager.bind('space', function () {
@@ -133,7 +118,7 @@
     '$rootScope',
     '$scope',
     '$document',
-    'DeckStudyModel',
+    'SessionManager',
     'keyboardManager',
     DeckStudyController
   ]);

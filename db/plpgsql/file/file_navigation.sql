@@ -18,16 +18,13 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function get_file(_user_id integer, _path text[]) 
+create or replace function get_file_info(_user_id integer, _file_id integer) 
 returns table (id integer, owner_id integer, owner_name text, name text,
                size integer, type text, percentage integer, rest_percentage integer,
                starred boolean, flashcard_order_id integer, until_100 boolean,
                studied integer, show_first text, study_method text)
 as $$
-	declare
-	_file_id	integer := 0;
 begin
-	select get_file_id(_path) into _file_id;
 	return query 
     select 
       f.id::INTEGER, 
@@ -49,6 +46,20 @@ begin
       join users u on u.id = f.owner_id
     where f.id = _file_id
     and u.id = _user_id;
+end;
+$$ language plpgsql;
+
+create or replace function get_file_info(_user_id integer, _path text[]) 
+returns table (id integer, owner_id integer, owner_name text, name text,
+               size integer, type text, percentage integer, rest_percentage integer,
+               starred boolean, flashcard_order_id integer, until_100 boolean,
+               studied integer, show_first text, study_method text)
+as $$
+	declare
+	_file_id	integer := 0;
+begin
+	select get_file_id(_path) into _file_id;
+  return query select * from get_file_info(_user_id, _file_id);
 end;
 $$ language plpgsql;	
 

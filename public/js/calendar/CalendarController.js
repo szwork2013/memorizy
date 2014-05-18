@@ -1,6 +1,9 @@
 (function () {
   'use strict';
-  function CalendarController ($scope, CalendarModel) { 
+  function CalendarController ($scope, $location, CalendarModel, FileManager) { 
+    this.$scope    = $scope;
+    this.$location = $location;
+
     CalendarModel.getCalendar().success(function (calendar) {
       $scope.calendar = calendar;
       updateWeek();
@@ -107,25 +110,29 @@
              d1.getMonth() === d2.getMonth() &&
              d1.getDate() === d2.getDate();
     }
+
+    $scope.studyFiles = function (files) {
+      var ids = [];
+
+      for (var i in files) {
+        ids.push(files[i].file_id);
+      }
+
+      FileManager.getFiles(ids).success(function (data) {
+        $scope.decks = data;
+      }). 
+      error(function (err) {
+        console.log(err);
+      }); 
+    };
   }
 
   angular.module('memorizy.calendar.CalendarController', []).
     controller('CalendarController',  [
       '$scope',
+      '$location',
       'CalendarModel', 
+      'FileManager',
       CalendarController
-    ]).
-    directive('foo', function(){
-      return {
-        restrict: 'A',
-        link: function(scope, elem, attrs){
-          console.log('hello');
-          var cal = new CalHeatMap();
-          cal.init({
-            domain: 'month',
-            data: scope.calHeatMap 
-          });
-        }
-      };
-    });
+    ]);
 })();

@@ -7,9 +7,11 @@ append content
     #flashcard-editor
       #content-left(ng-if="visible.stats == false")
         button.btn.btn-primary(ng-click="session.end()") Done
-        span(ng-bind="session.index + 1") 
-        / 
-        span(ng-bind="flashcards.length")
+        table
+          tr(ng-repeat="session in SessionManager.sessions" ng-class="{'active-session': $index == SessionManager.activeSessionIdx}"
+          ng-click="SessionManager.activeSessionIdx = $index")
+            td {{session.deck.name}} 
+            td {{session.index}}/{{session.deck.flashcards.length}}
       #content-center
         #flashcard(ng-if="visible.stats == false")
           .term
@@ -26,7 +28,7 @@ append content
             .text(ng-bind="flashcards[session.index].definition_text" spellcheck="false" ng-show="visible.definition == true")
 
           .status-list
-            .status(ng-repeat="flashcard in deck.flashcards")
+            .status(ng-repeat="flashcard in flashcards")
               span(ng-if="flashcard.status == -1") -1
               span(ng-if="flashcard.status == 0") 0
               span(ng-if="flashcard.status == 1") 1
@@ -56,7 +58,7 @@ append content
                 span.caret
               ul.dropdown-menu(role="menu")
                 li(role="presentation" ng-repeat="(key, prop) in options.FlashcardOrders")
-                  a(role="menuitem" href="#" ng-bind="stringifyFlashcardOrder(prop)" ng-click="options.order = prop") 
+                  a(role="menuitem" href="#" ng-bind="stringifyFlashcardOrder(prop)" ng-click="session.updateOrder(prop)") 
           div 
             | Show first:
             .btn-group
@@ -65,22 +67,32 @@ append content
                 span.caret
               ul.dropdown-menu(role="menu")
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.TERM") Term
+                  a(role="menuitem" href="#" ng-click="session.updateShowFirst(options.Sides.TERM)") Term
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.DEFINITION") Definition
+                  a(role="menuitem" href="#" ng-click="session.updateShowFirst(options.Sides.DEFINITION)") Definition
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.RANDOM") Random
+                  a(role="menuitem" href="#" ng-click="session.updateShowFirst(options.Sides.RANDOM)") Random
                 li(role="presentation")
-                  a(role="menuitem" href="#" ng-click="options.showFirst = options.Sides.BOTH") Both
+                  a(role="menuitem" href="#" ng-click="session.updateShowFirst(options.Sides.BOTH)") Both
 
           input(type="radio" name="quantity" id="fixed" ng-checked="options.method == options.Methods.CLASSIC" 
-            ng-model="options.method" ng-value="options.Methods.CLASSIC")
+            ng-model="options.method" ng-value="options.Methods.CLASSIC" ng-click="session.updateMethod(options.Methods.CLASSIC)")
           label(for="fixed") Qt:
             input.tiny-input(type="number" min="1" ng-model="options.quantity")
           br
           input(type="radio" name="quantity" id="get-100" ng-checked="options.method == options.Methods.GET100" 
-            ng-model="options.method" ng-value="options.Methods.GET100")
+            ng-model="options.method" ng-value="options.Methods.GET100" ng-click="session.updateMethod(options.Methods.GET100)")
           label(for="get-100") Get 100%
+
+          //-input(type="radio" name="quantity" id="fixed" ng-checked="options.method == options.Methods.CLASSIC" 
+            //-ng-model="options.method" ng-value="options.Methods.CLASSIC")
+          //-label(for="fixed") Qt:
+            //-input.tiny-input(type="number" min="1" ng-model="options.quantity")
+          //-br
+          //-input(type="radio" name="quantity" id="get-100" ng-checked="options.method == options.Methods.GET100" 
+            ng-model="options.method" ng-value="options.Methods.GET100")
+          //-label(for="get-100") Get 100%
+
           div(ng-show="options.method == options.method.GET100") 
             | Learn
             input.tiny-input(type="number" id="subdeck-size" ng-model="options.subdeckSize")

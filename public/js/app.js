@@ -77,6 +77,10 @@
       templateUrl: '/partials/calendar',
       controller: 'CalendarController'
     })
+    .when('/:username/calendar/study', {
+      templateUrl: '/partials/deck-study',
+      controller: 'DeckStudyController'
+    })
     .when('/:username/:subfolders*', {
       templateUrl: '/partials/file-manager',
       controller: 'FileManagerCtrl'

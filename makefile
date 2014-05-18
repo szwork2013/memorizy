@@ -4,7 +4,7 @@ local: npm
 	npm install
 
 global: npm 
-	npm install -g express mocha istanbul
+	npm install -g express mocha istanbul jshint
 	
 npm:
 	apt-get install npm

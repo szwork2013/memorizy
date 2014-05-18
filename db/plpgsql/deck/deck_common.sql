@@ -6,8 +6,6 @@ returns table(id integer, owner_id integer, deck_id integer,
               definition_media_position integer, index integer, status integer,
               studied integer)
 as $$
--- TODO return flashcards of all file's decks if the file
--- provided as arguments isn't a deck
 begin
   create temp table t (
     id integer, owner_id integer, deck_id integer,
@@ -35,11 +33,15 @@ begin
     flashcards f left join users_flashcards uf 
     on f.id = uf.flashcard_id 
     and _user_id = uf.user_id   
-  where f.deck_id in (
-    select ft.descendant_id
-    from file_tree ft
-    where ft.ancestor_id = _file_id
-  );
+  where f.deck_id = _file_id;
+
+  if _order_id is null then
+    select coalesce(flashcard_order_id, 1) 
+    into _order_id
+    from users_files
+    where file_id = _file_id
+    and user_id = _user_id;
+  end if;
 
   case 
     when _order_id = 1 then -- Classic

@@ -36,3 +36,6 @@ body {
   margin: auto;
   box-sizing: border-box;
 }
+.active-session {
+  background-color: lightgrey;
+}

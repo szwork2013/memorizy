@@ -54,14 +54,12 @@ begin
       f.index,   
       coalesce(uf.status, 0)::INTEGER status,
       coalesce(uf.studied, 0)::INTEGER
-    from   
-      flashcards f left join users_flashcards uf 
-      on f.id = uf.flashcard_id 
-      and _user_id = uf.user_id   
+    from flashcards f 
+      left join users_flashcards uf on f.id = uf.flashcard_id 
+      join users_files ufl on f.deck_id = ufl.file_id
     where f.deck_id in (
-      select d.id from decks
+      select d.id from decks d
     )
-    group by f.deck_id
-    order by uf.next_session asc, f.name asc;
+    order by ufl.next_session asc, f.deck_id asc, f.index asc;
 end;
 $$ language plpgsql;

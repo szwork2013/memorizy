@@ -27,7 +27,6 @@
       }
 
       fileManager.getFiles(req.user.id, locations).then(function (files) {
-        console.log('send ', files);
         res.json(files);
       })
       .catch(function (err) {
@@ -90,7 +89,6 @@
       }
 
       fileManager.copyFile(req.user.id, req.body.src, req.body.dest).then(function (id) {
-        console.log('send id ' + id);
         res.json({
           fileId: id
         });
@@ -121,7 +119,6 @@
         return next();
       }
       
-      console.log('delete file ' + req.query.fileId);
       fileManager.deleteFile(req.user.id, parseInt(req.query.fileId)).then(function (val) {
         res.json({
           id: val,

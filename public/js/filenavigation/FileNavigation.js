@@ -1,5 +1,5 @@
 angular.module('memorizy.filenavigation', [
-  'memorizy.filenavigation.FileNavigationCtrl',
+  'memorizy.filenavigation.FileNavigationController',
   'memorizy.filenavigation.FileNavigationProvider'
 ]);
 

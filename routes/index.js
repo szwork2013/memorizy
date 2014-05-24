@@ -8,7 +8,6 @@ exports.api = {
 exports.partials = function (app) {
   app.get('/partials/*', function (req, res) {
     var name = req.params;
-    console.log('requesting partial ', req.params);
     res.render('partials/' + req.params);
   });
 };
@@ -19,7 +18,6 @@ exports.login = function (app) {
 
 exports.index = function (app) {
   app.get('*', function (req, res) {
-    console.log('render index');
     res.render('index');
   });
 };

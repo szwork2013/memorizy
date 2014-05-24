@@ -6,6 +6,7 @@
     'memorizy.login',
     'memorizy.filemanager',
     'memorizy.filenavigation',
+    'memorizy.markdown',
     'memorizy.deckeditor',
     'memorizy.deckstudy',
     'memorizy.calendar',
@@ -71,7 +72,7 @@
     })
     .when('/:username', {
       templateUrl: '/partials/file-manager',
-      controller: 'FileManagerCtrl'
+      controller: 'FileManagerController'
     })
     .when('/:username/calendar', {
       templateUrl: '/partials/calendar',
@@ -83,7 +84,7 @@
     })
     .when('/:username/:subfolders*', {
       templateUrl: '/partials/file-manager',
-      controller: 'FileManagerCtrl'
+      controller: 'FileManagerController'
     })
     .otherwise({
       redirectTo: '/'

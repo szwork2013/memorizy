@@ -1,5 +1,6 @@
-(function () {
+(function (angular) {
   'use strict';
+
   function CalendarModel ($http, $location) {
     this.getCalendar = function () {
       return $http.get('/api' + $location.path(), {
@@ -18,4 +19,5 @@
         }
       ];
     });
-})();
+
+})(angular);

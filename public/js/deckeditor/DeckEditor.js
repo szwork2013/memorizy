@@ -1,5 +1,5 @@
 angular.module('memorizy.deckeditor', [
-  'memorizy.deckeditor.DeckEditorCtrl',
+  'memorizy.deckeditor.DeckEditorController',
   'memorizy.deckeditor.DeckEditorModel'
 ]);
 

@@ -1,8 +1,8 @@
-(function (angular) {
+(function () {
   'use strict';
 
-  angular.module('memorizy.filemanager.FileManagerCtrl', [])
-  .controller('FileManagerCtrl', 
+  angular.module('memorizy.filemanager.FileManagerController', [])
+  .controller('FileManagerController', 
     function ($scope, $http, $location, $routeParams, FileManager) { 
 
       $scope.refresh = function () {
@@ -49,4 +49,4 @@
       $scope.refresh();
     });
 
-})(angular);
+})();

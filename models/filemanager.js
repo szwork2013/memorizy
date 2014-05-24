@@ -176,7 +176,6 @@
         text: 'select * from get_file_tree($1)', 
         values: [ userId ]
       }).then(function (result) {
-        console.log(result.rows);
         return result.rows;
       });
     },
@@ -244,7 +243,6 @@
           ',$3::TEXT, $4::INTEGER)',
         values: [userId, filename, type, parentId]
       }).then(function (result) {
-        console.log('result ' + result.rows[0].create_file);
         return result.rows[0].create_file; // new file's id
       });
     },
@@ -293,7 +291,6 @@
         return q.reject('userId = ' + userId + ' (expected a number)');	
       }
       if (typeof fileId !== 'number') {
-        console.log('typeof fileId = ' + typeof fileId);
         return q.reject('fileId = ' + fileId  + ' (expected a number)');
       }
 
@@ -357,7 +354,6 @@
         text: 'select copy_file($1, $2, $3)',
         values: [ userId, src, dest ]
       }).then(function (result) {
-        console.log('result ' , result.rows[0].copy_file);
         return result.rows[0].copy_file; // new file's id
       });
     },
@@ -438,32 +434,9 @@
         values: [ userId, fileId ]
       });
     }
-
-    //FileManager.prototype.exportFile = function (userId, path) {
-
-    //};
-
-    //FileManager.prototype.importFile = function (userId, data, path) {
-
-    //};
-
-    //FileManager.prototype.shareFile = function (userId, path) {
-
-    //};
-
-    //FileManager.prototype.setStudyMode = function (userId, path, studyMode) {
-
-    //};
-
-    //FileManager.prototype.setPrivacy = function (userId, path, privacy) {
-
-    //};
-
-    //FileManager.prototype.resetStats = function (userId, path) {
-
-    //};
   };
 
   var singleton = new FileManager(); 
   module.exports = singleton;
+
 })(module);

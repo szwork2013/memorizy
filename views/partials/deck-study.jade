@@ -15,7 +15,10 @@ append content
       #content-center
         #flashcard(ng-if="visible.stats == false")
           .term
-            .text(ng-bind="flashcards[session.index].term_text" spellcheck="false" ng-show="visible.term == true")
+            .text(ng-bind-html="markdownToHtml(flashcards[session.index].term_text)" 
+              spellcheck="false" 
+              ng-show="visible.term == true"
+            )
           .definition
             //-.media.media-halfsize
               //-.upload-form
@@ -25,7 +28,10 @@ append content
                 //-.MB
               //-canvas.media-canvas
 
-            .text(ng-bind="flashcards[session.index].definition_text" spellcheck="false" ng-show="visible.definition == true")
+            .text(
+              ng-bind-html="markdownToHtml(flashcards[session.index].definition_text)" 
+              spellcheck="false" ng-show="visible.definition == true"
+            )
 
           .status-list
             .status(ng-repeat="flashcard in flashcards")

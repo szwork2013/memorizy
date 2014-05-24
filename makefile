@@ -16,6 +16,7 @@ db: postgresql
 		main
 	service postgresql start
 	su -c "psql -c \"alter user postgres with password 'postgres'\"" postgres
+	su -c "createdb -O postgres -h 127.0.0.1 -p $(shell pg_lsclusters -h | cut -f2,3 -d' ' | grep -Eo ^main[\ ]+[0-9]+ | grep -Eo [0-9]+) memorizy-dev" postgres
 	su -c "createdb -O postgres -h 127.0.0.1 -p $(shell pg_lsclusters -h | cut -f2,3 -d' ' | grep -Eo ^main[\ ]+[0-9]+ | grep -Eo [0-9]+) memorizy" postgres
 	su -c "psql memorizy -c \"\i ./db/memorizy_dump.sql\"" postgres
 	su -c "psql memorizy -c \"\i ./db/init.sql\"" postgres

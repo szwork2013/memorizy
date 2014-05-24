@@ -27,16 +27,11 @@
           span.glyphicon.glyphicon-file(ng-if="file.type == 'deck'")
           //-span.glyphicon.glyphicon-file
         td.filename
-          a(ng-href="{{$location.path()}}/{{file.name | encodeURI}}")
-            {{file.name}}
-        td.owner
-          {{file.owner_name}}
-        td.size
-          {{file.size}}
-        td.percentage
-          {{file.percentage}}%
-        td.file-id
-          {{file.id}}
+          a(ng-href="{{$location.path()}}/{{file.name | encodeURI}}") {{file.name}}
+        td.owner {{file.owner_name}}
+        td.size {{file.size}}
+        td.percentage {{file.percentage}}%
+        td.file-id {{file.id}}
       
 #content-right
   #file-details
@@ -103,8 +98,7 @@
           div.ft-row(ng-repeat="file in tree" ng-click="tree.selected = file")
             div.ft-data.ft-selected
               span.glyphicon.glyphicon-ok(ng-if="file.id == tree.selected.id")
-            div.ft-data
-              {{file.name}}
+            div.ft-data {{file.name}}
 
       .modal-footer
         button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
@@ -121,8 +115,7 @@
           div.ft-row(ng-repeat="file in tree" ng-click="tree.selected = file")
             div.ft-data.ft-selected
               span.glyphicon.glyphicon-ok(ng-if="file.id == tree.selected.id")
-            div.ft-data
-              {{file.name}}
+            div.ft-data {{file.name}}
 
       .modal-footer
         button(type="button" class="btn btn-default" data-dismiss="modal") Cancel

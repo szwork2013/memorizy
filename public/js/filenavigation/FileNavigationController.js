@@ -1,8 +1,8 @@
 (function (angular) {
   'use strict';
 
-  angular.module('memorizy.filenavigation.FileNavigationCtrl', [])
-  .controller('FileNavigationCtrl', 
+  angular.module('memorizy.filenavigation.FileNavigationController', [])
+  .controller('FileNavigationController', 
     function ($document, $scope, $http, $location, FileNavigation) {
 
       $scope.newFile = {}; 

@@ -1,5 +1,6 @@
-(function () {
+(function (angular) {
   'use strict';
+
   function CalendarController ($scope, $location, CalendarModel, FileManager) { 
     this.$scope    = $scope;
     this.$location = $location;
@@ -32,7 +33,6 @@
         }
       }
 
-      console.log('data = ', data);
       return data;
     }
 
@@ -135,4 +135,5 @@
       'FileManager',
       CalendarController
     ]);
-})();
+
+})(angular);

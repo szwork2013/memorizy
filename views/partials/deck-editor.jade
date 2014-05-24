@@ -11,12 +11,10 @@ append content
           ng-click="display($index)" ng-mouseover="setDeleteButtonIndex($index)")
             .term.list-group-item-heading
               //-.media.media-thumbnail
-              .text(ng-bind="flashcard.term_text" ng-init="flashcard.term_text") 
-                {{flashcard.term_text}}
+              .text(ng-bind="flashcard.term_text" ng-init="flashcard.term_text") {{flashcard.term_text}}
             .definition.list-group-item-heading
               //-.media.media-thumbnail
-              .text(ng-bind="flashcard.definition_text")
-                {{flashcard.definition_text}}
+              .text(ng-bind="flashcard.definition_text") {{flashcard.definition_text}}
             .btn-delete.glyphicon.glyphicon-remove(ng-click="removeFlashcard($index);")
 
       #content-center
@@ -26,30 +24,25 @@ append content
           a#btn-italic.btn-style(href="#" title="Italic")
             span.glyphicon.glyphicon-italic
         #flashcard
-          .term
-            .text(ng-model="deck.flashcards[deck.active].term_text" 
-            ng-tab="focusDefinition()" ng-shift-tab="display(deck.active - 1)" 
-            focus-on="term" contenteditable="true" spellcheck="false" 
-            data-placeholder="Term") 
-              {{deck.flashcards[deck.active].term_text}}
-            a.btn-image.btn-style(href="#")
-              span.glyphicon.glyphicon-picture
-          .definition
-            //-.media.media-halfsize
-              //-.upload-form
-                //-button.btn-browse.btn.btn-primary(type="button" data-target="definition") Browse
-              //-.upload-progress
-                //-.percent
-                //-.MB
-              //-canvas.media-canvas
-
-            .text(ng-model="deck.flashcards[deck.active].definition_text" ng-tab="display(deck.active + 1)" ng-shift-tab="focusTerm()" 
-            focus-on="definition" contenteditable="true" spellcheck="false" data-placeholder="Definition")
-              //-{{deck.flashcards[deck.active].definition_text}}
+          .term(ng-tab="editDefinition()" ng-shift-tab="display(deck.active - 1)" ng-blur="edit.term = false" ng-click="editTerm()")
+            textarea#term-input.text(
+              ng-show="edit.term == true"
+              ng-model="deck.flashcards[deck.active].term_text" 
+              spellcheck="false" 
+              ng-blur="edit.term = false"
+            ) 
+            #preview-term.preview(ng-show="edit.term == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].term_text)")
+          .definition(ng-tab="display(deck.active + 1)" ng-shift-tab="editTerm()" ng-blur="edit.definition = false" ng-click="editDefinition()")
+            textarea#definition-input.text(
+              ng-show="edit.definition == true"
+              ng-model="deck.flashcards[deck.active].definition_text" 
+              spellcheck="false"
+              ng-blur="edit.definition = false"
+            )
+            #preview-definition.preview(ng-show="edit.definition == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].definition_text)")
             
-            a.btn-image.btn-style(href="#")
-              span.glyphicon.glyphicon-picture
-
+            //-a.btn-image.btn-style(href="#")
+              //-span.glyphicon.glyphicon-picture
 
       #content-right
         p test

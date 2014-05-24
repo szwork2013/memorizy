@@ -1,6 +1,12 @@
 (function () {
   'use strict';
-  function DeckStudyController ($rootScope, $scope, $document, SessionManager, keyboardManager) {
+
+  /**
+   * @constructor
+   */
+  function DeckStudyController ($rootScope, $scope, $sce, markdownConverter, 
+                                $document, SessionManager, keyboardManager) 
+  {
     this.$scope = $scope;
 
     // $scope.decks is inherited from a parent scope
@@ -17,7 +23,11 @@
 
     $scope.showAll = this.showAll.bind(this);
     $scope.stringifyFlashcardOrder = this.stringifyFlashcardOrder.bind(this);
+    $scope.markdownToHtml = function (str) {
+      return $sce.trustAsHtml(markdownConverter.makeHtml(str));
+    };
 
+    /* watchers */
     $scope.$watch('SessionManager.activeSessionIdx', function (n, o) {
       $scope.session = SessionManager.sessions[SessionManager.activeSessionIdx];
       $scope.flashcards = SessionManager.
@@ -26,22 +36,27 @@
         sessions[SessionManager.activeSessionIdx].options;
     });
 
-    /* watchers */
     $scope.$watch('session.options.showFirst', function () {
       this.show(this.$scope.session.index);
     }.bind(this));
 
-    /* events */
+    // recall show to hide a side depending on the options,
+    // every time another flashcard is displayed
     $rootScope.$on('nextFlashcard', this.show.bind(this));
     $rootScope.$on('end', this.showStats.bind(this));
 
+    // show both sides
     keyboardManager.bind('space', function () {
       $scope.showAll();
     });
+
+    // correct answer
     keyboardManager.bind('right', function () {
       var flashcard = $scope.flashcards[$scope.session.index];
       $scope.session.addAnswer(flashcard, true);
     });
+
+    // wrong answer
     keyboardManager.bind('left', function () {
       var flashcard = $scope.flashcards[$scope.session.index];
       $scope.session.addAnswer(flashcard, false);
@@ -54,6 +69,11 @@
     });
   }
 
+  /**
+   * Show the first side of the flashard, which vary depending 
+   * on user's options
+   * @param {number} index The index of the flashcard to display
+   */
   DeckStudyController.prototype.show = function (index) {
     var scope = this.$scope;
 
@@ -89,6 +109,12 @@
     }
   };
 
+  /**
+   * Translate an order id to the associated string
+   *
+   * @param {number} orderId The order's id
+   * @return {string} The associated string
+   */
   DeckStudyController.prototype.stringifyFlashcardOrder = function (orderId) {
     var opt = this.$scope.options;
     switch(orderId) {
@@ -101,6 +127,9 @@
     }
   };
 
+  /**
+   * Show all sides, and answer buttons as well
+   */
   DeckStudyController.prototype.showAll = function () {
     var v = this.$scope.visible;
     v.term = true;
@@ -109,6 +138,9 @@
     v.answerButtons = true;
   };
 
+  /**
+   * Show stats
+   */
   DeckStudyController.prototype.showStats = function () {
     this.$scope.visible.stats = true;
   };
@@ -117,6 +149,8 @@
   .controller('DeckStudyController', [
     '$rootScope',
     '$scope',
+    '$sce',
+    'markdownConverter',
     '$document',
     'SessionManager',
     'keyboardManager',

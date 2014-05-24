@@ -1,22 +1,26 @@
-var db = require('./db');
+(function () {
+  'use strict';
 
-function Calendar () {}
+  var db = require('./db');
 
-var singleton = new Calendar();
+  function Calendar () {}
 
-Calendar.prototype.getCalendar = function (userId) {
-  if (typeof userId !== 'number') {
-    return q.reject('userId = ' + userId + ' (expected a number)');
-  }
+  var singleton = new Calendar();
 
-  return db.executePreparedStatement({
-    name : 'getCalendar',
-    text : 'select * from get_calendar($1::INTEGER)',
-    values : [userId]
-  }). 
-  then(function (res) {
-    return res.rows;
-  });
-};
+  Calendar.prototype.getCalendar = function (userId) {
+    if (typeof userId !== 'number') {
+      return q.reject('userId = ' + userId + ' (expected a number)');
+    }
 
-module.exports = singleton;
+    return db.executePreparedStatement({
+      name : 'getCalendar',
+      text : 'select * from get_calendar($1::INTEGER)',
+      values : [userId]
+    }). 
+      then(function (res) {
+      return res.rows;
+    });
+  };
+
+  module.exports = singleton;
+})();

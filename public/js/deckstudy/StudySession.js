@@ -24,10 +24,13 @@
     this.activeSessionIdx = -1;
 
     var self = this;
+
     $rootScope.$on('sessionEnd', function (e, sessionIdx) {
       self.next();
     });
 
+    // Group status from every session before sending
+    // them to the server
     $rootScope.$on('end', function () {
       var status = {};
       for (var i in this.sessions) {
@@ -39,7 +42,6 @@
         }
       }
 
-      console.log('status = ', status);
       return this.$http.put('/api' + this.$location.path(), status, {
         params: { action: 'updateStatus' }
       });
@@ -57,17 +59,15 @@
 
       for (var i in decks) {
         // TODO: Break dependency injection paradigm, should not pass 
-        // $rootScope as argument
+        // $rootScope, $http, $location as argument
         this.sessions.push(new Session(
           this.$rootScope, this.$http, this.$location, decks[i]));
       }
       this.activeSessionIdx = 0;
-
-      console.log('sessions: ', this.sessions);
     },
 
     /**
-     * Goes to the next session which is not completed yet,
+     * Go to the next session which is not completed yet,
      * if there is no incomplete session after the active one,
      * it looks at the sessions before it
      */
@@ -82,7 +82,6 @@
         idx = (this.activeSessionIdx + iterations) % this.sessions.length;
         session = this.sessions[idx];
 
-        console.log('session at index ' + idx + ': ' + session.complete);
         if (!session.complete) { found = true; }
       }
 
@@ -100,16 +99,32 @@
 
   };
 
+  /**
+   * @constructor
+   * @param $rootScope
+   * @param $http
+   * @param $location
+   * @param {Object} deck
+   */
   function Session ($rootScope, $http, $location, deck) {
     this.$rootScope = $rootScope;
     this.$location  = $location;
     this.$http      = $http;
 
-    console.log('deck = ', deck);
+    /**
+     * Contain flashcards and information about the deck
+     */
     this.deck = deck;
 
+    /**
+     * Subdeck is used in get100 mode only and contains
+     * the index of the flashcards that are being studied
+     */
     this.subdeck = null;
 
+    /**
+     * User's options for the associated deck 
+     */
     this.options = {
       /** @enum */
       Methods: {
@@ -138,11 +153,29 @@
       order: deck.flashcard_order_id  
     };
 
+    /**
+     * Keys are flashcard ids, and values are the number of times
+     * the user answered to the flashcard during the session
+     */
     this.views = {};
+
+    /**
+     * Keys are flashcard ids, and values are the new status of 
+     * the flashcard
+     */
     this.status = {};
 
+    /**
+     * The index of the flashcard being studied
+     */
     this.index = 0;
 
+    /**
+     * Whether the session has been completed or not,
+     * a session is complete if the user has answered
+     * to all flashcards once in classic mode, or if
+     * all flashcard status are equal to 3 in get100 mode 
+     */
     this.complete = false;
     
     if (this.options.method === this.options.Methods.GET100) {
@@ -182,8 +215,17 @@
 
 	Session.prototype = {
 
+    /**
+     * The maximum size of a subdeck 
+     */
     SUBDECK_MAX_LENGTH: 10,
 
+    /**
+     * Update the status of the flashcard
+     *
+     * @param {Object} flashcard The flashcard that has been answered
+     * @param {boolean} correct Whether the answer is correct or not
+     */
     addAnswer: function (flashcard, correct) {
       // update status
       if (correct === false) { 
@@ -219,6 +261,10 @@
       this.next();
     },
 
+    /**
+     * Go to the next flashcard, or end the session
+     * if it is complete
+     */
     next: function () {
       if (!this.subdeck) { // Classic method
         this.index++;
@@ -237,6 +283,10 @@
       this.$rootScope.$emit('nextFlashcard');
     },
 
+    /**
+     * Update the study method for the associated deck
+     * @param {options.Methods} method The method to be used for the associated deck
+     */
     updateMethod: function (method) {
       if (this.options.method === method) { return; }
 
@@ -267,6 +317,10 @@
 			}
     },
 
+    /**
+     * Update the flashcard order for the associated deck
+     * @param {options.FlashcardOrders} orderId The order to be used for the associated deck
+     */
     updateOrder: function (orderId) {
       if (this.options.order === orderId) { return; }
 
@@ -284,6 +338,10 @@
       this.options.order = orderId;
     },
 
+    /**
+     * Update the flashcard side to show first for the associated deck
+     * @param {options.Sides} side The side to show first for the associated deck
+     */
     updateShowFirst: function (side) {
       if (this.options.showFirst === side) { return; }
 
@@ -301,12 +359,16 @@
       this.options.showFirst = side;
     },
 
+    /**
+     * End the session and mark it as complete
+     */
     end: function () {
       this.complete = true;
       this.$rootScope.$emit('sessionEnd');
     }
   };
 
+  /** @constructor */
   function Deck () {}
 
   Deck.prototype = {

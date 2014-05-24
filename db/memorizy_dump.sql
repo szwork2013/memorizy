@@ -3,6 +3,7 @@
 --
 
 SET statement_timeout = 0;
+SET lock_timeout = 0;
 SET client_encoding = 'SQL_ASCII';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
@@ -502,26 +503,6 @@ $_$;
 ALTER FUNCTION public.correct_web() OWNER TO postgres;
 
 --
--- Name: create_file(integer, text, text, text[]); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION create_file(_owner_id integer, _name text, _type text, _path text[]) RETURNS integer
-    LANGUAGE plpgsql
-    AS $$
-declare    
-  _owner_id  integer;
-  _parent_id   integer;
-begin
-  select get_file_id(_path) into _parent_id;
-
-  return create_file(_owner_id, _name, _type, _parent_id);
-end;
-$$;
-
-
-ALTER FUNCTION public.create_file(_owner_id integer, _name text, _type text, _path text[]) OWNER TO postgres;
-
---
 -- Name: create_file(integer, text, text, integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -573,6 +554,26 @@ $$;
 
 
 ALTER FUNCTION public.create_file(_owner_id integer, _name text, _type text, _parent_id integer) OWNER TO postgres;
+
+--
+-- Name: create_file(integer, text, text, text[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION create_file(_owner_id integer, _name text, _type text, _path text[]) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+declare    
+  _owner_id  integer;
+  _parent_id   integer;
+begin
+  select get_file_id(_path) into _parent_id;
+
+  return create_file(_owner_id, _name, _type, _parent_id);
+end;
+$$;
+
+
+ALTER FUNCTION public.create_file(_owner_id integer, _name text, _type text, _path text[]) OWNER TO postgres;
 
 --
 -- Name: create_media_link(character); Type: FUNCTION; Schema: public; Owner: postgres
@@ -905,42 +906,81 @@ $$;
 ALTER FUNCTION public.failed_test(thetest text) OWNER TO postgres;
 
 --
--- Name: get_file(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
+-- Name: get_calendar(integer); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
-CREATE FUNCTION get_file(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, flashcard_order_id integer, until_100 boolean, studied integer, show_first text, study_method text)
+CREATE FUNCTION get_calendar(_user_id integer) RETURNS TABLE(file_id integer, file_name character varying, last_session date, next_session date, size integer)
     LANGUAGE plpgsql
     AS $$
-	declare
-	_file_id	integer := 0;
 begin
-	select get_file_id(_path) into _file_id;
-	return query 
+  return query 
     select 
-      f.id::INTEGER, 
-      f.owner_id::INTEGER, 
-      u.name::TEXT owner_name,
-      f.name::TEXT, 
-      f.size::INTEGER, 
-      f.type::TEXT,
-      coalesce(uf.percentage, 0)::INTEGER,
-      coalesce(uf.rest_percentage, 0)::INTEGER,
-      coalesce(uf.starred, false)::BOOLEAN,
-      coalesce(uf.flashcard_order_id, 1)::INTEGER,
-      coalesce(uf.until_100, false)::BOOLEAN,
-      coalesce(uf.studied, 0)::INTEGER,
-      coalesce(uf.show_first, 'Term')::TEXT,
-      coalesce(uf.study_method, 'classic')::TEXT
+      f.id as file_id,
+      f.name as filename,
+      uf.last_session,
+      (
+        case 
+          when uf.next_session < CURRENT_DATE then CURRENT_DATE
+          else uf.next_session
+        end
+      ) as next_session,
+      f.size 
     from files f 
-      left join users_files uf on f.id = uf.file_id 
-      join users u on u.id = f.owner_id
-    where f.id = _file_id
-    and u.id = _user_id;
+      join users_files uf on f.id = uf.file_id 
+    where uf.user_id = _user_id
+    and f.type = 'deck'
+    and uf.next_session is not null
+    order by next_session asc, size desc;
 end;
 $$;
 
 
-ALTER FUNCTION public.get_file(_user_id integer, _path text[]) OWNER TO postgres;
+ALTER FUNCTION public.get_calendar(_user_id integer) OWNER TO postgres;
+
+--
+-- Name: get_decks(integer, date); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION get_decks(_user_id integer, _date date) RETURNS TABLE(id integer, owner_id integer, deck_id integer, term_text text, term_media_id integer, term_media_position integer, definition_text text, definition_media_id integer, definition_media_position integer, index integer, status integer, studied integer)
+    LANGUAGE plpgsql
+    AS $$
+begin
+  return query
+    with decks as (
+      select * from files f
+      where exists (
+        select 1 from users_files uf
+        where uf.file_id = f.id
+        and uf.next_session <= CURRENT_DATE
+        and uf.user_id = _user_id
+      ) 
+      and f.type = 'deck'
+    )
+    select    
+      f.id,   
+      f.owner_id,   
+      f.deck_id,   
+      f.term_text::TEXT,   
+      f.term_media_id::INTEGER,   
+      f.term_media_position::INTEGER,   
+      f.definition_text::TEXT,   
+      f.definition_media_id::INTEGER,   
+      f.definition_media_position::INTEGER,   
+      f.index,   
+      coalesce(uf.status, 0)::INTEGER status,
+      coalesce(uf.studied, 0)::INTEGER
+    from flashcards f 
+      left join users_flashcards uf on f.id = uf.flashcard_id 
+      join users_files ufl on f.deck_id = ufl.file_id
+    where f.deck_id in (
+      select d.id from decks d
+    )
+    order by ufl.next_session asc, f.deck_id asc, f.index asc;
+end;
+$$;
+
+
+ALTER FUNCTION public.get_decks(_user_id integer, _date date) OWNER TO postgres;
 
 --
 -- Name: get_file_id(text[]); Type: FUNCTION; Schema: public; Owner: postgres
@@ -980,6 +1020,59 @@ $$;
 
 
 ALTER FUNCTION public.get_file_id(_path text[]) OWNER TO postgres;
+
+--
+-- Name: get_file_info(integer, integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION get_file_info(_user_id integer, _file_id integer) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, flashcard_order_id integer, until_100 boolean, studied integer, show_first text, study_method text)
+    LANGUAGE plpgsql
+    AS $$
+begin
+	return query 
+    select 
+      f.id::INTEGER, 
+      f.owner_id::INTEGER, 
+      u.name::TEXT owner_name,
+      f.name::TEXT, 
+      f.size::INTEGER, 
+      f.type::TEXT,
+      coalesce(uf.percentage, 0)::INTEGER,
+      coalesce(uf.rest_percentage, 0)::INTEGER,
+      coalesce(uf.starred, false)::BOOLEAN,
+      coalesce(uf.flashcard_order_id, 1)::INTEGER,
+      coalesce(uf.until_100, false)::BOOLEAN,
+      coalesce(uf.studied, 0)::INTEGER,
+      coalesce(uf.show_first, 'Term')::TEXT,
+      coalesce(uf.study_method, 'classic')::TEXT
+    from files f 
+      left join users_files uf on f.id = uf.file_id 
+      join users u on u.id = f.owner_id
+    where f.id = _file_id
+    and u.id = _user_id;
+end;
+$$;
+
+
+ALTER FUNCTION public.get_file_info(_user_id integer, _file_id integer) OWNER TO postgres;
+
+--
+-- Name: get_file_info(integer, text[]); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION get_file_info(_user_id integer, _path text[]) RETURNS TABLE(id integer, owner_id integer, owner_name text, name text, size integer, type text, percentage integer, rest_percentage integer, starred boolean, flashcard_order_id integer, until_100 boolean, studied integer, show_first text, study_method text)
+    LANGUAGE plpgsql
+    AS $$
+	declare
+	_file_id	integer := 0;
+begin
+	select get_file_id(_path) into _file_id;
+  return query select * from get_file_info(_user_id, _file_id);
+end;
+$$;
+
+
+ALTER FUNCTION public.get_file_info(_user_id integer, _path text[]) OWNER TO postgres;
 
 --
 -- Name: get_file_tree(integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -1041,8 +1134,6 @@ ALTER FUNCTION public.get_file_tree(_user_id integer) OWNER TO postgres;
 CREATE FUNCTION get_flashcards(_user_id integer, _file_id integer, _order_id integer) RETURNS TABLE(id integer, owner_id integer, deck_id integer, term_text text, term_media_id integer, term_media_position integer, definition_text text, definition_media_id integer, definition_media_position integer, index integer, status integer, studied integer)
     LANGUAGE plpgsql
     AS $$
--- TODO return flashcards of all file's decks if the file
--- provided as arguments isn't a deck
 begin
   create temp table t (
     id integer, owner_id integer, deck_id integer,
@@ -1070,11 +1161,15 @@ begin
     flashcards f left join users_flashcards uf 
     on f.id = uf.flashcard_id 
     and _user_id = uf.user_id   
-  where f.deck_id in (
-    select ft.descendant_id
-    from file_tree ft
-    where ft.ancestor_id = _file_id
-  );
+  where f.deck_id = _file_id;
+
+  if _order_id is null then
+    select coalesce(flashcard_order_id, 1) 
+    into _order_id
+    from users_files
+    where file_id = _file_id
+    and user_id = _user_id;
+  end if;
 
   case 
     when _order_id = 1 then -- Classic
@@ -1309,17 +1404,17 @@ begin
   end if;
 
   -- Update file hierarchy
-  DELETE FROM file_tree
-  WHERE descendant_id IN (SELECT descendant_id FROM file_tree WHERE ancestor_id = _file_id)
-  AND ancestor_id NOT IN (SELECT descendant_id FROM file_tree WHERE ancestor_id = _file_id);
+  delete from file_tree
+  where descendant_id in (select descendant_id from file_tree where ancestor_id = _file_id)
+  and ancestor_id not in (select descendant_id from file_tree where ancestor_id = _file_id);
 
-  -- Insert subtree to its new location
-  INSERT INTO file_tree (ancestor_id, descendant_id, dist)
-  SELECT supertree.ancestor_id, subtree.descendant_id,
+  -- insert subtree to its new location
+  insert into file_tree (ancestor_id, descendant_id, dist)
+  select supertree.ancestor_id, subtree.descendant_id,
   supertree.dist+subtree.dist+1
-  FROM file_tree AS supertree, file_tree AS subtree
-  WHERE subtree.ancestor_id = _file_id
-  AND supertree.descendant_id = _new_parent_id;
+  from file_tree as supertree, file_tree as subtree
+  where subtree.ancestor_id = _file_id
+  and supertree.descendant_id = _new_parent_id;
 
 end;
 $$;
@@ -1468,6 +1563,29 @@ $$;
 
 
 ALTER FUNCTION public.star(_user_id integer, _file_id integer) OWNER TO postgres;
+
+--
+-- Name: status_to_percentage(integer); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION status_to_percentage(_status integer) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+begin
+  raise notice 'converting %', _status;
+  return case _status 
+    when -1 then 0
+    when 0  then 0
+    when 1  then 50
+    when 2  then 80
+    when 3  then 100
+    else    0
+  end;
+end;
+$$;
+
+
+ALTER FUNCTION public.status_to_percentage(_status integer) OWNER TO postgres;
 
 --
 -- Name: test_web_function_allids_is_removed(); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2199,6 +2317,63 @@ $$;
 ALTER FUNCTION public.update_flashcard_order(_user_id integer, _file_id integer, _order_id integer) OWNER TO postgres;
 
 --
+-- Name: update_flashcard_status(integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_flashcard_status(_user_id integer, _flashcard_id integer, _correct boolean) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+declare
+  _deck_id         integer;
+begin
+  select deck_id from flashcards 
+  where id = _flashcard_id 
+  into _deck_id;
+
+  if not found then 
+    raise exception 'Flashcard does not exist' 
+		using errcode = '22023'; /*invalid_parameter_value*/
+  end if;
+
+  if _correct = false then 
+    update users_flashcards 
+    set status = -1
+    where flashcard_id = _flashcard_id and 
+    user_id = _user_id;
+  else 
+    update users_flashcards 
+    set status = (
+      case 
+        when status = -1 then 1
+        when status < 3  then status + 1
+        else status 
+      end
+    )
+    where flashcard_id = _flashcard_id and 
+    user_id = _user_id;
+  end if;
+
+  insert into users_flashcards (user_id, flashcard_id, status) 
+  select 
+    _user_id, 
+    _flashcard_id, 
+    (case _correct when true then 1 when false then -1 end)
+  where not exists (
+    select 1 from users_flashcards uf 
+    where uf.flashcard_id = _flashcard_id and 
+    uf.user_id = _user_id 
+  );
+
+	-- perform _update_file_status(_user_id, _deck_id, 
+		-- (select _state_history_to_percentage(_new_history)) -
+		-- (select _state_history_to_percentage(_old_history)));
+end;
+$$;
+
+
+ALTER FUNCTION public.update_flashcard_status(_user_id integer, _flashcard_id integer, _correct boolean) OWNER TO postgres;
+
+--
 -- Name: update_flashcard_status(integer, integer, character); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -2264,63 +2439,6 @@ $$;
 ALTER FUNCTION public.update_flashcard_status(_user_id integer, _flashcard_id integer, _last_state character) OWNER TO postgres;
 
 --
--- Name: update_flashcard_status(integer, integer, boolean); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION update_flashcard_status(_user_id integer, _flashcard_id integer, _correct boolean) RETURNS void
-    LANGUAGE plpgsql
-    AS $$
-declare
-  _deck_id         integer;
-begin
-  select deck_id from flashcards 
-  where id = _flashcard_id 
-  into _deck_id;
-
-  if not found then 
-    raise exception 'Flashcard does not exist' 
-		using errcode = '22023'; /*invalid_parameter_value*/
-  end if;
-
-  if _correct = false then 
-    update users_flashcards 
-    set status = -1
-    where flashcard_id = _flashcard_id and 
-    user_id = _user_id;
-  else 
-    update users_flashcards 
-    set status = (
-      case 
-        when status = -1 then 1
-        when status < 3  then status + 1
-        else status 
-      end
-    )
-    where flashcard_id = _flashcard_id and 
-    user_id = _user_id;
-  end if;
-
-  insert into users_flashcards (user_id, flashcard_id, status) 
-  select 
-    _user_id, 
-    _flashcard_id, 
-    (case _correct when true then 1 when false then -1 end)
-  where not exists (
-    select 1 from users_flashcards uf 
-    where uf.flashcard_id = _flashcard_id and 
-    uf.user_id = _user_id 
-  );
-
-	-- perform _update_file_status(_user_id, _deck_id, 
-		-- (select _state_history_to_percentage(_new_history)) -
-		-- (select _state_history_to_percentage(_old_history)));
-end;
-$$;
-
-
-ALTER FUNCTION public.update_flashcard_status(_user_id integer, _flashcard_id integer, _correct boolean) OWNER TO postgres;
-
---
 -- Name: update_show_first(integer, integer, text); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -2345,6 +2463,102 @@ $$;
 
 
 ALTER FUNCTION public.update_show_first(_user_id integer, _file_id integer, _side text) OWNER TO postgres;
+
+--
+-- Name: update_status(integer, json); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION update_status(_user_id integer, _status json) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+  with per_flashcard as (  
+    select 
+      fi.id as deck_id,
+      s.key::integer as flashcard_id, 
+      s.value::integer as new_status,
+      coalesce(uf.status, 0) as old_status,
+      (status_to_percentage(s.value::integer) - status_to_percentage(coalesce(uf.status, 0)))::integer as percentage_difference 
+    from json_each_text(_status) s
+      left join users_flashcards uf on s.key::integer = uf.flashcard_id 
+      join flashcards f on f.id = s.key::integer 
+      join files fi on fi.id = f.deck_id
+    where uf.user_id = _user_id
+    or uf.user_id is null
+  ), per_deck as (
+    select 
+      p.deck_id, 
+      sum(p.percentage_difference)::integer as percentage_difference 
+    from per_flashcard p
+    group by p.deck_id
+  ), per_file as ( 
+    select 
+      ft.ancestor_id as file_id,
+      sum(p.percentage_difference)::integer as percentage_difference 
+    from per_deck p 
+      join file_tree ft on p.deck_id = ft.descendant_id
+    group by ft.ancestor_id
+  ), update_files_status as (
+    update users_files uf
+    set 
+      percentage = 
+        (percentage * f.size + rest_percentage + p.percentage_difference::integer) / f.size,
+      rest_percentage = 
+        (percentage * f.size + rest_percentage +  p.percentage_difference::integer) % f.size,
+      next_session = (
+        case 
+          when last_session < CURRENT_DATE then CURRENT_DATE + (CURRENT_DATE - last_session) * 2
+          else CURRENT_DATE + 1
+        end
+      ),
+      last_session = CURRENT_DATE
+    from files f 
+      join per_file p on f.id = p.file_id
+    where uf.file_id = p.file_id
+    and uf.user_id = _user_id
+  ), insert_file_status as (
+    insert into users_files (
+      user_id, 
+      file_id, 
+      percentage, 
+      rest_percentage
+    ) 
+    select 
+      _user_id, 
+      f.id, 
+      p.percentage_difference::integer / f.size, 
+      p.percentage_difference::integer % f.size
+    from files f 
+      join per_file p on f.id = p.file_id
+    where not exists (
+      select 1 from users_files uf
+      where uf.user_id = _user_id and 
+      file_id = f.id
+    )
+  ), update_flashcard_status as (
+    update users_flashcards uf1
+    set status = p.new_status 
+    from per_flashcard p 
+      join users_flashcards uf2 on p.flashcard_id = uf2.flashcard_id
+    where uf1.flashcard_id = p.flashcard_id
+    and uf1.user_id = _user_id
+  )
+  insert into users_flashcards (user_id, flashcard_id, status) 
+  select 
+    _user_id, 
+    p.flashcard_id,
+    p.new_status
+  from per_flashcard p
+  where not exists (
+    select 1 from users_flashcards uf 
+    where uf.flashcard_id = p.flashcard_id and 
+    uf.user_id = _user_id 
+  );
+end;
+$$;
+
+
+ALTER FUNCTION public.update_status(_user_id integer, _status json) OWNER TO postgres;
 
 --
 -- Name: update_status(integer, integer[], integer[], integer[], integer[]); Type: FUNCTION; Schema: public; Owner: postgres
@@ -2921,7 +3135,6 @@ ALTER TABLE public.users OWNER TO postgres;
 --
 
 CREATE TABLE users_files (
-    id integer NOT NULL,
     user_id integer NOT NULL,
     file_id integer NOT NULL,
     percentage integer DEFAULT 0 NOT NULL,
@@ -2932,6 +3145,8 @@ CREATE TABLE users_files (
     studied integer DEFAULT 0 NOT NULL,
     show_first character varying(32) DEFAULT 'Term'::character varying NOT NULL,
     study_method character varying(32) DEFAULT 'classic'::character varying NOT NULL,
+    last_session date,
+    next_session date,
     CONSTRAINT users_files_method_check CHECK (((study_method)::text = ANY (ARRAY[('classic'::character varying)::text, ('get100'::character varying)::text]))),
     CONSTRAINT users_files_percentage_check CHECK (((percentage >= 0) AND (percentage <= 100))),
     CONSTRAINT users_files_rest_percentage_check CHECK ((rest_percentage >= 0)),
@@ -2941,27 +3156,6 @@ CREATE TABLE users_files (
 
 
 ALTER TABLE public.users_files OWNER TO postgres;
-
---
--- Name: users_files_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE users_files_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.users_files_id_seq OWNER TO postgres;
-
---
--- Name: users_files_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE users_files_id_seq OWNED BY users_files.id;
-
 
 --
 -- Name: users_flashcards; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -3050,11 +3244,198 @@ ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('users_id_seq'::regcl
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+-- Data for Name: file_tree; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY users_files ALTER COLUMN id SET DEFAULT nextval('users_files_id_seq'::regclass);
+COPY file_tree (ancestor_id, descendant_id, dist) FROM stdin;
+0	0	0
+0	1	1
+1	1	0
+0	2	2
+1	2	1
+2	2	0
+0	3	2
+1	3	1
+3	3	0
+0	4	2
+1	4	1
+4	4	0
+0	5	3
+1	5	2
+3	5	1
+5	5	0
+0	6	3
+1	6	2
+3	6	1
+6	6	0
+\.
 
+
+--
+-- Data for Name: files; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY files (id, owner_id, name, size, type, symlink_of, copy_of) FROM stdin;
+2	1	starred	0	folder	\N	\N
+5	1	d1	2	deck	\N	\N
+6	1	d2	3	deck	\N	\N
+3	1	folder	5	folder	\N	\N
+4	1	deck	2	deck	\N	\N
+0	0	root	7	folder	\N	\N
+1	1	carl	7	folder	\N	\N
+\.
+
+
+--
+-- Name: files_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('files_id_seq', 6, true);
+
+
+--
+-- Data for Name: flashcard_orders; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY flashcard_orders (id, flashcard_order) FROM stdin;
+1	Classic
+2	Hardest to easiest
+3	Least studied
+4	Wrongs
+\.
+
+
+--
+-- Name: flashcard_orders_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('flashcard_orders_id_seq', 4, true);
+
+
+--
+-- Data for Name: flashcards; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY flashcards (id, owner_id, deck_id, term_text, term_media_id, definition_text, definition_media_id, index, term_media_position, definition_media_position) FROM stdin;
+4	1	5	1	\N	1	\N	100	\N	\N
+5	1	5	2	\N	2	\N	200	\N	\N
+6	1	6	a	\N	a	\N	100	\N	\N
+7	1	6	b	\N	b	\N	200	\N	\N
+8	1	6	c	\N	c	\N	300	\N	\N
+9	1	4	**test**	\N	> Coucou\n> ca va?	\N	100	\N	\N
+10	1	4	123 *hi*&lt;em&gt;<br>	\N	__coucou__	\N	200	\N	\N
+\.
+
+
+--
+-- Name: flashcards_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('flashcards_id_seq', 10, true);
+
+
+--
+-- Data for Name: media; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY media (id, sha256, links) FROM stdin;
+\.
+
+
+--
+-- Name: media_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('media_id_seq', 1, false);
+
+
+--
+-- Data for Name: media_positions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY media_positions (id, "position") FROM stdin;
+\.
+
+
+--
+-- Name: media_positions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('media_positions_id_seq', 1, false);
+
+
+--
+-- Name: study_modes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('study_modes_id_seq', 1, false);
+
+
+--
+-- Data for Name: study_orders; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY study_orders (id, study_order) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY users (id, name, email, password, enabled) FROM stdin;
+0	root	root@memorizy	root	f
+1	carl	carl@memorizy.com	test	t
+\.
+
+
+--
+-- Data for Name: users_files; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY users_files (user_id, file_id, percentage, starred, rest_percentage, flashcard_order_id, until_100, studied, show_first, study_method, last_session, next_session) FROM stdin;
+1	4	50	f	0	1	f	0	Term	classic	2014-05-20	2014-05-21
+1	0	85	f	5	1	f	0	Term	classic	2014-05-20	2014-05-21
+1	1	85	f	5	1	f	0	Term	classic	2014-05-20	2014-05-21
+1	5	100	f	0	1	f	0	Term	get100	2014-05-17	2014-05-18
+1	3	100	f	0	1	f	0	Term	classic	2014-05-17	2014-05-18
+1	6	100	f	0	1	f	0	Both	get100	2014-05-17	2014-05-18
+\.
+
+
+--
+-- Data for Name: users_flashcards; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY users_flashcards (user_id, flashcard_id, studied, status) FROM stdin;
+1	5	0	3
+1	4	0	3
+1	8	0	3
+1	7	0	3
+1	6	0	3
+1	9	0	3
+1	10	0	-1
+\.
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('users_id_seq', 1, true);
+
+
+SET search_path = web, pg_catalog;
+
+--
+-- Data for Name: session; Type: TABLE DATA; Schema: web; Owner: postgres
+--
+
+COPY session (sess_id, sess_data, expiration) FROM stdin;
+\.
+
+
+SET search_path = public, pg_catalog;
 
 --
 -- Name: files_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
@@ -3149,7 +3530,7 @@ ALTER TABLE ONLY users
 --
 
 ALTER TABLE ONLY users_files
-    ADD CONSTRAINT users_files_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT users_files_pkey PRIMARY KEY (user_id, file_id);
 
 
 --

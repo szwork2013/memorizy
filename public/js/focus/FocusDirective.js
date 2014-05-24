@@ -3,7 +3,9 @@ angular.module('memorizy.focus.FocusOn', [])
   return function(scope, elem, attr) {
     scope.$on('focusOn', function(e, name) {
       if(name === attr.focusOn) {
-        elem[0].focus();
+        setTimeout(function () {
+          console.log(elem[0].focus());
+        }, 0);
       }
     });
   };

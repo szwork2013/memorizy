@@ -7,7 +7,6 @@ angular.module('memorizy.flashcard.FlashcardService', [])
 
   this.equals = function (f1, f2) {
     if (typeof f1 === 'undefined' || typeof f2 === 'undefined') {
-      console.log('1');
       return false;
     }
 
@@ -18,15 +17,14 @@ angular.module('memorizy.flashcard.FlashcardService', [])
       }
     }
 
-    console.log('equals');
-
     return true;
   };
 
   this.clone = function (flashcard) {
     var clone = {};
     for (var i in this.attrs) {
-      clone[i] = flashcard[i];
+      var prop = this.attrs[i];
+      clone[prop] = flashcard[prop];
     }
 
     return clone;

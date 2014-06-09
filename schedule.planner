@@ -99,7 +99,7 @@
         <predecessor id="1" predecessor-id="11" type="FS"/>
       </predecessors>
       <task id="20" name="Information sur la flashcard" note="" work="28800" start="20140530T170000Z" end="20140531T170000Z" work-start="20140531T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work"/>
-      <task id="21" name="Bold/Italic" note="" work="57600" start="20140531T170000Z" end="20140602T170000Z" work-start="20140601T080000Z" percent-complete="0" priority="0" type="normal" scheduling="fixed-work">
+      <task id="21" name="Bold/Italic" note="" work="57600" start="20140531T170000Z" end="20140602T170000Z" work-start="20140601T080000Z" percent-complete="100" priority="0" type="normal" scheduling="fixed-work">
         <predecessors>
           <predecessor id="1" predecessor-id="20" type="FS"/>
         </predecessors>

@@ -17,8 +17,11 @@
     'memorizy.contenteditable',
     'memorizy.encodeURI',
     'memorizy.input',
+    'memorizy.socketio',
 
     //'http-auth-interceptor',
+    'angular.css.injector',
+    'angularFileUpload',
 
     /* Misc */
     'ngRoute',

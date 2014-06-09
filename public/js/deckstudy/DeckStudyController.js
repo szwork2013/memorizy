@@ -4,9 +4,13 @@
   /**
    * @constructor
    */
-  function DeckStudyController ($rootScope, $scope, $sce, markdownConverter, 
-                                $document, SessionManager, keyboardManager) 
+  function DeckStudyController ($rootScope, $scope, $sce, $document, 
+                                SessionManager, keyboardManager, cssInjector) 
   {
+
+    cssInjector.add('/stylesheets/deck-editor.css');
+    cssInjector.add('/stylesheets/deck-study.css');
+
     this.$scope = $scope;
 
     // $scope.decks is inherited from a parent scope
@@ -21,11 +25,9 @@
       stats: false
     };
 
+    $scope.trustAsHtml = $sce.trustAsHtml;
     $scope.showAll = this.showAll.bind(this);
     $scope.stringifyFlashcardOrder = this.stringifyFlashcardOrder.bind(this);
-    $scope.markdownToHtml = function (str) {
-      return $sce.trustAsHtml(markdownConverter.makeHtml(str));
-    };
 
     /* watchers */
     $scope.$watch('SessionManager.activeSessionIdx', function (n, o) {
@@ -150,10 +152,10 @@
     '$rootScope',
     '$scope',
     '$sce',
-    'markdownConverter',
     '$document',
     'SessionManager',
     'keyboardManager',
+    'cssInjector',
     DeckStudyController
   ]);
 

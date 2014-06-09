@@ -131,25 +131,70 @@ $$ language plpgsql;
 create or replace 
 function delete_flashcard (_user_id integer, _flashcard_id integer) 
 returns void as $$
-declare   _deck_id  integer;
+declare   
+  _deck_id  integer;
 begin
   select deck_id 
   from flashcards 
   where id = _flashcard_id
   into _deck_id;
 
-  -- TODO Fix dec_number_of_cards
-	-- perform dec_number_of_cards(_deck_id, _flashcard_id);
-
-	delete from flashcards 
-  where id = _flashcard_id;
-
   if not found then
 		raise exception 'Flashcard with id % not found', _flashcard_id
 		using errcode = '22023'; /*invalid_parameter_value*/
   end if;
 
-  perform _update_file_size(_deck_id, -1);
+  with parents as (
+    select ancestor_id
+    from file_tree
+    where descendant_id = _deck_id 
+  ),
+  lost_percentages as (
+    select user_id, status_to_percentage(status) percentage
+    from users_flashcards
+    where flashcard_id = _flashcard_id
+  ),
+  update_percentage_0 as (
+    update users_files uf
+    set 
+      percentage = 0,
+      rest_percentage = 0
+    from files f
+    where file_id in (
+      select ancestor_id 
+      from parents
+    ) 
+    and f.id = uf.file_id
+    and f.size - 1 = 0
+  ),
+  update_percentage as (
+    update users_files uf
+    set 
+      percentage = 
+        (uf.percentage * f.size + uf.rest_percentage - lp.percentage) / (f.size - 1),
+      rest_percentage = 
+        (uf.percentage * f.size + uf.rest_percentage - lp.percentage) % (f.size - 1)
+    from files f
+      join users_files uf2 on f.id = uf2.file_id
+      join lost_percentages lp on uf2.user_id = lp.user_id 
+    where uf.file_id in (
+      select ancestor_id 
+      from parents
+    ) 
+    and f.id = uf.file_id
+    and f.size - 1 > 0
+  )
+  update files f
+  set size = size - 1
+  where f.id in (
+    select ancestor_id 
+    from parents
+  );
+
+
+	delete from flashcards 
+  where id = _flashcard_id;
+
 end;
 $$ language plpgsql;
 

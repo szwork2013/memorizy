@@ -90,7 +90,6 @@ $$ language plpgsql;
 create or replace function status_to_percentage (_status integer) 
 returns integer as $$
 begin
-  raise notice 'converting %', _status;
   return case _status 
     when -1 then 0
     when 0  then 0

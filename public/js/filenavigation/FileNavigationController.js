@@ -3,7 +3,9 @@
 
   angular.module('memorizy.filenavigation.FileNavigationController', [])
   .controller('FileNavigationController', 
-    function ($document, $scope, $http, $location, FileNavigation) {
+    function ($document, $scope, $http, $location, FileNavigation, cssInjector) {
+
+      cssInjector.add('/stylesheets/file-navigation.css');
 
       $scope.newFile = {}; 
       $scope.newFile.parentId = $scope.folder.id;

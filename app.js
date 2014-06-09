@@ -72,6 +72,7 @@ routes.api.filemanager(app);
 routes.api.deckeditor(app);
 routes.api.deckstudy(app);
 routes.api.calendar(app);
+routes.api.media(app);
 
 routes.index(app);
 
@@ -79,7 +80,17 @@ routes.index(app);
  * Start Server
  */
 
-http.createServer(app).listen(app.get('port'), function () {
+var server = http.createServer(app),
+    io = require('socket.io')(server);
+
+io.on('connection', function (socket) {
+  var uploader = require('socketio-uploader');
+  uploader.listen(socket);
+});
+
+server.listen(app.get('port'), function () {
   'use strict';
   console.log('Express server listening on port ' + app.get('port'));
 });
+
+

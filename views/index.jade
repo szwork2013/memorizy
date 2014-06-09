@@ -10,6 +10,8 @@ html(ng-app="memorizy")
       link(rel="stylesheet" href="/stylesheets/cal-heatmap.css")
 
       script(src="/js/lib/jquery-2.0.3.js")
+      script(src="/js/socket.io/socket.io.js")
+      script(src="/js/socket.io/socketioUploader.js")
       script(src="/js/lib/bootstrap.js")
       script(src="/js/d3/d3.js")
       script(src="/js/calendar/cal-heatmap.js")
@@ -19,6 +21,12 @@ html(ng-app="memorizy")
       script(src='/js/lib/angular/angular-resource.js')
       script(src='/js/lib/angular/angular-cookies.js')
       script(src='/js/lib/angular/angular-sanitize.js')
+
+      script(src='/js/cssinjector/angular-css-injector.js')
+
+      script(src='/js/markdown/to-markdown.js')
+
+      script(src='/js/socket.io/SocketIOModel.js')
 
       script(src='/js/markdown/Markdown.Converter.js')
       script(src='/js/markdown/Markdown.Editor.js')
@@ -47,6 +55,10 @@ html(ng-app="memorizy")
       script(src='/js/deckeditor/DeckEditor.js')
       script(src='/js/deckeditor/DeckEditorController.js')
       script(src='/js/deckeditor/DeckEditorModel.js')
+      script(src='/js/deckeditor/DeckEditorDirective.js') 
+
+      script(src="/js/upload/angular-file-upload-shim.min.js")
+      script(src="/js/upload/angular-file-upload.min.js")
 
       script(src='/js/deckstudy/DeckStudy.js')
       script(src='/js/deckstudy/DeckStudyController.js')

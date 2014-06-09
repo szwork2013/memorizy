@@ -1,4 +1,7 @@
-all: local global db 
+all: struct local global db 
+
+struct: 
+	mkdir -p uploads/tmp
 
 local: npm
 	npm install

@@ -22,5 +22,8 @@
         }
       };
     })
-  .service('markdownConverter', Markdown.getSanitizingConverter);
+  .service('markdownConverter', function () {
+    this.markdownToHtml = Markdown.getSanitizingConverter().makeHtml;
+    this.htmlToMarkdown = toMarkdown;
+  });
 })(angular);

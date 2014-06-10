@@ -1,14 +1,15 @@
-FROM    ubuntu:13.10
+from ubuntu:13.10
 
-RUN     apt-get update
+run apt-get update
 
-# Install Node.js and npm
-RUN     apt-get install -y nodejs npm
+# install node.js and npm
+run apt-get install -y git nodejs npm
 
-RUN     ls
-RUN     pwd
-# Install app dependencies
-RUN     npm install
+run git clone https://github.com/clevasseur/memorizy.git
+run cd ./memorizy
 
-EXPOSE  8080
-CMD ["node", "app.js"]
+# install app dependencies
+run npm install
+
+expose  8080
+cmd ["node", "app.js"]

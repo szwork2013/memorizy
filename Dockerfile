@@ -1,5 +1,7 @@
 FROM    ubuntu:13.10
 
+RUN     apt-get update
+
 # Install Node.js and npm
 RUN     apt-get install -y nodejs npm
 

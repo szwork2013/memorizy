@@ -8,10 +8,10 @@ append content
           ng-click="display($index)" ng-mouseover="setDeleteButtonIndex($index)")
             .term.list-group-item-heading
               //-.media.media-thumbnail
-              .text(ng-bind-html="trustAsHtml(flashcard.term_text)")
+              .text(ng-bind-html="markdownToHtml(flashcard.term_text)")
             .definition.list-group-item-heading
               //-.media.media-thumbnail
-              .text(ng-bind-html="trustAsHtml(flashcard.definition_text)")
+              .text(ng-bind-html="markdownToHtml(flashcard.definition_text)")
             .btn-delete.glyphicon.glyphicon-remove(ng-click="removeFlashcard($index);")
 
       #content-center
@@ -24,22 +24,22 @@ append content
           .term(side ng-tab="editDefinition()" ng-shift-tab="display(deck.active - 1)" ng-blur="edit.term = false" ng-click="editTerm()")
             textarea#term-input.text(
               ng-show="edit.term == true"
-              ng-model="markdown.term"
+              ng-model="deck.flashcards[deck.active].term_text"
               spellcheck="false" 
               ng-blur="edit.term = false"
             ) 
-            #preview-term.preview(ng-show="edit.term == false" ng-bind-html="trustAsHtml(deck.flashcards[deck.active].term_text)")
+            #preview-term.preview(ng-show="edit.term == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].term_text)")
 
             a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image")
               span.glyphicon.glyphicon-picture
           .definition(side ng-tab="display(deck.active + 1)" ng-shift-tab="editTerm()" ng-blur="edit.definition = false" ng-click="editDefinition()")
             textarea#definition-input.text(
               ng-show="edit.definition == true"
-              ng-model="markdown.definition"
+              ng-model="deck.flashcards[deck.active].definition_text"
               spellcheck="false"
               ng-blur="edit.definition = false"
             )
-            #preview-definition.preview(ng-show="edit.definition == false" ng-bind-html="trustAsHtml(deck.flashcards[deck.active].definition_text)")
+            #preview-definition.preview(ng-show="edit.definition == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].definition_text)")
             
             a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image")
               span.glyphicon.glyphicon-picture

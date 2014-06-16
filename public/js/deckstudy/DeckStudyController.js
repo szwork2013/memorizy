@@ -4,7 +4,7 @@
   /**
    * @constructor
    */
-  function DeckStudyController ($rootScope, $scope, $sce, $document, 
+  function DeckStudyController ($rootScope, $scope, $sce, $document, markdownConverter,
                                 SessionManager, keyboardManager, cssInjector) 
   {
 
@@ -12,6 +12,8 @@
     cssInjector.add('/stylesheets/deck-study.css');
 
     this.$scope = $scope;
+    this.$sce = $sce;
+    this.markdownConverter = markdownConverter;
 
     // $scope.decks is inherited from a parent scope
     
@@ -25,7 +27,7 @@
       stats: false
     };
 
-    $scope.trustAsHtml = $sce.trustAsHtml;
+    $scope.markdownToHtml = this.markdownToHtml.bind(this);
     $scope.showAll = this.showAll.bind(this);
     $scope.stringifyFlashcardOrder = this.stringifyFlashcardOrder.bind(this);
 
@@ -70,6 +72,11 @@
       keyboardManager.unbind('left');
     });
   }
+
+  DeckStudyController.prototype.markdownToHtml = function (markdown) {
+    var html = this.markdownConverter.markdownToHtml(markdown);
+    return this.$sce.trustAsHtml(html);
+  };
 
   /**
    * Show the first side of the flashard, which vary depending 
@@ -153,6 +160,7 @@
     '$scope',
     '$sce',
     '$document',
+    'markdownConverter',
     'SessionManager',
     'keyboardManager',
     'cssInjector',

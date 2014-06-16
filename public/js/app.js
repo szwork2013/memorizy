@@ -25,7 +25,8 @@
 
     /* Misc */
     'ngRoute',
-    'ngStorage'
+    'ngStorage',
+    'ngSanitize'
   ]).
     
   /**

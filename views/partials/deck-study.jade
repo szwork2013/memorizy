@@ -10,12 +10,12 @@ append content
             td {{session.index}}/{{session.deck.flashcards.length}}
       #content-center
         #flashcard(ng-if="visible.stats == false")
-          .term
+          .side.term
             .text(ng-bind-html="markdownToHtml(flashcards[session.index].term_text)" 
               spellcheck="false" 
               ng-show="visible.term == true"
             )
-          .definition
+          .side.definition
             //-.media.media-halfsize
               //-.upload-form
                 //-button.btn-browse.btn.btn-primary(type="button" data-target="definition") Browse

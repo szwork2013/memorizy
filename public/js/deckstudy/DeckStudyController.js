@@ -52,19 +52,23 @@
     // show both sides
     keyboardManager.bind('space', function () {
       $scope.showAll();
-    });
+    }.bind(this));
 
     // correct answer
     keyboardManager.bind('right', function () {
-      var flashcard = $scope.flashcards[$scope.session.index];
-      $scope.session.addAnswer(flashcard, true);
-    });
+      if (this.canAnswer()) {
+        var flashcard = $scope.flashcards[$scope.session.index];
+        $scope.session.addAnswer(flashcard, true);
+      }
+    }.bind(this));
 
     // wrong answer
     keyboardManager.bind('left', function () {
-      var flashcard = $scope.flashcards[$scope.session.index];
-      $scope.session.addAnswer(flashcard, false);
-    });
+      if (this.canAnswer()) {
+        var flashcard = $scope.flashcards[$scope.session.index];
+        $scope.session.addAnswer(flashcard, false);
+      }
+    }.bind(this));
 
     $scope.$on('$destroy', function () {
       keyboardManager.unbind('space');
@@ -152,6 +156,15 @@
    */
   DeckStudyController.prototype.showStats = function () {
     this.$scope.visible.stats = true;
+  };
+
+  /**
+   * @return true if the user is able to tell whether his
+   *  answer is true or not
+   */
+  DeckStudyController.prototype.canAnswer = function () {
+    console.log('this.$scope.visible.answerButtons: ' + this.$scope.visible.answerButtons);
+    return this.$scope.visible.answerButtons; 
   };
 
   angular.module('memorizy.deckstudy.DeckStudyController', [])

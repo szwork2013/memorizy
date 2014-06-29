@@ -102,6 +102,7 @@
   font-size: 1.3em;
   box-sizing: border-box;
   word-wrap: break-word;
+  overflow: auto;
   -webkit-hyphens: auto;
   -moz-hyphens: auto;
   hyphens: auto;

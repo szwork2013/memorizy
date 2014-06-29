@@ -3,6 +3,7 @@
 
   angular.module('memorizy', [
     'memorizy.navbar',
+    'memorizy.path',
     'memorizy.login',
     'memorizy.filemanager',
     'memorizy.filenavigation',

@@ -107,6 +107,7 @@
    * @param {Object} deck
    */
   function Session ($rootScope, $http, $location, deck) {
+    console.log('deck = ', deck);
     this.$rootScope = $rootScope;
     this.$location  = $location;
     this.$http      = $http;
@@ -114,7 +115,10 @@
     /**
      * Contain flashcards and information about the deck
      */
-    this.deck = deck;
+    this.deck = {
+      id: deck.id,
+      flashcards: deck.flashcards
+    };
 
     /**
      * Subdeck is used in get100 mode only and contains
@@ -179,10 +183,11 @@
     this.complete = false;
     
     if (this.options.method === this.options.Methods.GET100) {
+      console.log('this.deck = ', this.deck);
       this.subdeck = {
         index: 0,
         begin: 0,
-        end  : Math.min(this.SUBDECK_MAX_LENGTH - 1, deck.flashcards.length - 1),
+        end  : Math.min(this.SUBDECK_MAX_LENGTH - 1, this.deck.flashcards.length - 1),
         indexes: []
       };
 
@@ -196,6 +201,7 @@
 
     // event listeners
 		$rootScope.$on('method', function (event, method) {
+      console.log('received method');
 			if (method === that.options.Methods.GET100) {
 				that.subdeck = {
 					index: 0,
@@ -336,6 +342,66 @@
       }
 
       this.options.order = orderId;
+      this.sortFlashcards(orderId);
+    },
+
+    /**
+     * sort
+     *
+     * @param {number} flashcardOrderId specify the order in which
+     *    the flashcards should be displayed, it must be one of 
+     *    this.session.options.FlashcardOrders values
+     */
+    sortFlashcards: function (flashcardOrderId) {
+
+      /**
+       * Used for the 'Hardest to easiest' order
+       * @private
+       */
+      function sortByDifficulty () {
+        this.deck.flashcards.sort(function (a, b) {
+          if (a.status < b.status) { return -1; }
+          else if (a.status > b.status) { return 1;}
+          else if (a.status === b.status && a.index < b.index) { return -1; }
+          else { return 1; }
+        });
+      }
+
+      /**
+       * Used for the 'Least studied' order
+       * @private
+       */
+      function sortByViews () {
+        this.deck.flashcards.sort(function (a, b) {
+          if (a.studied < b.studied) { return -1; }
+          else if (a.studied > b.studied) { return 1; }
+          else if (a.studied === b.studied && a.index < b.index) { return -1; }
+          else { return 1; }
+        });
+      }
+
+      /**
+       * Used for the 'Classic' order
+       * @private
+       */
+      function sortByIndex () {
+        this.deck.flashcards.sort(function (a, b) {
+          if (a.index < b.index) { return -1; }
+          else { return 1; }
+        });
+      }
+
+      var Orders = this.options.FlashcardOrders;
+
+      console.log('this = ', this);
+      switch (flashcardOrderId) {
+        case Orders.CLASSIC           : sortByIndex.call(this); break; 
+        case Orders.HARDEST_TO_EASIEST: sortByDifficulty.call(this); break; 
+        case Orders.LEAST_STUDIED     : sortByViews.call(this); break; 
+        default:
+          console.log('unknown order');
+        return;
+      }
     },
 
     /**
@@ -365,74 +431,6 @@
     end: function () {
       this.complete = true;
       this.$rootScope.$emit('sessionEnd');
-    }
-  };
-
-  /** @constructor */
-  function Deck () {}
-
-  Deck.prototype = {
-    configure: function (deck) {
-      this.deck = deck;
-    },
-
-    /**
-     * sort
-     *
-     * @param {number} flashcardOrderId specify the order in which
-     *    the flashcards should be displayed, it must be one of 
-     *    this.session.options.FlashcardOrders values
-     */
-    sort: function (flashcardOrderId) {
-
-      /**
-       * Used for the 'Hardest to easiest' order
-       * @private
-       */
-      function sortByDifficulty () {
-        this.flashcards.sort(function (a, b) {
-          if (a.status < b.status) { return -1; }
-          else if (a.status > b.status) { return 1;}
-          else if (a.status === b.status && a.index < b.index) { return -1; }
-          else { return 1; }
-        });
-      }
-
-      /**
-       * Used for the 'Least studied' order
-       * @private
-       */
-      function sortByViews () {
-        this.flashcards.sort(function (a, b) {
-          if (a.studied < b.studied) { return -1; }
-          else if (a.studied > b.studied) { return 1; }
-          else if (a.studied === b.studied && a.index < b.index) { return -1; }
-          else { return 1; }
-        });
-      }
-
-      /**
-       * Used for the 'Classic' order
-       * @private
-       */
-      function sortByIndex () {
-        this.flashcards.sort(function (a, b) {
-          if (a.index < b.index) { return -1; }
-          else { return 1; }
-        });
-      }
-
-      var Orders = this.session.options.FlashcardOrders;
-
-      switch (flashcardOrderId) {
-        case Orders.CLASSIC           : sortByIndex(); break; 
-        case Orders.HARDEST_TO_EASIEST: sortByDifficulty(); break; 
-        case Orders.LEAST_STUDIED     : sortByViews(); break; 
-        default:
-          console.log('unknown order');
-        return;
-      }
-
     }
   };
 

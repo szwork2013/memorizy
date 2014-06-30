@@ -106,8 +106,10 @@
         return false;
       };
 
-      $document.on('click', function () {
-        $('#contextMenu').hide();
+      $document.on('click', function (e) {
+        if (e.which === 1) { // left click
+          $('#contextMenu').hide();
+        }
       });
 
       //$('body').on('contextmenu', 'table tr', function(e) {

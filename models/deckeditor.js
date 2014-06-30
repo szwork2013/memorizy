@@ -35,9 +35,11 @@
     this._nullifyFlashcardUpdates(flashcard);
 
     if (typeof flashcard.id === 'number') {
+      console.log('Saving existing flashcard: ' + flashcard.id);
       return this._updateFlashcard(userId, flashcard);
     }
     if (typeof flashcard.deck_id === 'number') {
+      console.log('Creating a new flashcard: ' + flashcard.id + ' (' + typeof flashcard.id + ')');
       return this._appendFlashcard(userId, flashcard);
     }
 

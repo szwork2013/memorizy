@@ -29,14 +29,21 @@
 
     removeFlashcard: function (index) {
       var f = this.deck.flashcards[index];
-      var ret = this.$http.delete('/api' + this.$location.path(), { 
-        params: { 
-          action: 'deleteFlashcard',
-          flashcardId: f.id 
-        }
-      });
+      var ret = null;
+      if (f.id) {
+        ret = this.$http.delete('/api' + this.$location.path(), { 
+          params: { 
+            action: 'deleteFlashcard',
+            flashcardId: f.id 
+          }
+        });
+      }
 
       this.deck.flashcards.splice(index, 1);
+      if (this.deck.flashcards.length === 0) {
+        this.addFlashcard();
+      }
+
       return ret;
     }
   };

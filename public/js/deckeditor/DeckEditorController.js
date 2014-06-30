@@ -11,7 +11,8 @@
     this.$sce = $sce;
     this.markdownConverter = markdownConverter;
 
-    $scope.deck = $scope.decks[0];
+    DeckEditorModel.init($scope.decks[0]);
+    $scope.deck = DeckEditorModel.deck;
     $scope.decks = null;
     
     $scope.edit = {
@@ -20,8 +21,8 @@
     };
 
     $scope.markdownToHtml  = this.markdownToHtml.bind(this);
-    $scope.addFlashcard    = DeckEditorModel.addFlashcard;
-    $scope.removeFlashcard = DeckEditorModel.removeFlashcard;
+    $scope.addFlashcard    = DeckEditorModel.addFlashcard.bind(DeckEditorModel);
+    $scope.removeFlashcard = DeckEditorModel.removeFlashcard.bind(DeckEditorModel);
 
     $scope.onFileSelect = function(files) {
       socketioUploader.upload(files[0]);
@@ -45,10 +46,16 @@
       if (!flashcardService.equals(beforeEdit, displayed) && 
           typeof beforeEdit !== 'undefined') {
 
-        DeckEditorModel.saveFlashcard(displayed).
-          error(function (err) {
-          console.log('error while saving: ', err); 
-        });
+        (function (displayed) {
+          DeckEditorModel.saveFlashcard(displayed).
+            success (function (flashcardId) {
+              console.log('flashcardId = ' + flashcardId + ' (' + typeof flashcardId + ')');
+              displayed.id = parseInt(flashcardId, 10);
+            }).
+            error(function (err) {
+              console.log('error while saving: ', err); 
+            });
+        })(displayed);
       }
 
       $scope.deck.active = index;
@@ -88,7 +95,7 @@
   }
 
   DeckEditorController.prototype.markdownToHtml = function (markdown) {
-    var html = this.markdownConverter.markdownToHtml(markdown);
+    var html = markdown ? this.markdownConverter.markdownToHtml(markdown): '';
     return this.$sce.trustAsHtml(html);
   };
 

@@ -47,19 +47,19 @@ begin
     when _order_id = 1 then -- Classic
       return query 
         select * from t
-        order by index asc;
+        order by t.index asc;
     when _order_id =  2 then -- Hardest to easiest
       return query 
         select * from t 
-        order by status asc, index asc;
+        order by t.status asc, t.index asc;
     when _order_id =  3 then -- Least studied
       return query 
         select * from t 
-        order by studied asc, index asc; 
+        order by t.studied asc, t.index asc; 
     when _order_id =  4 then -- Wrongs
       return query 
         select * from t
-        where status = -1
+        where t.status = -1
         order by t.index asc;
     else 
       raise invalid_parameter_value 

@@ -2,8 +2,9 @@ append content
   #content
     #flashcard-editor
       #content-left
+        input.form-control(ng-model="searchFlashcard" placeholder="Search")
         #list-flashcards.list-group
-          a.flashcard-item.list-group-item(ng-repeat="flashcard in deck.flashcards" 
+          a.flashcard-item.list-group-item(ng-repeat="flashcard in deck.flashcards | filter:searchFlashcard" 
           ng-class="{active: deck.active == $index}" href="#" data-flashcard-id="{{flashcard.id}}"
           ng-click="display($index)" ng-mouseover="setDeleteButtonIndex($index)")
             .term.list-group-item-heading

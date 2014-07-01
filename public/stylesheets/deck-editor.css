@@ -13,11 +13,11 @@
   width: 20%;
   padding: 0;
   margin: 0 -4px 0 0;
-  overflow: auto;
+  /*overflow  : auto;*/
   box-sizing: border-box;
 }
 #list-flashcards {
-  height: 100%;
+  height: calc(100% - 2em);
   width: 100%;
   overflow: auto;
 }

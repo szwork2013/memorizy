@@ -95,7 +95,10 @@
   }
 
   DeckEditorController.prototype.markdownToHtml = function (markdown) {
-    var html = markdown ? this.markdownConverter.markdownToHtml(markdown): '';
+    // Remove Markdown rule for double space to insert a line break
+    markdown = markdown ? markdown.replace(/\n/g, '  \n') : ''; 
+
+    var html = this.markdownConverter.markdownToHtml(markdown);
     return this.$sce.trustAsHtml(html);
   };
 

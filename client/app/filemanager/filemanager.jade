@@ -1,0 +1,4 @@
+#content(ng-if="folder" ng-cloak ng-include="'/partials/filenavigation/filenavigation'" ng-controller="FileNavigationController")
+#content(ng-if="decks && action == 'edit'" ng-cloak ng-include="'/partials/deck/editor/editor'" ng-controller="DeckEditorController")
+#content(ng-if="decks && action != 'edit'" ng-cloak ng-include="'/partials/deck/study/study'" ng-controller="DeckStudyController")
+

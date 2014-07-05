@@ -1,0 +1,74 @@
+#content
+  #flashcard-editor
+    #content-left
+      input.form-control(ng-model="searchFlashcard" placeholder="Search")
+      #list-flashcards.list-group
+        a.flashcard-item.list-group-item(ng-repeat="flashcard in deck.flashcards | filter:searchFlashcard" 
+        ng-class="{active: deck.active == $index}" href="#" data-flashcard-id="{{flashcard.id}}"
+        ng-click="display($index)" ng-mouseover="setDeleteButtonIndex($index)")
+          .term.list-group-item-heading
+            //-.media.media-thumbnail
+            .text(ng-bind-html="markdownToHtml(flashcard.term_text)")
+          .definition.list-group-item-heading
+            //-.media.media-thumbnail
+            .text(ng-bind-html="markdownToHtml(flashcard.definition_text)")
+          .btn-delete.glyphicon.glyphicon-remove(ng-click="removeFlashcard($index);")
+
+    #content-center
+      nav#edit-tools
+        a#btn-bold.btn-style(href="#" title="Bold")
+          span.glyphicon.glyphicon-bold
+        a#btn-italic.btn-style(href="#" title="Italic")
+          span.glyphicon.glyphicon-italic
+      #flashcard
+        .term(side ng-tab="editDefinition()" ng-shift-tab="display(deck.active - 1)" ng-blur="edit.term = false" ng-click="editTerm()")
+          textarea#term-input.text(
+            ng-show="edit.term == true"
+            ng-model="deck.flashcards[deck.active].term_text"
+            spellcheck="false" 
+            ng-blur="edit.term = false"
+          ) 
+          #preview-term.preview(ng-show="edit.term == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].term_text)")
+
+          a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image")
+            span.glyphicon.glyphicon-picture
+        .definition(side ng-tab="display(deck.active + 1)" ng-shift-tab="editTerm()" ng-blur="edit.definition = false" ng-click="editDefinition()")
+          textarea#definition-input.text(
+            ng-show="edit.definition == true"
+            ng-model="deck.flashcards[deck.active].definition_text"
+            spellcheck="false"
+            ng-blur="edit.definition = false"
+          )
+          #preview-definition.preview(ng-show="edit.definition == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].definition_text)")
+          
+          a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image")
+            span.glyphicon.glyphicon-picture
+
+    #content-right
+      p test
+      #flashcard-info 
+
+        //-<input type="text" ng-model="myModelObj">
+          //-<input type="file" ng-file-select="onFileSelect($files)" >
+            //-<input type="file" ng-file-select="onFileSelect($files)" multiple>
+              //-<div ng-file-drop="onFileSelect($files)" ng-file-drag-over-class="optional-css-class"
+                //-ng-show="dropSupported">drop files here</div>
+                  //-<div ng-file-drop-available="dropSupported=true" 
+                    //-ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
+                      //-<button ng-click="upload.abort()">Cancel Upload</button>
+
+.modal.fade(id="modal-upload-image" role="dialog" aria-labelledby="Upload" aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
+        h4.modal-title#id="Upload image"
+      .modal-body
+        form(role="form")
+          .form-group
+            label(for="filename-input") Image
+            input(type="file" ng-file-select="onFileSelect($files)")
+
+      .modal-footer
+        button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
+        button.upload-image(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="uploadImage()") Upload

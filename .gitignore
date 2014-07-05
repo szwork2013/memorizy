@@ -14,12 +14,9 @@ results
 npm-debug.log
 node_modules
 
-/* test coverage */
-coverage/
+
+build/
 
 /* vim swap files */
 *.swp
 
-uploads/
-
-watcher.sh

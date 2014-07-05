@@ -1,0 +1,23 @@
+doctype html
+html(ng-app="memorizy")
+  head
+    title= title
+    meta(http-equiv="content-type" content="text/html; charset=UTF-8")
+    link(rel="stylesheet" href="/css/vendor.css")
+    link(rel="stylesheet" href="/css/common/common.css")
+    link(rel="stylesheet" href="/css/calendar/cal-heatmap.css")
+
+    script(src="/js/memorizy.js")
+
+  body
+    block body 
+      div(ng-if="user" ng-include="'/partials/navbar/navbar-logged-in'" ng-controller="NavbarController") 
+      div(ng-if="!user" ng-include="'/partials/navbar/navbar-default'" ng-controller="NavbarController") 
+
+      div(style="padding-top: 70px;")
+      div(ng-include="'/partials/path/path'" ng-controller="PathController")
+
+      div(ng-view ng-if="user")
+      div(ng-if="!user" ng-include="'/partials/login/login'" ng-controller="LoginController")
+
+doctype html

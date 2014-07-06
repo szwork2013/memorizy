@@ -44,25 +44,22 @@
   });
 
   gulp.task('js', function () {
-    gulp.src([
+    var glob = [
       './client/vendor/angular/angular.js',
       './client/vendor/jquery/jquery.js',
       './client/vendor/bootstrap/bootstrap.js',
       './client/vendor/**/*.js',
       './client/app/**/*.js'
-    ]).pipe(concat('memorizy.js'))
-    .pipe(gulp.dest('./build/js'));
+    ];
 
-    //watch({
-     //glob: [
-      //'./client/vendor/**/*.js',
-    //*    './client/app/**/*.js'
-    //*  ],
-    //*  base: './client/'
-    //*}, function (files) {
-    //*  return files.pipe(concat('memorizy.js')).pipe(uglify())
-    //*    .pipe(gulp.dest('./build/js'));
-    //*});
+    watch({
+      glob: glob
+    }, function (files) {
+      return gulp.src(glob)
+        .pipe(concat('memorizy.js'))
+        //.pipe(uglify())
+        .pipe(gulp.dest('./build/js'));
+    });
     
   });
 

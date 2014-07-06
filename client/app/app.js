@@ -2,6 +2,7 @@
   'use strict';
 
   angular.module('memorizy', [
+    'memorizy.finder',
     'memorizy.navbar',
     'memorizy.path',
     'memorizy.login',

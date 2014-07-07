@@ -1,22 +1,14 @@
 create or replace function find (_user_id integer, _keywords text[]) returns 
-table (id integer, name text, type text) as $$ 
+table (id integer, name text, type text, path text) as $$ 
 begin
   return query
     select 
       f.id::INTEGER,
       f.name::TEXT,
-      f.type::TEXT
+      f.type::TEXT,
+      get_path(f.id)::TEXT path
     from files f
-    where match(f.name, _keywords) is true
-    union all
-    select
-      u.id::INTEGER,
-      u.name::TEXT,
-      'user'::TEXT
-    from users u
-    where match(u.name, _keywords) is true
-    and u.enabled is true;
-
+    where match(f.name, _keywords) is true;
 end;
 $$ language plpgsql;
 

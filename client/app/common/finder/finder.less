@@ -1,0 +1,25 @@
+.finder {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.suggestions {
+  position: absolute;
+  top: 3em;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.suggestion.selected {
+  background-color: lightblue;
+}
+
+.suggestion > .filename,
+.suggestion > .path {
+  display: inline-block;
+  text-overflow: ellipsis;
+  width: 100%;
+  box-sizing: border-box;
+}

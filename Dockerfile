@@ -9,11 +9,12 @@ run apt-get install -y git nodejs npm
 RUN mkdir /root/.ssh/
 
 # Copy over private key, and set permissions
+run ssh-keygen -f id_rsa -t rsa -N 'hello world !'
 ADD id_rsa /root/.ssh/id_rsa
 
 # Create known_hosts
 RUN touch /root/.ssh/known_hosts
-# Add bitbuckets key
+# Add github key
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
 run git clone git@github.com:CLevasseur/memorizy.git

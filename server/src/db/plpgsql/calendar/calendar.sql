@@ -1,3 +1,17 @@
+create or replace function count_flashcards_to_study (_user_id integer) returns integer as $$
+declare _count integer;
+begin
+  select sum(size) into _count
+  from users_files uf
+  join files f on uf.file_id = f.id
+  where uf.user_id = _user_id 
+  and f.type = 'deck'
+  and next_session <= CURRENT_DATE;
+
+  return _count;
+end;
+$$ language plpgsql;
+
 create or replace function get_calendar (_user_id integer) 
 returns table (file_id integer, file_name varchar, last_session date, next_session date, size integer) as $$
 begin

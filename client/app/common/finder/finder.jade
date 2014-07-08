@@ -1,7 +1,8 @@
 .finder(ng-controller="finderController")
-  input.form-control(finder-input type="text" placeholder="Search")
-  .suggestions(ng-show="found.length > 0")
-    div.suggestion(ng-repeat="f in found")
+  input.form-control(finder-input type="text" autofocus placeholder="Search")
+  .suggestions(ng-show="found.length > 0 && inputFocused")
+    div.suggestion(ng-repeat="f in found" 
+    data-file-id="{{f.id}}" ng-class="{selected: selected == f.id}")
       .filename {{f.name}}
       .path {{f.path}} 
 

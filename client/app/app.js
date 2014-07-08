@@ -80,7 +80,7 @@
     })
     .when('/:username/calendar', {
       templateUrl: '/partials/calendar/calendar',
-      controller: 'CalendarController'
+      controller: 'calendarController'
     })
     .when('/:username/calendar/study', {
       templateUrl: '/partials/deck/study/study',

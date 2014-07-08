@@ -2,15 +2,24 @@
   'use strict';
 
   function CalendarModel ($http, $location) {
-    this.getCalendar = function () {
-      return $http.get('/api' + $location.path(), {
-        params: { action: 'getCalendar' }
-      });
-    };
+    this.$http = $http;
+    this.$location = $location; 
   }
 
+  CalendarModel.prototype.count = function () {
+    return this.$http.get('/api/calendar', {
+      params: { action: 'count' }
+    });
+  };
+
+  CalendarModel.prototype.getCalendar = function () {
+    return this.$http.get('/api' + this.$location.path(), {
+      params: { action: 'getCalendar' }
+    });
+  };
+
   angular.module('memorizy.calendar.CalendarModel', []). 
-    provider('CalendarModel', function () {
+    provider('calendarModel', function () {
       this.$get = [
         '$http',
         '$location',

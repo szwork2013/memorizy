@@ -1,11 +1,9 @@
 (function () {
   'use strict';
 
-  function FinderController (cssInjector) {
-    cssInjector.add('/css/common/finder/finder.css');
-  }
+  function FinderController () {}
 
   angular.module('memorizy.finder.FinderController', []).
-    controller('finderController', ['cssInjector', FinderController]);
+    controller('finderController', FinderController);
 
 })();

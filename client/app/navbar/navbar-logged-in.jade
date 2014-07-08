@@ -8,8 +8,10 @@ nav.navbar.navbar-default.navbar-fixed-top(role="navigation")
           a(ng-href="/{{user.name}}") Home
         li
           a(href="/{{user.name}}/starred") Starred
-        li
-          a(href="/{{user.name}}/calendar") Calendar
+        li(ng-controller="calendarController")
+          a(href="/{{user.name}}/calendar")
+            | Calendar
+            span.badge(ng-if="count > 0" ng-bind="count")
         li
           a(href="/poll") Poll
         li

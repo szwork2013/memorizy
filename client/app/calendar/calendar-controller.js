@@ -1,7 +1,7 @@
 (function (angular) {
   'use strict';
 
-  function CalendarController ($scope, $location, CalendarModel, 
+  function CalendarController ($scope, $location, calendarModel, 
                                FileManager, cssInjector) 
   {
     cssInjector.add('/css/calendar/calendar.css');
@@ -9,7 +9,12 @@
     this.$scope    = $scope;
     this.$location = $location;
 
-    CalendarModel.getCalendar().success(function (calendar) {
+    calendarModel.count().success(function (count) {
+      console.log('set count to ' , count);
+      $scope.count = count;
+    });
+
+    calendarModel.getCalendar().success(function (calendar) {
       $scope.calendar = calendar;
       updateWeek();
       updateCalHeatMap();
@@ -132,10 +137,10 @@
   }
 
   angular.module('memorizy.calendar.CalendarController', []).
-    controller('CalendarController',  [
+    controller('calendarController',  [
       '$scope',
       '$location',
-      'CalendarModel', 
+      'calendarModel', 
       'FileManager',
       'cssInjector',
       CalendarController

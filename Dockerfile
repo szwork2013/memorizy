@@ -10,8 +10,7 @@ RUN mkdir /root/.ssh/
 
 # Copy over private key, and set permissions
 run ssh-keygen -f id_rsa -t rsa -N 'hello world !'
-run ls
-ADD id_rsa /root/.ssh/id_rsa
+ADD /id_rsa /root/.ssh/id_rsa
 
 # Create known_hosts
 RUN touch /root/.ssh/known_hosts

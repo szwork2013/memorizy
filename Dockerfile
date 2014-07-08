@@ -5,10 +5,11 @@ run apt-get update
 # install node.js and npm
 run apt-get install -y git nodejs npm
 
-run find / -name "memorizy"
+run git clone https://github.com/CLevasseur/memorizy.git
+run cd memorizy
 
 # install app dependencies
 run npm install
 
-expose  8080
+expose 8080
 cmd ["node", "app.js"]

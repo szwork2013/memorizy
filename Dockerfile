@@ -5,11 +5,14 @@ run apt-get -q update
 # install node.js and npm
 run apt-get install -yq git nodejs npm
 
-run pwd
-run ls
-run find / -name "memorizy"
+run mkdir /root/.ssh/
+add id_rsa /root/.ssh/id_rsa 
+run touch /root/.ssh/known_hosts
+run ssh-keyscan github.com >> /root/.ssh/known_hosts
 
-# install app dependencies
+run git clone git@github.com:CLevasseur/memorizy.git
+run cd memorizy
+
 run npm install
 
 # Postgresql

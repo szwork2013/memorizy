@@ -26,6 +26,15 @@ run service postgresql start &&\
     psql --command "alter user postgres with password 'postgres';" &&\
     createdb -O postgres memorizy
 
+# Adjust PostgreSQL configuration so that remote connections to the
+# database are possible. 
+RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf
+
+# And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
+RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
+
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
+
 run cd /memorizy/server/src/db/plpgsql && \
     psql -f "all.sql"
 

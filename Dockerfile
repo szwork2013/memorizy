@@ -14,7 +14,7 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc
 RUN apt-get update
 
 RUN apt-get -y -q install python-software-properties software-properties-common
-RUN apt-get -y -q install postgresql postgresql-contrib
+RUN alias adduser='useradd' && DEBIAN_FRONTEND=noninteractive apt-get -y install postgresql postgresql-contrib
 
 add . /memorizy
 

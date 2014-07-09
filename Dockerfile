@@ -6,7 +6,7 @@ run apt-get -q update
 run apt-get install -yq git nodejs npm
 
 # install add-apt-repository cmd
-run apt-get install software-properties-common
+run apt-get install -yq software-properties-common
 
 # Postgresql
 run add-apt-repository ppa:pitti/postgresql 

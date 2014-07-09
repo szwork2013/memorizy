@@ -7,6 +7,7 @@ run apt-get install -yq git nodejs npm
 
 run mkdir /root/.ssh/
 add id_rsa /root/.ssh/id_rsa 
+run chmod 600 /root/.ssh/id_rsa
 run touch /root/.ssh/known_hosts
 run ssh-keyscan github.com >> /root/.ssh/known_hosts
 

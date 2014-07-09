@@ -10,8 +10,10 @@ add id_rsa /root/.ssh/id_rsa
 run chmod 600 /root/.ssh/id_rsa
 run touch /root/.ssh/known_hosts
 run ssh-keyscan github.com >> /root/.ssh/known_hosts
+RUN eval `ssh-agent -s` && \
+    ssh-add && \
+    git clone git@github.com:CLevasseur/memorizy.git
 
-run git clone git@github.com:CLevasseur/memorizy.git
 run cd memorizy
 
 run npm install

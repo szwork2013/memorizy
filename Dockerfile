@@ -5,6 +5,9 @@ run apt-get -q update
 # install node.js and npm
 run apt-get install -yq git nodejs npm
 
+# make a link from nodejs to node
+run ln -s $(which nodejs) $(dirname $(which nodejs))/node
+
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 

@@ -6,17 +6,21 @@ run apt-get -q update
 run apt-get install -yq git nodejs npm
 
 #Make ssh dir
-RUN mkdir /root/.ssh/
+#RUN mkdir /root/.ssh/
 
 # Copy over private key, and set permissions
-ADD /root/.ssh/id_rsa /root/.ssh/id_rsa
+#ADD /root/.ssh/id_rsa /root/.ssh/id_rsa
 
-# Create known_hosts
-RUN touch /root/.ssh/known_hosts
-# Add github key
-RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
+## Create known_hosts
+#RUN touch /root/.ssh/known_hosts
+## Add github key
+#RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
 
-run git clone git@github.com:CLevasseur/memorizy.git
+#run git clone git@github.com:CLevasseur/memorizy.git
+
+RUN eval `ssh-agent -s` && \
+    ssh-add id_rsa && \
+    git clone git@github.com:CLevasseur/memorizy.git
 
 run cd memorizy
 

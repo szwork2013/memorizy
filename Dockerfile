@@ -19,7 +19,7 @@ run apt-get install -yq git nodejs npm
 #run git clone git@github.com:CLevasseur/memorizy.git
 
 RUN eval `ssh-agent -s` && \
-    ssh-add id_rsa && \
+    ssh-add && \
     git clone git@github.com:CLevasseur/memorizy.git
 
 run cd memorizy
@@ -30,7 +30,7 @@ run npm install
 # Postgresql
 run add-apt-repository ppa:pitti/postgresql 
 run apt-get update
-run apt-get install -y -q postgresql-client-9.3 postgresql-contrib-9.3 postgresql-client-9.3
+run apt-get install -y -q postgresql-server-9.3 postgresql-contrib-9.3 postgresql-client-9.3
 
 user postgres
 

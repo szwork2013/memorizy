@@ -31,7 +31,7 @@ run cd /memorizy && \
 user postgres
 run service postgresql start &&\
     psql --command "alter user postgres with password 'postgres';" &&\
-    createdb -O memorizy
+    createdb memorizy
 
 # Adjust PostgreSQL configuration so that remote connections to the
 # database are possible. 

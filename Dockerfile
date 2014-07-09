@@ -1,6 +1,12 @@
 from ubuntu:13.10
 
-run apt-get -q update
+# Postgres default port
+expose 5432
+
+# Http server's port
+expose 8080
+
+run apt-get -qq update
 
 # install node.js and npm
 run apt-get install -yq git nodejs npm
@@ -37,11 +43,5 @@ VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 run cd /memorizy/server/src/db/plpgsql && \
     psql -f "all.sql"
-
-# Postgres default port
-expose 5432
-
-# Http server's port
-expose 8080
 
 cmd ["node", "/memorizy/server/src/app.js"]

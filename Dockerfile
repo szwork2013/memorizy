@@ -5,14 +5,12 @@ run apt-get -q update
 # install node.js and npm
 run apt-get install -yq git nodejs npm
 
-# install add-apt-repository cmd
-run apt-get install -yq software-properties-common
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
-# Postgresql
-run add-apt-repository ppa:pitti/postgresql 
-run apt-get update
-run apt-get install -y -q postgresql-server-9.3 postgresql-contrib-9.3 postgresql-client-9.3
+RUN apt-get update
 
+RUN apt-get -y -q install python-software-properties software-properties-common
+RUN apt-get -y -q install postgresql-9.3 postgresql-client-9.3 postgresql-contrib-9.3
 
 add . /memorizy
 

@@ -21,6 +21,7 @@ RUN apt-get update
 
 RUN apt-get -y -q install python-software-properties software-properties-common
 RUN alias adduser='useradd' && DEBIAN_FRONTEND=noninteractive apt-get -y install postgresql postgresql-contrib
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 add . /memorizy
 
@@ -38,8 +39,6 @@ RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.co
 
 # And add ``listen_addresses`` to ``/etc/postgresql/9.3/main/postgresql.conf``
 RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
-
-VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 run cd /memorizy/server/src/db/plpgsql && \
     psql -f "all.sql"

@@ -23,7 +23,7 @@ var app = module.exports = express();
 
 // all environments
 app.set('build', path.join(__dirname, '../../build'));
-app.set('port', process.env.PORT || 3000);
+app.set('port', process.env.PORT || 80);
 app.set('views', app.get('build') + '/partials');
 app.use(express.logger('dev'));
 app.use(express.cookieParser());
@@ -42,16 +42,9 @@ app.use(express.static(path.join(app.get('build'))));
 app.use(app.router);
 
 // development only
-if (app.get('env') === 'development') {
-  app.use(express.errorHandler());
-
-  db.conn = 'postgres://postgres:postgres@localhost:5432/memorizydev';
-  db.nodepgConn = 'tcp://nodepg:nodepg@localhost:5432/memorizydev';
-}
-else {
-  db.conn = 'postgres://postgres:postgres@localhost:5432/memorizy';
-  db.nodepgConn = 'tcp://nodepg:nodepg@localhost:5432/memorizy';
-}
+app.set('dbAddr', process.env.DB_PORT_5432_TCP_ADDR || 'localhost');
+db.conn = 'postgres://postgres:postgres@' + app.get('dbAddr') + ':5432/memorizy';
+db.nodepgConn = 'tcp://nodepg:nodepg@' + app.get('dbAddr') + ':5432/memorizy';
 
 /**
  * Routes

@@ -10,24 +10,26 @@ append content
             td {{session.index}}/{{session.deck.flashcards.length}}
       #content-center
         #flashcard(ng-if="visible.stats == false")
-          .side.term
+          .side.term(ng-show="visible.term == true")
+            .media-halfsize(tabindex="0" ng-if="flashcards[session.index].term_media_id && flashcards[session.index].term_media_position == 'left'" )
+              img(ng-src="/media/{{flashcards[session.index].term_media_id}}")
+            .media-fullsize(tabindex="0" ng-if="flashcards[session.index].term_media_id && flashcards[session.index].term_media_position == 'full'")
+              img(ng-src="/media/{{flashcards[session.index].term_media_id}}")
             .text(ng-bind-html="markdownToHtml(flashcards[session.index].term_text)" 
               spellcheck="false" 
-              ng-show="visible.term == true"
             )
-          .side.definition
-            //-.media.media-halfsize
-              //-.upload-form
-                //-button.btn-browse.btn.btn-primary(type="button" data-target="definition") Browse
-              //-.upload-progress
-                //-.percentd
-                //-.MB
-              //-canvas.media-canvas
-
+            .media-halfsize(tabindex="0" ng-if="flashcards[session.index].term_media_id && flashcards[session.index].term_media_position == 'right'" )
+              img(ng-src="/media/{{flashcards[session.index].term_media_id}}")
+          .side.definition(ng-show="visible.definition == true")
+            .media-halfsize(tabindex="0" ng-if="flashcards[session.index].definition_media_id && flashcards[session.index].definition_media_position == 'left'" )
+              img(ng-src="/media/{{flashcards[session.index].definition_media_id}}")
+            .media-fullsize(tabindex="0" ng-if="flashcards[session.index].definition_media_id && flashcards[session.index].definition_media_position == 'full'")
+              img(ng-src="/media/{{flashcards[session.index].definition_media_id}}")
             .text(
               ng-bind-html="markdownToHtml(flashcards[session.index].definition_text)" 
-              spellcheck="false" ng-show="visible.definition == true"
-            )
+              spellcheck="false"             )
+            .media-halfsize(tabindex="0" ng-if="flashcards[session.index].definition_media_id && flashcards[session.index].definition_media_position == 'right'" )
+              img(ng-src="/media/{{flashcards[session.index].definition_media_id}}")
 
           .status-list
             .status(ng-repeat="flashcard in flashcards")

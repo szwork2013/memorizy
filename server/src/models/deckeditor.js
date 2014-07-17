@@ -56,9 +56,9 @@
     return db.executePreparedStatement({
       name : 'appendFlashcard',
       text : 'select append_flashcard($1::INTEGER, $2::INTEGER,' +
-                                     '$3::TEXT, $4::INTEGER,' +
+                                     '$3::TEXT, $4::TEXT,' +
                                      '$5::TEXT, $6::TEXT,' +
-                                     '$7::INTEGER, $8::TEXT)',
+                                     '$7::TEXT, $8::TEXT)',
       values : [
         userId, flashcard.deck_id, 
         flashcard.term_text, flashcard.term_media_id, 
@@ -80,9 +80,9 @@
     return db.executePreparedStatement({
       name : 'saveFlashcard',
       text : 'select update_flashcard($1::INTEGER, $2::INTEGER,' +
-                                     '$3::TEXT, $4::INTEGER,' +
+                                     '$3::TEXT, $4::TEXT,' +
                                      '$5::TEXT, $6::TEXT,' +
-                                     '$7::INTEGER, $8::TEXT)',
+                                     '$7::TEXT, $8::TEXT)',
       values : [
         userId, flashcard.id, 
         flashcard.term_text, flashcard.term_media_id, 

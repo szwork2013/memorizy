@@ -21,27 +21,85 @@
         a#btn-italic.btn-style(href="#" title="Italic")
           span.glyphicon.glyphicon-italic
       #flashcard
-        .term(side ng-tab="editDefinition()" ng-shift-tab="display(deck.active - 1)" ng-blur="edit.term = false" ng-click="editTerm()")
-          textarea#term-input.text(
-            ng-show="edit.term == true"
+        .term(side  ng-tab="editDefinition()" ng-shift-tab="display(deck.active - 1)" ng-blur="edit.term = false" ng-click="editTerm()")
+          .media-halfsize(tabindex="0" ng-if="deck.flashcards[deck.active].term_media_id && deck.flashcards[deck.active].term_media_position == 'left'" )
+            img(ng-src="/media/{{deck.flashcards[deck.active].term_media_id}}")
+            a
+              span.media-left-btn.glyphicon.glyphicon-arrow-right(ng-click="deck.flashcards[deck.active].term_media_position = 'right'")
+            a
+              span.media-fullsize-btn.glyphicon.glyphicon-resize-full(ng-click="deck.flashcards[deck.active].term_media_position = 'full'")
+            a
+              span.remove-media-btn.glyphicon.glyphicon-remove(ng-click="deck.flashcards[deck.active].term_media_id = null")
+          .media-fullsize(tabindex="0" ng-if="deck.flashcards[deck.active].term_media_id && deck.flashcards[deck.active].term_media_position == 'full'")
+            img(ng-src="/media/{{deck.flashcards[deck.active].term_media_id}}")
+            a
+              span.media-left-btn.glyphicon.glyphicon-arrow-left(ng-click="deck.flashcards[deck.active].term_media_position = 'left'")
+            a
+              span.media-fullsize-btn.glyphicon.glyphicon-arrow-right(ng-click="deck.flashcards[deck.active].term_media_position = 'right'")
+            a
+              span.remove-media-btn.glyphicon.glyphicon-remove(ng-click="deck.flashcards[deck.active].term_media_id = null")
+          textarea#term-input(
+            ng-show="edit.term == true && (!deck.flashcards[deck.active].term_media_id || deck.flashcards[deck.active].term_media_position != 'full')"
             ng-model="deck.flashcards[deck.active].term_text"
-            spellcheck="false" 
+            ng-class="{'text-halfsize': deck.flashcards[deck.active].term_media_id && deck.flashcards[deck.active].term_media_position && deck.flashcards[deck.active].term_media_position != 'full', 'text-fullsize': !deck.flashcards[deck.active].term_media_id}"
+            spellcheck="false"
             ng-blur="edit.term = false"
-          ) 
-          #preview-term.preview(ng-show="edit.term == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].term_text)")
-
-          a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image")
+          )
+          #preview-term(
+            ng-class="{'text-halfsize': deck.flashcards[deck.active].term_media_id && deck.flashcards[deck.active].term_media_position && deck.flashcards[deck.active].term_media_position != 'full', 'text-fullsize': deck.flashcards[deck.active].term_media_id == null}"
+            ng-show="edit.term == false && deck.flashcards[deck.active].term_media_position != 'full'" 
+            ng-bind-html="markdownToHtml(deck.flashcards[deck.active].term_text)"
+          )
+          .media-halfsize(tabindex="0" ng-if="deck.flashcards[deck.active].term_media_id && deck.flashcards[deck.active].term_media_position == 'right'" )
+            img(ng-src="/media/{{deck.flashcards[deck.active].term_media_id}}")
+            a
+              span.media-left-btn.glyphicon.glyphicon-arrow-left(ng-click="deck.flashcards[deck.active].term_media_position = 'left'")
+            a
+              span.media-fullsize-btn.glyphicon.glyphicon-resize-full(ng-click="deck.flashcards[deck.active].term_media_position = 'full'")
+            a
+              span.remove-media-btn.glyphicon.glyphicon-remove(ng-click="deck.flashcards[deck.active].term_media_id = null")
+          
+          a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image-term")
             span.glyphicon.glyphicon-picture
         .definition(side ng-tab="display(deck.active + 1)" ng-shift-tab="editTerm()" ng-blur="edit.definition = false" ng-click="editDefinition()")
-          textarea#definition-input.text(
-            ng-show="edit.definition == true"
+          .media-halfsize(tabindex="0" ng-if="deck.flashcards[deck.active].definition_media_id && deck.flashcards[deck.active].definition_media_position == 'left'" )
+            img(ng-src="/media/{{deck.flashcards[deck.active].definition_media_id}}")
+            a
+              span.media-left-btn.glyphicon.glyphicon-arrow-right(ng-click="deck.flashcards[deck.active].definition_media_position = 'right'")
+            a
+              span.media-fullsize-btn.glyphicon.glyphicon-resize-full(ng-click="deck.flashcards[deck.active].definition_media_position = 'full'")
+            a
+              span.remove-media-btn.glyphicon.glyphicon-remove(ng-click="deck.flashcards[deck.active].definition_media_id = null")
+          .media-fullsize(tabindex="0" ng-if="deck.flashcards[deck.active].definition_media_id && deck.flashcards[deck.active].definition_media_position == 'full'")
+            img(ng-src="/media/{{deck.flashcards[deck.active].definition_media_id}}")
+            a
+              span.media-left-btn.glyphicon.glyphicon-arrow-left(ng-click="deck.flashcards[deck.active].definition_media_position = 'left'")
+            a
+              span.media-fullsize-btn.glyphicon.glyphicon-arrow-right(ng-click="deck.flashcards[deck.active].definition_media_position = 'right'")
+            a
+              span.remove-media-btn.glyphicon.glyphicon-remove(ng-click="deck.flashcards[deck.active].definition_media_id = null")
+          textarea#definition-input(
+            ng-show="edit.definition == true && (!deck.flashcards[deck.active].definition_media_id || deck.flashcards[deck.active].definition_media_position != 'full')"
             ng-model="deck.flashcards[deck.active].definition_text"
+            ng-class="{'text-halfsize': deck.flashcards[deck.active].definition_media_id && deck.flashcards[deck.active].definition_media_position && deck.flashcards[deck.active].definition_media_position != 'full', 'text-fullsize': !deck.flashcards[deck.active].definition_media_id}"
             spellcheck="false"
             ng-blur="edit.definition = false"
           )
-          #preview-definition.preview(ng-show="edit.definition == false" ng-bind-html="markdownToHtml(deck.flashcards[deck.active].definition_text)")
+          #preview-definition(
+            ng-class="{'text-halfsize': deck.flashcards[deck.active].definition_media_id && deck.flashcards[deck.active].definition_media_position && deck.flashcards[deck.active].definition_media_position != 'full', 'text-fullsize': deck.flashcards[deck.active].definition_media_id == null}"
+            ng-show="edit.definition == false && deck.flashcards[deck.active].definition_media_position != 'full'" 
+            ng-bind-html="markdownToHtml(deck.flashcards[deck.active].definition_text)"
+          )
+          .media-halfsize(tabindex="0" ng-if="deck.flashcards[deck.active].definition_media_id && deck.flashcards[deck.active].definition_media_position == 'right'" )
+            img(ng-src="/media/{{deck.flashcards[deck.active].definition_media_id}}")
+            a
+              span.media-left-btn.glyphicon.glyphicon-arrow-left(ng-click="deck.flashcards[deck.active].definition_media_position = 'left'")
+            a
+              span.media-fullsize-btn.glyphicon.glyphicon-resize-full(ng-click="deck.flashcards[deck.active].definition_media_position = 'full'")
+            a
+              span.remove-media-btn.glyphicon.glyphicon-remove(ng-click="deck.flashcards[deck.active].definition_media_id = null")
           
-          a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image")
+          a.btn-image.btn-style(href="#" data-toggle="modal" data-target="#modal-upload-image-definition")
             span.glyphicon.glyphicon-picture
 
     #content-right
@@ -57,17 +115,45 @@
                     //-ng-show="!dropSupported">HTML5 Drop File is not supported!</div>
                       //-<button ng-click="upload.abort()">Cancel Upload</button>
 
-.modal.fade(id="modal-upload-image" role="dialog" aria-labelledby="Upload" aria-hidden="true")
+.modal.fade(id="modal-upload-image-term" role="dialog" aria-labelledby="Upload" aria-hidden="true")
   .modal-dialog
     .modal-content
       .modal-header
         button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
         h4.modal-title#id="Upload image"
       .modal-body
-        form(role="form")
-          .form-group
-            label(for="filename-input") Image
-            input(type="file" ng-file-select="onFileSelect($files)")
+        form(role="form" enctype="multipart/form-data")
+          p Image
+          input(type="file" name="image" accept="image/*" ng-file-select="uploadTermMedia($files[0])")
+          p Position
+          input(type="radio" id="full" name="position" ng-model="deck.flashcards[deck.active].term_media_position" ng-value="MediaPositions.FULL") 
+          label(for="full") Full
+          input(type="radio" id="left" name="position" ng-model="deck.flashcards[deck.active].term_media_position" ng-value="MediaPositions.LEFT") 
+          label(for="left") Left
+          input(type="radio" id="right" name="position" ng-model="deck.flashcards[deck.active].term_media_position" ng-value="MediaPositions.RIGHT") 
+          label(for="right") Right
+
+      .modal-footer
+        button(type="button" class="btn btn-default" data-dismiss="modal") Cancel
+        button.upload-image(type="button" class="btn btn-primary" data-dismiss="modal" ng-click="uploadImage()") Upload
+
+.modal.fade(id="modal-upload-image-definition" role="dialog" aria-labelledby="Upload" aria-hidden="true")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button(type="button" class="close" data-dismiss="modal" aria-hidden="true") &times;
+        h4.modal-title#id="Upload image"
+      .modal-body
+        form(role="form" enctype="multipart/form-data")
+          p Image
+          input(type="file" name="image" accept="image/*" ng-file-select="uploadDefinitionMedia($files[0])")
+          p Position
+          input(type="radio" id="full" name="position" ng-model="deck.flashcards[deck.active].definition_media_position" ng-value="MediaPositions.FULL") 
+          label(for="full") Full
+          input(type="radio" id="left" name="position" ng-model="deck.flashcards[deck.active].definition_media_position" ng-value="MediaPositions.LEFT") 
+          label(for="left") Left
+          input(type="radio" id="right" name="position" ng-model="deck.flashcards[deck.active].definition_media_position" ng-value="MediaPositions.RIGHT") 
+          label(for="right") Right
 
       .modal-footer
         button(type="button" class="btn btn-default" data-dismiss="modal") Cancel

@@ -2,7 +2,11 @@ angular.module('memorizy.flashcard.FlashcardService', [])
 .service('flashcardService', [function () {
   this.attrs = [
     'term_text',
-    'definition_text'
+    'definition_text',
+    'term_media_id',
+    'term_media_position',
+    'definition_media_id',
+    'definition_media_position'
   ];
 
   this.equals = function (f1, f2) {
@@ -28,5 +32,11 @@ angular.module('memorizy.flashcard.FlashcardService', [])
     }
 
     return clone;
+  };
+
+  this.MediaPositions = {
+    FULL : 'full',
+    RIGHT: 'right',
+    LEFT : 'left'
   };
 }]);

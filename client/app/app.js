@@ -22,6 +22,7 @@
     'memorizy.socketio',
 
     'angular.css.injector',
+    'angularFileUpload',
     'ngStorage',
 
     /* Misc */

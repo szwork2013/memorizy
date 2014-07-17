@@ -1,8 +1,7 @@
 (function () {
   'use strict';
   function DeckEditorController ($scope, $sce, $timeout, DeckEditorModel, 
-                                 markdownConverter, flashcardService, cssInjector, 
-                                 socketioUploader) 
+                                 markdownConverter, flashcardService, cssInjector) 
   {
 
     cssInjector.add('/css/deck/editor/editor.css');
@@ -20,13 +19,12 @@
       definition: false
     };
 
+    $scope.MediaPositions  = flashcardService.MediaPositions;
     $scope.markdownToHtml  = this.markdownToHtml.bind(this);
     $scope.addFlashcard    = DeckEditorModel.addFlashcard.bind(DeckEditorModel);
     $scope.removeFlashcard = DeckEditorModel.removeFlashcard.bind(DeckEditorModel);
-
-    $scope.onFileSelect = function(files) {
-      socketioUploader.upload(files[0]);
-    };
+    $scope.uploadTermMedia = DeckEditorModel.uploadTermMedia.bind(DeckEditorModel);
+    $scope.uploadDefinitionMedia = DeckEditorModel.uploadDefinitionMedia.bind(DeckEditorModel);
 
     var beforeEdit;
     $scope.display = function (index) {
@@ -72,18 +70,36 @@
       $timeout(function () {
         $scope.edit.term = true;
       });
-      $timeout(function () {
-        $('#term-input').focus();
-      });
+      if ($scope.deck.flashcards[$scope.deck.active].term_media_id && 
+          $scope.deck.flashcards[$scope.deck.active].term_media_position == 'full') 
+      {
+        $timeout(function () {
+          $('.term > .media-fullsize').focus();
+        });
+      }
+      else {
+        $timeout(function () {
+          $('#term-input').focus();
+        });
+      }
     };
 
     $scope.editDefinition = function () {
       $timeout(function () {
         $scope.edit.definition = true;
       });
-      $timeout(function () {
-        $('#definition-input').focus();
-      });
+      if ($scope.deck.flashcards[$scope.deck.active].definition_media_id && 
+          $scope.deck.flashcards[$scope.deck.active].definition_media_position == 'full') 
+      {
+        $timeout(function () {
+          $('.definition > .media-fullsize').focus();
+        });
+      }
+      else {
+        $timeout(function () {
+          $('#definition-input').focus();
+        });
+      }
     };
 
     if ($scope.deck.flashcards.length <= 0) {
@@ -111,7 +127,6 @@
     'markdownConverter',
     'flashcardService',
     'cssInjector',
-    'socketioUploader',
     DeckEditorController
   ]);
 })();

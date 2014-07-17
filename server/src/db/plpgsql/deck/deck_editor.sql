@@ -1,8 +1,8 @@
 create or replace 
 function append_flashcard(_owner_id integer, _deck_id integer,
-                          _term_text text, _term_media_id integer,
+                          _term_text text, _term_media_id text,
                           _term_media_position text, _definition_text text, 
-                          _definition_media_id integer, 
+                          _definition_media_id text, 
                           _definition_media_position text)
 returns integer as $$
 declare 
@@ -32,7 +32,7 @@ begin
   if _term_media_id is not null or
     _definition_media_id is not null then
 
-    update media
+    update images
     set links = links + 1
     where id = _term_media_id
     or id = _definition_media_id;
@@ -43,9 +43,9 @@ $$ language plpgsql;
 
 create or replace
 function update_flashcard (_user_id integer, _flashcard_id integer,
-                           _term_text text, _term_media_id integer,
+                           _term_text text, _term_media_id text,
                            _term_media_position text, _definition_text text, 
-                           _definition_media_id integer,
+                           _definition_media_id text,
                            _definition_media_position text)
 returns integer as $$
 declare
@@ -63,7 +63,7 @@ begin
       from flashcards
       where id = _flashcard_id
     )
-    update media
+    update images
     set links = links - 1
     where (
       _term_media_id is not null and id = (
@@ -79,7 +79,7 @@ begin
     );
 
     -- increments new ones
-    update media
+    update images
     set links = links + 1
     where id = _term_media_id
     or id = _definition_media_id;

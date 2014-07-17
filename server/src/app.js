@@ -23,11 +23,16 @@ var app = module.exports = express();
 
 // all environments
 app.set('build', path.join(__dirname, '../../build'));
+app.set('uploadDir', path.join(__dirname, '../uploads'));
 app.set('port', process.env.PORT || 80);
 app.set('views', app.get('build') + '/partials');
 app.use(express.logger('dev'));
 app.use(express.cookieParser());
-app.use(express.bodyParser());
+
+//app.use(express.bodyParser());
+app.use(express.json());
+app.use(express.urlencoded());
+
 app.use(express.methodOverride());
 
 app.use(expressJwt({

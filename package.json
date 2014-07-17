@@ -24,7 +24,8 @@
     "mmmagic": "0.3.5",
     "jsonwebtoken": "~0.2.0",
     "express-jwt": "~0.2.0",
-    "pagedown": "~1.1.0"
+    "pagedown": "~1.1.0",
+    "formidable": "~1.0.15"
   },
   "devDependencies": {
     "should": "~2.0.2",
@@ -40,6 +41,7 @@
     "gulp-changed": "~0.4.0",
     "gulp-watch": "~0.6.8",
     "gulp-util": "~2.2.19",
-    "gulp-rename": "~1.2.0"
+    "gulp-rename": "~1.2.0",
+    "gulp": "~3.8.5"
   }
 }

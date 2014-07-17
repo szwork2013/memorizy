@@ -1,17 +1,17 @@
 create or replace
 function get_flashcards (_user_id integer, _file_id integer, _order_id integer)
 returns table(id integer, owner_id integer, deck_id integer,
-              term_text text, term_media_id integer, term_media_position integer, 
-              definition_text text, definition_media_id integer,
-              definition_media_position integer, index integer, status integer,
+              term_text text, term_media_id text, term_media_position text, 
+              definition_text text, definition_media_id text,
+              definition_media_position text, index integer, status integer,
               studied integer)
 as $$
 begin
   create temp table t (
     id integer, owner_id integer, deck_id integer,
-    term_text text, term_media_id integer, term_media_position integer, 
-    definition_text text, definition_media_id integer,
-    definition_media_position integer, index integer, status integer,
+    term_text text, term_media_id text, term_media_position text, 
+    definition_text text, definition_media_id text,
+    definition_media_position text, index integer, status integer,
     studied integer
   ) on commit drop;
 
@@ -21,11 +21,11 @@ begin
     f.owner_id,   
     f.deck_id,   
     f.term_text::TEXT,   
-    f.term_media_id::INTEGER,   
-    f.term_media_position::INTEGER,   
+    f.term_media_id::TEXT,   
+    f.term_media_position::TEXT,   
     f.definition_text::TEXT,   
-    f.definition_media_id::INTEGER,   
-    f.definition_media_position::INTEGER,   
+    f.definition_media_id::TEXT,   
+    f.definition_media_position::TEXT,   
     f.index,   
     coalesce(uf.status, 0)::INTEGER status,
     coalesce(uf.studied, 0)::INTEGER

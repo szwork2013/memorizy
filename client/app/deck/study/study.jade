@@ -15,8 +15,11 @@ append content
               img(ng-src="/media/{{flashcards[session.index].term_media_id}}")
             .media-fullsize(tabindex="0" ng-if="flashcards[session.index].term_media_id && flashcards[session.index].term_media_position == 'full'")
               img(ng-src="/media/{{flashcards[session.index].term_media_id}}")
-            .text(ng-bind-html="markdownToHtml(flashcards[session.index].term_text)" 
+            .text(
+              ng-bind-html="markdownToHtml(flashcards[session.index].term_text)" 
+              ng-show="!flashcards[session.index].term_media_id || flashcards[session.index].term_media_position != 'full')"
               spellcheck="false" 
+              ng-class="{'text-halfsize': flashcards[session.index].term_media_id && flashcards[session.index].term_media_position && flashcards[session.index].term_media_position != 'full', 'text-fullsize': !flashcards[session.index].term_media_id}"
             )
             .media-halfsize(tabindex="0" ng-if="flashcards[session.index].term_media_id && flashcards[session.index].term_media_position == 'right'" )
               img(ng-src="/media/{{flashcards[session.index].term_media_id}}")
@@ -27,25 +30,28 @@ append content
               img(ng-src="/media/{{flashcards[session.index].definition_media_id}}")
             .text(
               ng-bind-html="markdownToHtml(flashcards[session.index].definition_text)" 
-              spellcheck="false"             )
+              ng-show="!flashcards[session.index].definition_media_id || flashcards[session.index].definition_media_position != 'full')"
+              spellcheck="false"             
+              ng-class="{'text-halfsize': flashcards[session.index].definition_media_id && flashcards[session.index].definition_media_position && flashcards[session.index].definition_media_position != 'full', 'text-fullsize': !flashcards[session.index].definition_media_id}"
+            )
             .media-halfsize(tabindex="0" ng-if="flashcards[session.index].definition_media_id && flashcards[session.index].definition_media_position == 'right'" )
               img(ng-src="/media/{{flashcards[session.index].definition_media_id}}")
 
-          .status-list
-            .status(ng-repeat="flashcard in flashcards")
-              span(ng-if="flashcard.status == -1") -1
-              span(ng-if="flashcard.status == 0") 0
-              span(ng-if="flashcard.status == 1") 1
-              span(ng-if="flashcard.status == 2") 2
-              span(ng-if="flashcard.status == 3") 3
+        .status-list
+          .status(ng-repeat="flashcard in flashcards")
+            span(ng-if="flashcard.status == -1") -1
+            span(ng-if="flashcard.status == 0") 0
+            span(ng-if="flashcard.status == 1") 1
+            span(ng-if="flashcard.status == 2") 2
+            span(ng-if="flashcard.status == 3") 3
 
 
-          .answer-bar
-            span#btn-wrong.glyphicon.glyphicon-remove(ng-click="session.addAnswer(flashcards[session.index], false)" 
-                                             ng-show="visible.answerButtons == true")
-            span#btn-turn.glyphicon.glyphicon-refresh(ng-click="showAll()" ng-show="visible.answerButtons != true")
-            span#btn-right.glyphicon.glyphicon-ok(ng-click="session.addAnswer(flashcards[session.index], true)"
-                                             ng-show="visible.answerButtons == true")
+        .answer-bar
+          span#btn-wrong.glyphicon.glyphicon-remove(ng-click="session.addAnswer(flashcards[session.index], false)" 
+                                           ng-show="visible.answerButtons == true")
+          span#btn-turn.glyphicon.glyphicon-refresh(ng-click="showAll()" ng-show="visible.answerButtons != true")
+          span#btn-right.glyphicon.glyphicon-ok(ng-click="session.addAnswer(flashcards[session.index], true)"
+                                           ng-show="visible.answerButtons == true")
 
         #stats(ng-if="visible.stats == true")
           p

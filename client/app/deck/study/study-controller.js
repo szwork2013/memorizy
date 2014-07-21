@@ -17,6 +17,7 @@
 
     // $scope.decks is inherited from a parent scope
     
+    console.log('DeckStudyController: decks = ', $scope.decks);
     SessionManager.configure($scope.decks);
     $scope.SessionManager = SessionManager;
 

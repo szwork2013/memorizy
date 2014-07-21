@@ -140,9 +140,10 @@
       }
 
       if (typeof fileIds === 'number' || typeof fileIds === 'string') {
-        return getOneFile(userId, fileIds);
+        //return getOneFile(userId, fileIds);
+        fileIds = [fileIds];
       }
-      else if (Object.prototype.toString.call(fileIds) === '[object Array]') {
+      if (Object.prototype.toString.call(fileIds) === '[object Array]') {
         var deferred = [];
         for (var i in fileIds) {
           deferred.push(getOneFile(userId, fileIds[i]));

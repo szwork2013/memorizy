@@ -1,0 +1,9 @@
+\i ./plpgsql/deck/deck_common.sql
+\i ./plpgsql/deck/deck_editor.sql
+\i ./plpgsql/deck/deck_study.sql
+\i ./plpgsql/finder.sql
+\i ./plpgsql/file/file_common.sql
+\i ./plpgsql/file/file_navigation.sql
+\i ./plpgsql/file/file_manager.sql
+\i ./plpgsql/user/users.sql
+\i ./plpgsql/calendar/calendar.sql

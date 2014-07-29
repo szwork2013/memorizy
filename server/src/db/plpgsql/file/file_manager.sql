@@ -443,8 +443,7 @@ begin
     from file_copies c1 join flashcards f1 on c1.copy_of = f1.deck_id
     where c1.type = 'deck' 
   )
-  select id from file_copies where copy_of = _file_id into _new_subtree_head;
-
+  select id from file_copies where copy_of = _file_id into _new_subtree_head; 
   -- Insert new subtree under _parent_id
   INSERT INTO file_tree (ancestor_id, descendant_id, dist)
   SELECT supertree.ancestor_id, subtree.descendant_id,
@@ -458,7 +457,34 @@ end;
 $$ language plpgsql;
 
 create or replace function delete_file(_user_id integer, _file_id integer) returns void as $$
+declare
+  deleted_flashcards_count integer;
 begin
+  select f.size into deleted_flashcards_count
+  from files f 
+  where f.id = _file_id;
+
+  update users_files uf
+  set 
+    percentage = (uf.percentage * f.size + uf.rest_percentage) / (f.size - deleted_flashcards_count),
+    rest_percentage = (uf.percentage * f.size + uf.rest_percentage) % (f.size - deleted_flashcards_count)
+  from files f
+  where f.id = uf.file_id
+  and uf.file_id in (
+    select ancestor_id
+    from file_tree 
+    where descendant_id = _file_id
+  ); 
+
+  update files
+  set size = size - deleted_flashcards_count
+  where id in (
+    select ancestor_id
+    from file_tree 
+    where descendant_id = _file_id
+  ); 
+ 
+ 
   delete from files
   where id in (
     select descendant_id from file_tree
@@ -469,25 +495,6 @@ begin
       and ancestor_id = 0
       and dist = 0
     )
-    -- Prevent from deleting starred folder
-    -- TODO make it work
-    -- and not exists (
-      -- select 1 from file_tree
-      -- where ancestor_id = (
-        -- -- search user's root folder id
-        -- -- select f.id from files f
-        -- where name = (
-          -- select username from users
-          -- where id = _user_id
-        -- )
-        -- and exists (
-          -- select 1 from file_tree
-          -- where descendant_id = f.id
-          -- and ancestor_id = 0
-          -- and dist = 1
-        -- )
-      -- )
-    -- )
     and ancestor_id = _file_id
   );
 end;

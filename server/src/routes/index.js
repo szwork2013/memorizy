@@ -9,7 +9,8 @@
     deckeditor: require('./deckeditor'),
     deckstudy: require('./deckstudy'),
     calendar: require('./calendar'),
-    media: require('./media')
+    media: require('./media'),
+    register: require('./register')
   };
 
   exports.partials = function (app) {

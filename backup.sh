@@ -10,4 +10,5 @@ docker run --rm --volumes-from memorizy_db_data -v "$DIR":/backup ubuntu tar cvz
 
 # send to remote server
 git add -f "$BACKUP_PATH"
-git commit -m "backup" "$BACKUP_PATH" && git push origin "$BRANCH"
+git commit -m "backup" "$BACKUP_PATH" && \
+  su user -c "git push origin $BRANCH"

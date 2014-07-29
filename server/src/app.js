@@ -65,6 +65,7 @@ routes.api.deckeditor(app);
 routes.api.deckstudy(app);
 routes.api.calendar(app);
 routes.api.media(app);
+routes.api.register(app);
 
 routes.index(app);
 
@@ -85,4 +86,6 @@ server.listen(app.get('port'), function () {
   console.log('Express server listening on port ' + app.get('port'));
 });
 
-
+var cleaner = require('./utils/cleaner');
+cleaner.workingDir = app.get('uploadDir');
+cleaner.removeUnlinkedMedia();

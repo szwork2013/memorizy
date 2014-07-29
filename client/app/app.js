@@ -2,6 +2,8 @@
   'use strict';
 
   angular.module('memorizy', [
+    'memorizy.register',
+    'memorizy.registered',
     'memorizy.finder',
     'memorizy.navbar',
     'memorizy.path',
@@ -74,6 +76,14 @@
     .when('/login', {
       templateUrl: '/partials/login/login',
       controller: 'LoginController'
+    })
+    .when('/register', {
+      templateUrl: '/partials/register/register',
+      controller: 'registerController'
+    })
+    .when('/registered', {
+      templateUrl: '/partials/registered/registered',
+      controller: 'registeredController'
     })
     .when('/:username', {
       templateUrl: '/partials/filemanager/filemanager',

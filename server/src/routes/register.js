@@ -1,44 +1,40 @@
-var util = require('util');
-var register = require('../models/register.js');
-/*
- *register page
- */
-module.exports = function(app){
-	var title = 'Register';
-	var uri = {
-		register : '/register'
-	};
-	var views = {
-		register : 'register',
-		registerSuccess : 'registerSuccess'
-	};
+(function () {
+  'use strict';
 
+  var util = require('util');
+  var register = require('../models/register.js');
+  /*
+   *register page
+   */
+  module.exports = function (app) {
+    app.post('/register', function (req, res) {
+      var user = {
+        name : req.body.name,
+        password : req.body.password,
+        email : req.body.email
+      };
 
-	app.get(uri.register, function(req, res){
-		var props = {
-			title : title,
-			username : req.body.username
-		};
+      register.createUser(user).then(function(res){
+        return register.sendActivationEmail(user.name, 'levasseur.cl@gmail.com', res.hash);
+      })
+      .then(function () {
+        res.send(204);
+      })
+      .catch(function(err){
+        console.log(err);
+        res.send(500);
+      })
+      .done();
+    });
 
-		res.render(views.register, props);
-	});
+    app.get('/register/:hash', function (req, res) {
+      register.activateAccount(req.params.hash).then(function () {
+        res.send(204); 
+      }).catch(function (err) {
+        console.log(err);
+        res.send(500);
+      });
+    });
+  };
 
-	app.post(uri.register, function(req, res){
-		var props = {
-			username : req.body.username,
-			password : req.body.password,
-			email : req.body.email
-		};
-
-		register.createUser(props)
-		.then(function(results){
-			res.render(views.registerSuccess, props);
-		})
-		.catch(function(err){
-			props.err = err;
-			res.render(views.register, props);
-		})
-		.done();
-	});
-};
-
+})();

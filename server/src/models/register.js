@@ -5,6 +5,7 @@
   var util = require('util');
   var db = require('./db');
   var dv = require('./datavalidator');
+  var nodemailer = require('nodemailer');
 
   function Register(){}
 
@@ -46,7 +47,7 @@
     }
 
     return dv.validate(registrationData, {
-      username : dv.validateUsername,
+      name : dv.validateUsername,
       password : dv.validatePassword,
       email : dv.validateEmail
     });
@@ -75,23 +76,20 @@
       return q.reject(new RegistrationError(err));
     }
 
-    var deferred = q.defer();
-
-    db.executePreparedStatement({
+    return db.executePreparedStatement({
       name : 'Register',
-      text : 'select * from create_user($1, $2, $3, $4)' +
-        ' as (created boolean, usernameAlreadyExists boolean' + 
+      text : 'select * from create_user($1, $2, $3)' +
+        ' as (created boolean, userId integer, hash text, usernameAlreadyExists boolean' + 
         ', emailAlreadyExists boolean)',
       values : [
-        userProps.username,
-        userProps.username, // should fix it
+        userProps.name,
         userProps.password,
         userProps.email
       ]
     })
     // the query has been executed correctly
     .then(function(result){
-      var row = result.value.rows[0];
+      var row = result.rows[0];
       
       //Username or email already exists in the database
       if (row.created === false) {
@@ -99,17 +97,57 @@
         //are already taken or not using
         //emailAlreadyExists and usernameAlreadyExists
         //properties
-        deferred.reject(row);	
+        throw row;	
       }
       //User has been created
-      deferred.resolve(row);
-    })
-    // the query execution has failed
-    .catch(function(err){
-      deferred.reject(err);
+      return row;
+    });
+  };
+
+  Register.prototype.sendActivationEmail = function (username, email, hash) {
+    // create reusable transporter object using SMTP transport
+    var transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: 'levasseur.cl@gmail.com',
+        pass: '<_cL1475369!>;'
+      }
     });
 
-    return deferred.promise;
+    // NB! No need to recreate the transporter object. You can use
+    // the same transporter object for all e-mails
+
+    // setup e-mail data with unicode symbols
+    var mailOptions = {
+      from: 'Memorizy', // sender address
+      to: email, // list of receivers
+      subject: 'Account activation', // Subject line
+      text: 'localhost:3000/register/' + hash, // plaintext body
+      html: 'localhost:3000/register/' + hash // html body
+    };
+
+    // send mail with defined transport object
+    transporter.sendMail(mailOptions, function(error, info){
+      if(error){
+        console.log(error);
+      }else{
+        console.log('Message sent: ' + info.response);
+      }
+    });
+  };
+
+  Register.prototype.activateAccount = function (hash) {
+    console.log('activate account ' + hash);
+    if (typeof hash !== 'string' || hash.length !== 32) {
+      return q.reject('hash must be a string of 32 characters');
+    }
+
+    console.log('\texecute statement');
+    return db.executePreparedStatement({
+      name : 'activateAccount',
+      text : 'select enable_account($1)',
+      values : [hash]
+    });
   };
 
   module.exports = singleton;

@@ -484,7 +484,33 @@ begin
     where descendant_id = _file_id
   ); 
  
- 
+  with media_to_delete as (
+    select id, count(*) links from (
+      select f.term_media_id id
+      from flashcards f
+      where f.term_media_id is not null
+      and f.deck_id in (
+        select descendant_id
+        from file_tree
+        where ancestor_id = _file_id
+      )
+      union all
+      select f.definition_media_id id
+      from flashcards f
+      where f.definition_media_id is not null
+      and f.deck_id in (
+        select descendant_id
+        from file_tree
+        where ancestor_id = _file_id
+      )
+    ) t
+    group by id
+  )
+  update images i
+  set links = i.links - m.links
+  from media_to_delete m
+  where i.id = m.id;
+
   delete from files
   where id in (
     select descendant_id from file_tree

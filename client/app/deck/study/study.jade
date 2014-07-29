@@ -17,7 +17,7 @@ append content
               img(ng-src="/media/{{flashcards[session.index].term_media_id}}")
             .text(
               ng-bind-html="markdownToHtml(flashcards[session.index].term_text)" 
-              ng-show="!flashcards[session.index].term_media_id || flashcards[session.index].term_media_position != 'full')"
+              ng-show="!flashcards[session.index].term_media_id || flashcards[session.index].term_media_position != 'full'"
               spellcheck="false" 
               ng-class="{'text-halfsize': flashcards[session.index].term_media_id && flashcards[session.index].term_media_position && flashcards[session.index].term_media_position != 'full', 'text-fullsize': !flashcards[session.index].term_media_id}"
             )
@@ -30,7 +30,7 @@ append content
               img(ng-src="/media/{{flashcards[session.index].definition_media_id}}")
             .text(
               ng-bind-html="markdownToHtml(flashcards[session.index].definition_text)" 
-              ng-show="!flashcards[session.index].definition_media_id || flashcards[session.index].definition_media_position != 'full')"
+              ng-show="!flashcards[session.index].definition_media_id || flashcards[session.index].definition_media_position != 'full'"
               spellcheck="false"             
               ng-class="{'text-halfsize': flashcards[session.index].definition_media_id && flashcards[session.index].definition_media_position && flashcards[session.index].definition_media_position != 'full', 'text-fullsize': !flashcards[session.index].definition_media_id}"
             )

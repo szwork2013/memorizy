@@ -25,7 +25,8 @@
     "jsonwebtoken": "~0.2.0",
     "express-jwt": "~0.2.0",
     "pagedown": "~1.1.0",
-    "formidable": "~1.0.15"
+    "formidable": "~1.0.15",
+    "nodemailer": "~1.0.4"
   },
   "devDependencies": {
     "should": "~2.0.2",

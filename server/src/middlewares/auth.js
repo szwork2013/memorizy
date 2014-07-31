@@ -1,11 +1,15 @@
-function auth(){}
+(function () {
+  'use strict';
 
-var singleton = new auth();
+  function Auth () {}
 
-auth.prototype.ensureAuthenticated = function(req, res, next) {
-	if (req.isAuthenticated()) { return next(); }
-	res.redirect('/login');
-};
+  var singleton = new Auth();
 
-module.exports = singleton;
+  Auth.prototype.isLoggedIn = function(req, res, next) {
+    if (req.user.id) { return next(); }
+    res.send(401);
+  };
 
+  module.exports = singleton;
+
+})();

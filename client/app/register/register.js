@@ -1,1 +1,6 @@
-angular.module('memorizy.register', ['memorizy.register.RegisterController']);
+(function () {
+  'use strict';
+
+  angular.module('memorizy.register', ['memorizy.register.RegisterController']);
+
+})();

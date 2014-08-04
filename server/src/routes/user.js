@@ -9,7 +9,10 @@
     app.get('/api/account/profile', auth.isLoggedIn, function (req, res, next) {
       userModel.getUserById(userModel.getUserId(req)).then(function (user) {
         res.json(user); 
-      }).catch(next);
+      }).catch(function (err) {
+        console.log(err);
+        res.send(422);        
+      });
     });
 
     app.put('/api/account/profile', auth.isLoggedIn, function (req, res, next) {
@@ -23,7 +26,10 @@
       userModel.updatePassword(userModel.getUserId(req), req.body.oldPassword,
         req.body.newPassword, req.body.newPasswordConfirm).then(function () {
           res.send(204);
-        }).catch(next);
+        }).catch(function (err) {
+          console.log(err);
+          res.send(422);
+        });
     });
   };
 

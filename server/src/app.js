@@ -60,6 +60,7 @@ routes.partials(app);
 
 // JSON API
 routes.api.finder(app);
+routes.api.user(app);
 routes.api.filemanager(app);
 routes.api.deckeditor(app);
 routes.api.deckstudy(app);

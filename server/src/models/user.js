@@ -6,6 +6,10 @@
 
   function User() {}
 
+  User.prototype.getUserId = function (req) {
+    return req.user.id;
+  };
+
   User.prototype.getUserById = function (id) {
     if (typeof id !== 'number') {
       return q.reject(new Error('id = ' + id + ' (expected a number)'));
@@ -20,6 +24,48 @@
         throw new Error('User with id ' + id + ' not found');
       }
       return res.rows[0];
+    });
+  };
+
+  User.prototype.updateProfile = function (userId, user) {
+    if (typeof userId !== 'number') {
+      return q.reject(new Error('userId must be an number'));
+    }
+    if (Object.prototype.toString.call(user) !== '[object Object]') {
+      return q.reject(new Error('user must be an object'));
+    }
+
+    return db.executePreparedStatement({
+      name: 'updateUser',
+      text: 'select update_profile($1::integer, $2::json)',
+      values: [ userId, user ]
+    });
+  };
+
+  User.prototype.updatePassword = function (userId, oldPassword, newPassword, 
+                                            newPasswordConfirm) 
+  {
+    if (typeof userId !== 'number') {
+      return q.reject(new Error('userId must be an number'));
+    }
+    if (typeof oldPassword !== 'string') {
+      return q.reject(new Error('oldPassword must be an string'));
+    }
+    if (typeof newPassword !== 'string') {
+      return q.reject(new Error('newPassword must be an string'));
+    }
+    if (typeof newPasswordConfirm !== 'string') {
+      return q.reject(new Error('newPasswordConfirm must be an string'));
+    }
+
+    return db.executePreparedStatement({
+      name: 'updateUser',
+      text: 'select update_password($1::integer, $2::text, $3::text)',
+      values: [ 
+        userId,
+        oldPassword,
+        newPassword
+      ]
     });
   };
 

@@ -5,6 +5,7 @@
 
   exports.api = {
     finder: require('./finder'),
+    user: require('./user'),
     filemanager: require('./filemanager'),
     deckeditor: require('./deckeditor'),
     deckstudy: require('./deckstudy'),

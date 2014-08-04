@@ -4,6 +4,7 @@
   angular.module('memorizy', [
     'memorizy.register',
     'memorizy.registered',
+    'memorizy.account',
     'memorizy.finder',
     'memorizy.navbar',
     'memorizy.path',
@@ -84,6 +85,21 @@
     .when('/registered', {
       templateUrl: '/partials/registered/registered',
       controller: 'registeredController'
+    })
+    .when('/account', {
+      redirectTo: '/account/profile'
+    })
+    .when('/account/profile', {
+      templateUrl: '/partials/account/profile/profile',
+      controller: 'profileController'
+    })
+    .when('/account/password', {
+      templateUrl: '/partials/account/password/password',
+      controller: 'passwordController'
+    })
+    .when('/account/settings', {
+      templateUrl: '/partials/account/settings/settings',
+      controller: 'SettingsController'
     })
     .when('/:username', {
       templateUrl: '/partials/filemanager/filemanager',

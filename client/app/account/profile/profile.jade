@@ -1,0 +1,13 @@
+#content
+  form#form-profile(role="form")
+    label(for="picture") Profile picture
+    input(type="file" name="picture" id="picture")
+    label(for="name") Name
+    input.form-control(type="text" name="name" id="name" ng-model="user.name")
+    label(for="email") Email
+    input.form-control(type="email" name="email" id="email" ng-model="user.email")
+    label(for="url") Website
+    input.form-control(type="url" name="url" id="url" ng-model="user.url")
+
+    button.btn.btn-default(ng-click="updateProfile(user)") Update profile
+

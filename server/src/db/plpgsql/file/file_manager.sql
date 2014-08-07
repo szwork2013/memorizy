@@ -578,3 +578,65 @@ begin
 
 end;
 $$ language plpgsql;
+
+create or replace function update_visibility (_user_id integer, _file_id integer, _visibility text, _update_parents boolean)
+returns void as $$
+begin
+  if _visibility not in ('public', 'private') then
+    raise exception 'Invalid visibility'
+    using errcode = '22023'; --invalid_parameter_value
+  end if;
+
+  if _update_parents then
+    if _visibility = 'public' then
+      update files
+      set visibility = _visibility
+      where id in (
+        select ancestor_id from file_tree
+        where descendant_id = _file_id
+      ); 
+    else
+      update files
+      set visibility = _visibility
+      where id in (
+        select descendant_id from file_tree
+        where ancestor_id = _file_id
+      ); 
+    end if;
+
+    if not found then
+      raise exception 'File not found'
+      using errcode = '22023'; --invalid_parameter_value
+    end if;
+
+  elsif _visibility = 'public' then 
+    update files
+    set visibility = _visibility
+    where id = _file_id
+    and not exists (
+      select 1 from file_tree ft join files f on ft.ancestor_id = f.id
+      where ft.descendant_id = _file_id and ft.ancestor_id not in (0, _file_id)
+      and f.visibility = 'private'
+    );
+
+    if not found then
+      raise exception 'Incoherent permissions';
+    end if;
+
+  elsif _visibility = 'private' then 
+    update files
+    set visibility = _visibility
+    where id = _file_id
+    and not exists (
+      select 1 from file_tree ft join files f on ft.descendant_id = f.id
+      where ft.ancestor_id = _file_id and ft.descendant_id <> _file_id
+      and f.visibility = 'public'
+    );
+
+    if not found then
+      raise exception 'Incoherent permissions';
+    end if;
+  
+  end if;
+end;
+$$ language plpgsql;

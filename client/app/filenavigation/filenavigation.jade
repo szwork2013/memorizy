@@ -11,6 +11,7 @@
         th.file-type Type
         th.name Name
         th.owner Owner
+        th.visibility Visibility
         th.size Size
         th.percentage %
     //-tbody(ng-right-click="showContextMenu($event)")
@@ -26,6 +27,7 @@
         td.filename
           a(ng-href="{{$location.path()}}/{{file.name | encodeURI}}") {{file.name}}
         td.owner {{file.owner_name}}
+        td.visibility(ng-click="toggleVisibility(file)") {{file.visibility}}
         td.size {{file.size}}
         td.percentage {{file.percentage}}%
         td.file-id {{file.id}}

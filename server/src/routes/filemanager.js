@@ -1,8 +1,9 @@
 (function (module) {
   'use strict';
 
-  var fileManager = require('../models/filemanager.js'),
-      deckModel = require('../models/deck.js');
+  var fileManager = require('../models/filemanager'),
+      deckModel = require('../models/deck'),
+      auth = require('../middlewares/auth');
 
   module.exports = function (app) {
     app.get('/api/:username/:subfolders?*', function (req, res, next) {
@@ -49,7 +50,7 @@
       });
     });
 
-    app.put('/api/:username/:subfolders?*', function (req, res, next) {
+    app.put('/api/:username/:subfolders?*', auth.isLoggedIn, function (req, res, next) {
       if (req.query.action !== 'createFile') {
         return next();
       }
@@ -68,7 +69,27 @@
       }).done();
     });
 
-    app.post('/api/:username/:subfolders?*', function (req, res, next) {
+    app.put('/api/:username/:subfolders?*', auth.isLoggedIn, function (req, res, next) {
+      if (req.query.action !== 'toggleVisibility') {
+        return next();
+      }
+
+      var fileId = req.query.fileId;
+      var parsed;
+      if (typeof fileId === 'string') {
+        parsed = parseInt(fileId , 10);
+        if (parsed) { fileId = parsed; } 
+      }
+
+      fileManager.toggleVisibility(req.user.id, fileId).then(function () {
+        res.send(204);
+      }).catch(function(err){
+        console.log(err);
+        res.send(422);
+      }).done();
+    });
+
+    app.post('/api/:username/:subfolders?*', auth.isLoggedIn, function (req, res, next) {
       if (req.query.action !== 'moveFile') {
         return next();
       }
@@ -83,7 +104,7 @@
 
     });
 
-    app.post('/api/:username/:subfolders?*', function (req, res, next) {
+    app.post('/api/:username/:subfolders?*', auth.isLoggedIn, function (req, res, next) {
       if (req.query.action !== 'copyFile') {
         return next();
       }
@@ -100,7 +121,7 @@
 
     });
 
-    app.post('/api/:username/:subfolders?*', function (req, res, next) {
+    app.post('/api/:username/:subfolders?*', auth.isLoggedIn, function (req, res, next) {
       if (req.query.action !== 'renameFile') { return next(); }
 
       var newName = req.body.newName;
@@ -114,7 +135,7 @@
       });
     });
 
-    app.delete('/api/:username/:subfolders?*', function (req, res, next) {
+    app.delete('/api/:username/:subfolders?*', auth.isLoggedIn, function (req, res, next) {
       if (req.query.action !== 'deleteFile') {
         return next();
       }

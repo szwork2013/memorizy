@@ -434,6 +434,21 @@
         text: 'select unstar($1, $2)',
         values: [ userId, fileId ]
       });
+    },
+
+    toggleVisibility: function (userId, fileId) {
+      if (typeof userId !== 'number') {
+        return q.reject('userId = ' + userId + ' (expected a number)');	
+      }
+      if (typeof fileId !== 'number') {
+        return q.reject('fileId = ' + fileId + ' (expected a number)');
+      }
+
+      return db.executePreparedStatement({
+        name: 'toggleVisibility',
+        text: 'select toggle_visibility($1, $2)',
+        values: [ userId, fileId ]
+      });
     }
   };
 

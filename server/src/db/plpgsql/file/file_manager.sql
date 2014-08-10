@@ -1,6 +1,6 @@
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
-returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
+returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
                percentage integer, starred boolean, flashcard_order_id integer, study_method text)
 as $$
 begin
@@ -27,6 +27,7 @@ begin
       u.name::TEXT owner_name, 
       f.name::TEXT, 
       f.size::INTEGER, 
+      f.visibility::TEXT, 
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
       coalesce(uf.starred, 'f')::BOOLEAN, 
@@ -47,7 +48,7 @@ $$ language plpgsql;
 
 create or replace 
 function get_folder_content (_user_id integer, _path text[]) 
-returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
+returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
                percentage integer, starred boolean, flashcard_order_id integer, study_method text)
 as $$
 declare
@@ -576,5 +577,24 @@ begin
     from parents
   );
 
+end;
+$$ language plpgsql;
+
+create or replace function toggle_visibility (_user_id integer, _file_id integer)
+returns void as $$
+begin
+  update files
+  set visibility = (case visibility
+    when 'public' then 'private'
+    else 'public'
+    end
+  )
+  where id = _file_id 
+  and owner_id = _user_id;
+
+  if not found then
+    raise exception 'File id or owner id is invalid'
+    using errcode = '2F004'; --modifying_sql_data_not_permitted;
+  end if;
 end;
 $$ language plpgsql;

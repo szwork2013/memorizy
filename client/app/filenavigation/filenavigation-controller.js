@@ -69,6 +69,12 @@
         });
       };
 
+      $scope.toggleVisibility = function (index) {
+        FileNavigation.toggleVisibility(index).error(function (err) {
+          console.log(err);
+        });
+      };
+
       $scope.getFileTree = function () {
         FileNavigation.getFileTree().success(function (tree) {
           console.log('tree = ', tree);

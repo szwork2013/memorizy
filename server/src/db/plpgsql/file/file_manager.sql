@@ -1,6 +1,6 @@
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
-returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
+returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
                percentage integer, starred boolean, flashcard_order_id integer, study_method text)
 as $$
 begin
@@ -27,6 +27,7 @@ begin
       u.name::TEXT owner_name, 
       f.name::TEXT, 
       f.size::INTEGER, 
+      f.visibility::TEXT, 
       f.type::TEXT, 
       coalesce(uf.percentage, 0)::INTEGER percentage, 
       coalesce(uf.starred, 'f')::BOOLEAN, 
@@ -47,7 +48,7 @@ $$ language plpgsql;
 
 create or replace 
 function get_folder_content (_user_id integer, _path text[]) 
-returns table (id integer, owner_id integer, owner_name text, name text, size integer, type text, 
+returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
                percentage integer, starred boolean, flashcard_order_id integer, study_method text)
 as $$
 declare
@@ -579,64 +580,21 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function update_visibility (_user_id integer, _file_id integer, _visibility text, _update_parents boolean)
+create or replace function toggle_visibility (_user_id integer, _file_id integer)
 returns void as $$
 begin
-  if _visibility not in ('public', 'private') then
-    raise exception 'Invalid visibility'
-    using errcode = '22023'; --invalid_parameter_value
-  end if;
+  update files
+  set visibility = (case visibility
+    when 'public' then 'private'
+    else 'public'
+    end
+  )
+  where id = _file_id 
+  and owner_id = _user_id;
 
-  if _update_parents then
-    if _visibility = 'public' then
-      update files
-      set visibility = _visibility
-      where id in (
-        select ancestor_id from file_tree
-        where descendant_id = _file_id
-      ); 
-    else
-      update files
-      set visibility = _visibility
-      where id in (
-        select descendant_id from file_tree
-        where ancestor_id = _file_id
-      ); 
-    end if;
-
-    if not found then
-      raise exception 'File not found'
-      using errcode = '22023'; --invalid_parameter_value
-    end if;
-
-  elsif _visibility = 'public' then 
-    update files
-    set visibility = _visibility
-    where id = _file_id
-    and not exists (
-      select 1 from file_tree ft join files f on ft.ancestor_id = f.id
-      where ft.descendant_id = _file_id and ft.ancestor_id not in (0, _file_id)
-      and f.visibility = 'private'
-    );
-
-    if not found then
-      raise exception 'Incoherent permissions';
-    end if;
-
-  elsif _visibility = 'private' then 
-    update files
-    set visibility = _visibility
-    where id = _file_id
-    and not exists (
-      select 1 from file_tree ft join files f on ft.descendant_id = f.id
-      where ft.ancestor_id = _file_id and ft.descendant_id <> _file_id
-      and f.visibility = 'public'
-    );
-
-    if not found then
-      raise exception 'Incoherent permissions';
-    end if;
-  
+  if not found then
+    raise exception 'File id or owner id is invalid'
+    using errcode = '2F004'; --modifying_sql_data_not_permitted;
   end if;
 end;
 $$ language plpgsql;

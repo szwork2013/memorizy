@@ -1,67 +1,82 @@
-angular.module('memorizy.filenavigation.FileNavigationProvider', [])
-.provider('FileNavigation', function () {
+(function () {
+  'use strict';
 
-  this.$get = ['$http', '$location', function ($http, $location) {
-    return {
-      //getAll: function () {
-        //return $http.get('/api' + $location.path());
-      //},
+  angular.module('memorizy.filenavigation.FileNavigationProvider', [])
+  .provider('FileNavigation', function () {
 
-      getFileTree: function () {
-        return $http.get('/api' + $location.path(), {
-          params: { action: 'getFileTree' } 
-        });
-      },
+    this.$get = ['$http', '$location', function ($http, $location) {
+      return {
+        //getAll: function () {
+          //return $http.get('/api' + $location.path());
+        //},
 
-      addFile: function (file) {
-        return $http.put('/api' + $location.path() + '/' + file.name, file, {
-          params: { action: 'createFile' }
-        });
-      },
+        getFileTree: function () {
+          return $http.get('/api' + $location.path(), {
+            params: { action: 'getFileTree' } 
+          });
+        },
 
-      updateFile: function (file) {
-        return $http.put('/api' + $location.path() + '/' + file.name, file);
-      },
+        addFile: function (file) {
+          return $http.put('/api' + $location.path() + '/' + file.name, file, {
+            params: { action: 'createFile' }
+          });
+        },
 
-      renameFile: function (file, newName) {
-        return $http.post('/api' + $location.path() + '/' + file.name, {
-          fileId: file.id,
-          newName: newName
-        }, {
-          params: { 
-            action: 'renameFile'
-          }
-        });
-      },
+        updateFile: function (file) {
+          return $http.put('/api' + $location.path() + '/' + file.name, file);
+        },
 
-      moveFile: function (src, dest) {
-        // should fix the url
-        return $http.post('/api' + $location.path() + '/' + src.name, {
-          src: src.id,
-          dest: dest.id 
-        }, {
-          params: { action: 'moveFile' }
-        });
-      },
+        renameFile: function (file, newName) {
+          return $http.post('/api' + $location.path() + '/' + file.name, {
+            fileId: file.id,
+            newName: newName
+          }, {
+            params: { 
+              action: 'renameFile'
+            }
+          });
+        },
 
-      copyFile: function (src, dest) {
-        // should fix the url
-        return $http.post('/api' + $location.path() + '/' + src.name, {
-          src: src.id,
-          dest: dest.id 
-        }, {
-          params: { action: 'copyFile' }
-        });
-      },
+        moveFile: function (src, dest) {
+          // should fix the url
+          return $http.post('/api' + $location.path() + '/' + src.name, {
+            src: src.id,
+            dest: dest.id 
+          }, {
+            params: { action: 'moveFile' }
+          });
+        },
 
-      deleteFile: function (file) {
-        return $http.delete('/api' + $location.path() + '/' + file.name, { 
-          params: {
-            action: 'deleteFile',
-            fileId: file.id 
-          } 
-        });
-      }
-    };
-  }];
-});
+        copyFile: function (src, dest) {
+          // should fix the url
+          return $http.post('/api' + $location.path() + '/' + src.name, {
+            src: src.id,
+            dest: dest.id 
+          }, {
+            params: { action: 'copyFile' }
+          });
+        },
+
+        deleteFile: function (file) {
+          return $http.delete('/api' + $location.path() + '/' + file.name, { 
+            params: {
+              action: 'deleteFile',
+              fileId: file.id 
+            } 
+          });
+        },
+
+        toggleVisibility: function (file) {
+          return $http.put('/api' + $location.path() + '/' + file.name, null, {
+            params: {
+              action: 'toggleVisibility',
+              fileId: file.id
+            }
+          }).success(function () {
+            file.visibility = (file.visibility === 'public') ? 'private' : 'public'; 
+          });
+        }
+      };
+    }];
+  });
+})();

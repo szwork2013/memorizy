@@ -1,8 +1,25 @@
+create or replace
+function get_groups_root_id () returns integer as $$
+declare 
+  _id integer;
+begin
+  with root_folders as (
+    select * from file_tree ft join files f on ft.descendant_id = f.id
+    where ancestor_id = 0 and dist = 1
+  )
+  select rf.id into _id from root_folders rf where rf.name = 'groups';
+  
+  return _id;
+end;
+$$ language plpgsql;
+
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
 returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
                percentage integer, starred boolean, flashcard_order_id integer, study_method text)
 as $$
+declare
+  _group_id integer;
 begin
   if not exists(
     select 1 from files f 
@@ -20,7 +37,15 @@ begin
       from file_tree    
       where ancestor_id =  _folder_id  
       and dist = 1    
-    )    
+    ), group_id as (
+      select ancestor_id as id from file_tree ft
+      where descendant_id = _folder_id
+      and dist = (
+        select dist - 1 from file_tree ft2
+        where descendant_id = _folder_id
+        and ancestor_id = get_groups_root_id()
+      )
+    )
     select 
       f.id::INTEGER, 
       f.owner_id::INTEGER, 
@@ -37,7 +62,15 @@ begin
       files f 
       left join users_files uf on f.id = uf.file_id 
       join users u on f.owner_id = u.id
-    where f.id in (
+    where (
+      (select count(*) from group_id) = 0 -- the file does not belong to any group
+      or (select f2.visibility from files f2 where f2.id = (select g.id from group_id g)) = 'public' -- the group which owns the file is public
+      or exists ( -- the user belongs to the group which owns the file
+        select 1 from users_groups
+        where user_id = _user_id
+        and group_id = (select g.id from group_id g)
+      )
+    ) and f.id in (
       select children_id 
       from children_ids
     ) 
@@ -46,30 +79,117 @@ begin
 end;                                                                  
 $$ language plpgsql;
 
+-- create or replace 
+-- function get_folder_content (_user_id integer, _path text[]) 
+-- returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
+               -- percentage integer, starred boolean, flashcard_order_id integer, study_method text)
+-- as $$
+-- declare
+  -- _file_id  integer := 0;
+-- begin
+  -- select get_file_id(_path) into _file_id;
+
+  -- create temp table tt (
+    -- id integer, owner_id integer, name text, size integer, type text, 
+    -- percentage integer, starred boolean, flashcard_order_id integer
+  -- ) on commit drop;
+
+  -- insert into tt 
+  -- select * 
+  -- from get_folder_content(_user_id, _file_id);
+
+  -- -- The path is correct, so we return the last folder found's children
+  -- return query 
+    -- select * from tt;
+-- end;                                                                  
+-- $$ language plpgsql;
+
 create or replace 
-function get_folder_content (_user_id integer, _path text[]) 
-returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
-               percentage integer, starred boolean, flashcard_order_id integer, study_method text)
-as $$
-declare
-  _file_id  integer := 0;
+function f_check_group_id () returns trigger as $$
 begin
-  select get_file_id(_path) into _file_id;
+  if not exists (
+    select 1 from file_tree
+    where ancestor_id = get_groups_root_id()
+    and descendant_id = new.group_id
+    and dist = 1
+  ) then 
+    raise exception 'Invalid group id';
+  end if;
 
-  create temp table tt (
-    id integer, owner_id integer, name text, size integer, type text, 
-    percentage integer, starred boolean, flashcard_order_id integer
-  ) on commit drop;
-
-  insert into tt 
-  select * 
-  from get_folder_content(_user_id, _file_id);
-
-  -- The path is correct, so we return the last folder found's children
-  return query 
-    select * from tt;
-end;                                                                  
+  return new;
+end;
 $$ language plpgsql;
+
+drop trigger if exists check_group_id on users_groups;
+create trigger check_group_id before insert or update of group_id
+on users_groups for each row
+execute procedure f_check_group_id();
+
+create or replace 
+function f_check_name_uniqueness () returns trigger as $$
+declare
+  _unique boolean;
+begin
+  if new.dist <> 1 then
+    return new;
+  end if;
+
+  select not exists (
+    select 1 from file_tree ft join files f on ft.descendant_id = f.id
+    where ft.ancestor_id = new.ancestor_id
+    and ft.dist = 1
+    and f.name = (
+      select name from files
+      where id = new.descendant_id
+    )
+  ) into _unique;
+
+  if _unique is true then
+    return new;
+  end if;
+
+  if tg_op = 'insert' then
+    delete from files where id = new.descendant_id;
+  end if;
+
+  raise exception 'Filename is not unique in this folder';
+end;
+$$ language plpgsql;
+
+drop trigger if exists check_name_uniqueness on file_tree;
+create trigger check_name_uniqueness before insert or update 
+on file_tree for each row
+execute procedure f_check_name_uniqueness();
+
+create or replace
+function f_check_name_uniqueness_on_rename () returns trigger as $$
+declare
+  _unique boolean;
+begin
+  select not exists (
+    select 1 from file_tree ft join files f on ft.descendant_id = f.id
+    where ft.ancestor_id = (
+      select ancestor_id from file_tree ft2
+      where descendant_id = new.id
+      and dist = 1
+    )
+    and dist = 1
+    and f.name = new.name
+    and f.id <> new.id
+  ) into _unique;
+
+  if _unique is not true then
+    raise exception 'filename is not unique in this folder';
+  end if;
+
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists check_name_uniqueness_on_rename on files;
+create trigger check_name_uniqueness_on_rename before update of name 
+on files for each row
+execute procedure f_check_name_uniqueness_on_rename();
 
 create or replace 
 function create_file (_owner_id integer, _name text, _type text, _path text[]) 
@@ -128,6 +248,13 @@ begin
     raise exception 'A file with name "%" already exists', _name
       using errcode = '42710'; /*duplicate_object*/
   end if;
+end;
+$$ language plpgsql;
+
+create or replace 
+function create_group (_owner_id integer, _name text) returns integer as $$
+begin
+  return create_file(_owner_id, _name, 'folder', get_groups_root_id());
 end;
 $$ language plpgsql;
 

@@ -13,19 +13,20 @@
 
       // reconvert string to number if it start with a numbe
       var locations = req.query.locations;
-      var parsed;
-      if (typeof locations === 'string') {
-        parsed = parseInt(locations, 10);
-        if (parsed) { locations = parsed; } 
-      }
-      else if (Object.prototype.toString.call(locations) === '[object Array]') {
-        for (var i in locations) {
-          if (typeof locations[i] === 'string') {
-            parsed = parseInt(locations[i], 10);
-            if (parsed) { locations[i] = parsed; } 
-          }
-        }
-      }
+      console.log('locations = ', locations);
+      //var parsed;
+      //if (typeof locations === 'string') {
+        //parsed = parseInt(locations, 10);
+        //if (parsed) { locations = parsed; } 
+      //}
+      //else if (Object.prototype.toString.call(locations) === '[object Array]') {
+        //for (var i in locations) {
+          //if (typeof locations[i] === 'string') {
+            //parsed = parseInt(locations[i], 10);
+            //if (parsed) { locations[i] = parsed; } 
+          //}
+        //}
+      //}
 
       fileManager.getFiles(req.user.id, locations).then(function (files) {
         res.json(files);

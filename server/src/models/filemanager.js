@@ -196,10 +196,10 @@
       }
 
       if (typeof file.parentId === 'number') {
-        return this.createFileWithParentId_(userId, file.name, file.type, file.parentId);
+        return this.createFileWithParentId_(userId, file.name, file.type, file.visibility, file.parentId);
       }
       else if (typeof file.path === 'string') {
-        return this.createFileWithPath_(userId, file.name, file.type, file.path);
+        return this.createFileWithPath_(userId, file.name, file.type, file.visibility, file.path);
       }
       
       return q.reject('The file must have a parentId or a path');
@@ -212,16 +212,18 @@
      * @param {number} userId
      * @param {string} filename
      * @param {string} type
+     * @param {string} visibility 
      * @param {string} path
      * @return {number} The id of the new file
      */
-    createFileWithPath_: function (userId, filename, type, path) {
+    createFileWithPath_: function (userId, filename, type, visibility, path) {
+      if (!visibility) { visibility = null; }
       path = this.getArrayablePGPath(path);
       return db.executePreparedStatement({
         name: 'createFileWithPath',
         text: 'select create_file($1::INTEGER, $2::TEXT, $3::TEXT,' +
-          'string_to_array($4, \'/\'))',
-        values: [ userId, filename, type, db.stringToPGPath(path)]
+          '$4::TEXT, string_to_array($5, \'/\'))',
+        values: [ userId, filename, type, visibility, db.stringToPGPath(path)]
       }).then(function (result) {
         return result.rows[0].create_file; // new file's id
       });
@@ -234,15 +236,17 @@
      * @param {number} userId
      * @param {string} filename
      * @param {string} type
+     * @param {string} visibility 
      * @param {number} parentId
      * @return {number} The id of the new file
      */
-    createFileWithParentId_: function (userId, filename, type, parentId) {
+    createFileWithParentId_: function (userId, filename, type, visibility, parentId) {
+      if (!visibility) { visibility = null; }
       return db.executePreparedStatement({
         name: 'createFileWithParendId',
         text: 'select create_file($1::INTEGER, $2::TEXT' +
-          ',$3::TEXT, $4::INTEGER)',
-        values: [userId, filename, type, parentId]
+          ',$3::TEXT, $4::TEXT, $5::INTEGER)',
+        values: [userId, filename, type, visibility, parentId]
       }).then(function (result) {
         return result.rows[0].create_file; // new file's id
       });

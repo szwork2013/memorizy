@@ -1,18 +1,3 @@
-create or replace
-function get_groups_root_id () returns integer as $$
-declare 
-  _id integer;
-begin
-  with root_folders as (
-    select * from file_tree ft join files f on ft.descendant_id = f.id
-    where ancestor_id = 0 and dist = 1
-  )
-  select rf.id into _id from root_folders rf where rf.name = 'groups';
-  
-  return _id;
-end;
-$$ language plpgsql;
-
 create or replace 
 function get_folder_content (_user_id integer, _folder_id integer) 
 returns table (id integer, owner_id integer, owner_name text, name text, size integer, visibility text, type text, 
@@ -104,26 +89,6 @@ $$ language plpgsql;
 -- end;                                                                  
 -- $$ language plpgsql;
 
-create or replace 
-function f_check_group_id () returns trigger as $$
-begin
-  if not exists (
-    select 1 from file_tree
-    where ancestor_id = get_groups_root_id()
-    and descendant_id = new.group_id
-    and dist = 1
-  ) then 
-    raise exception 'Invalid group id';
-  end if;
-
-  return new;
-end;
-$$ language plpgsql;
-
-drop trigger if exists check_group_id on users_groups;
-create trigger check_group_id before insert or update of group_id
-on users_groups for each row
-execute procedure f_check_group_id();
 
 create or replace 
 function f_check_name_uniqueness () returns trigger as $$
@@ -192,7 +157,7 @@ on files for each row
 execute procedure f_check_name_uniqueness_on_rename();
 
 create or replace 
-function create_file (_owner_id integer, _name text, _type text, _path text[]) 
+function create_file (_owner_id integer, _name text, _type text, _visibility text, _path text[]) 
 returns integer as $$
 declare    
   _owner_id  integer;
@@ -200,13 +165,13 @@ declare
 begin
   select get_file_id(_path) into _parent_id;
 
-  return create_file(_owner_id, _name, _type, _parent_id);
+  return create_file(_owner_id, _name, _type, _visibility, _parent_id);
 end;
 $$ language plpgsql;
 
 create or replace 
 function create_file (_owner_id integer, _name text, 
-          _type text, _parent_id integer) 
+          _type text, _visibility text, _parent_id integer) 
 returns integer as $$
 declare
   _file_id  integer;
@@ -230,10 +195,12 @@ begin
 
   if not found then
     -- Add file
-    insert into files (owner_id, name, type) values(
+    insert into files (owner_id, name, type, visibility) values(
       _owner_id, 
       _name,
-      _type)
+      _type,
+      coalesce(_visibility, 'public')
+    )
     returning id into _file_id;
 
     -- Update file hierarchy
@@ -252,7 +219,7 @@ end;
 $$ language plpgsql;
 
 create or replace 
-function create_group (_owner_id integer, _name text) returns integer as $$
+function create_group (_owner_id integer, _name text, visibility text) returns integer as $$
 begin
   return create_file(_owner_id, _name, 'folder', get_groups_root_id());
 end;

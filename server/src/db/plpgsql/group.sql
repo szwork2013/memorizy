@@ -40,8 +40,12 @@ function get_group_requests (_user_id integer, _group_name text)
 returns table (user_id integer, user_name text) as $$
 declare _group_id integer;
 begin
+  if is_group_admin(_user_id, get_group_id(_group_name)) is not true then
+    raise exception 'You must be admin of the group to see its requests';
+  end if;
+
   return query
-    select gp.user_id, u.name 
+    select gp.user_id, u.name::text 
     from group_requests gp join users u on gp.user_id = u.id
     where gp.group_id = get_group_id(_group_name);
 end;
@@ -53,9 +57,23 @@ returns table (user_id integer, user_name text) as $$
 declare _group_id integer;
 begin
   return query
-    select gm.user_id, u.name 
-    from group_members gm join users u on gm.user_id = u.id
+    select ug.user_id, u.name::text 
+    from users_groups ug join users u on ug.user_id = u.id
     where group_id = get_group_id(_group_name);
+end;
+$$ language plpgsql;
+
+create or replace function get_invitations (_user_id integer)
+returns table (group_id integer, group_name text, 
+               inviting_user_id integer, inviting_user_name text)
+as $$
+begin
+  return query
+    select f.id, f.name::text, u.id, u.name::text
+    from group_invitations gi
+      join files f on f.id = gi.group_id
+      join users u on u.id = gi.inviting_user_id 
+    where gi.invited_user_id = _user_id;
 end;
 $$ language plpgsql;
 
@@ -80,7 +98,7 @@ begin
   select _inviting_user_id, get_group_id(_group_name), _invited_user_id
   where exists (
     select 1 from users_groups ug
-    where user_id = inviting_user_id
+    where user_id = _inviting_user_id
     and group_id = get_group_id(_group_name)
   );
 
@@ -98,9 +116,17 @@ begin
   select _user_id, get_group_id(_group_name)
   where exists (
     select 1 from group_invitations
-    where user_id = _user_id
+    where invited_user_id = _user_id
     and group_id = get_group_id(_group_name)
   );
+
+  if not found then
+    raise exception 'The invitation does not exist';
+  end if;
+
+  delete from group_invitations
+  where invited_user_id = _user_id
+  and group_id = get_group_id(_group_name);
 end;
 $$ language plpgsql;
 
@@ -108,9 +134,23 @@ create or replace
 function decline_invitation (_user_id integer, _group_name text)
 returns void as $$
 begin
-  delete from users_groups 
-  where user_id = _user_id
+  delete from group_invitations
+  where invited_user_id = _user_id
   and group_id = get_group_id(_group_name);
+
+  if not found then
+    raise exception 'The invitation does not exist';
+  end if;
+
+end;
+$$ language plpgsql;
+
+create or replace
+function request (_user_id integer, _group_name text)
+returns void as $$
+begin
+  insert into group_requests(group_id, user_id)
+  values (get_group_id(_group_name), _user_id);
 end;
 $$ language plpgsql;
 
@@ -124,12 +164,12 @@ begin
   and group_id = get_group_id(_group_name)
   and exists (
     select 1 from users_groups ug
-    where user_id = inviting_user_id
+    where user_id = _kicking_user_id
     and group_id = get_group_id(_group_name)
   );
 
   if not found then
-    raise exception 'The kicking user does not have the privilege to kick other members of this group';
+    raise exception 'The kicking user does not have the privilege to kick other members of this group or the kicked user does not belong to the group';
   end if;
 end;
 $$ language plpgsql;
@@ -140,8 +180,29 @@ returns void as $$
 begin
   update files
   set visibility = _visibility
-  where is_group_admin (_user_id, get_group_id(_group_name)) is true
-  and id = get_group_id(_group_name);
+  where id = get_group_id(_group_name)
+  and is_group_admin (_user_id, get_group_id(_group_name)) is true;
+end;
+$$ language plpgsql;
+
+create or replace function leave_group (_user_id integer, _group_name text)
+returns void as $$
+begin
+  delete from users_groups
+  where user_id = _user_id
+  and group_id = get_group_id(_group_name);
+
+  if not found then
+    raise exception 'The user does not exist or does not belong to the group';
+  end if;
+end;
+$$ language plpgsql;
+
+-- TODO
+create or replace function is_group_admin (_user_id integer, _group_id integer)
+returns boolean as $$
+begin
+  return true;
 end;
 $$ language plpgsql;
 

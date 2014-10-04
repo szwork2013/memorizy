@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if [[ $EUID -ne 0 ]]; then
-  echo 'You must be a root user'
-  exit 1
-fi
-
 APP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 APP_IMAGE_NAME="memorizy"
 APP_CONTAINER_NAME="memorizy"
@@ -16,8 +11,7 @@ DB_CONTAINER_NAME="memorizy_db"
 DATA_CONTAINER_NAME="memorizy_db_data"
 
 docker inspect "$DATA_CONTAINER_NAME" 2>/dev/null 1>&2 || \
-  docker run --name "$DATA_CONTAINER_NAME" -v /etc/postgresql \
-  -v /var/log/postgresql -v /var/lib/postgresql busybox true  
+	"$APP_DIR"/restore.sh
 
 echo "Start postgresql server..."
 docker start "$DB_CONTAINER_NAME" 2>/dev/null || \

@@ -9,12 +9,7 @@ RUN apt-get update
 RUN apt-get -y -q install python-software-properties software-properties-common
 RUN DEBIAN_FRONTEND=noninteractive apt-get -y -q install postgresql-9.3 postgresql-client-9.3 postgresql-contrib-9.3 postgresql-server-dev-9.3
 
-# Note: The official Debian and Ubuntu images automatically ``apt-get clean``
-# after each ``apt-get``
-
-COPY . /db
-RUN chown postgres:postgres /db -R && \
-    chmod 700 /db -R
+RUN chown postgres:postgres /etc/postgresql /var/log/postgresql /var/lib/postgresql
 
 # Run the rest of the commands as the ``postgres`` user created by the ``postgres-9.3`` package when it was ``apt-get installed``
 USER postgres
@@ -23,7 +18,7 @@ USER postgres
 EXPOSE 5432
 
 # Add VOLUMEs to allow backup of config, logs and databases
-# VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
+VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 # Set the default command to run when starting the container
 CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]

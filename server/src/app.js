@@ -8,7 +8,7 @@ var express = require('express'),
     http = require('http'),
     path = require('path');
 
-var expressJwt = require('express-jwt');
+var expressJwt = require('express-jwt-modified');
 var jwt = require('jsonwebtoken');
 
 

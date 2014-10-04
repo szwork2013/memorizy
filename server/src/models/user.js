@@ -83,7 +83,7 @@
     return db.executePreparedStatement({
       name : 'authenticateUser',
       text : 'select u.id, u.name from users u where name = $1 ' +
-        'and password = $2',
+        'and password = crypt($2, password)',
       values : [ username, password ]
     }).then(function (res) {
       if (res.rows.length !== 1) {

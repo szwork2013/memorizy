@@ -1,4 +1,4 @@
 angular.module('memorizy.login', [
-  'memorizy.login.LoginCtrl',
+  'memorizy.login.LoginController',
   'memorizy.login.LoginModel'
 ]);

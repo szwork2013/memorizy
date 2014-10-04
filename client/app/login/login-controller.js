@@ -1,5 +1,5 @@
-angular.module('memorizy.login.LoginCtrl', [])
-.controller('LoginCtrl', [ '$scope', 'LoginModel', function ($scope, LoginModel) {
+angular.module('memorizy.login.LoginController', [])
+.controller('LoginController', [ '$scope', 'LoginModel', function ($scope, LoginModel) {
 
   $scope.user = {
     name: null,

@@ -9,6 +9,7 @@
     "connect-ensure-login": "0.1.x",
     "connect-flash": "0.1.x",
     "connect-pg": "1.1.x",
+    "engine.io": "^1.4.1",
     "express": "3.4.3",
     "express-jwt-modified": "~0.2.0",
     "formidable": "~1.0.15",

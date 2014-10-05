@@ -13,6 +13,8 @@ results
 npm-debug.log
 node_modules/
 
+# Regenerated during deployment
+client/vendor/primus/
 
 build/
 

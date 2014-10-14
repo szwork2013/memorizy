@@ -10,7 +10,6 @@
     'memorizy.path',
     'memorizy.login',
     'memorizy.filemanager',
-    'memorizy.filenavigation',
     'memorizy.markdown',
     'memorizy.deckeditor',
     'memorizy.deckstudy',

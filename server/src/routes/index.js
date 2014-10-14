@@ -4,14 +4,14 @@
   var path = require('path');
 
   exports.api = {
-    finder: require('./finder'),
-    user: require('./user'),
-    filemanager: require('./filemanager'),
-    deckeditor: require('./deckeditor'),
-    deckstudy: require('./deckstudy'),
-    calendar: require('./calendar'),
-    media: require('./media'),
-    register: require('./register')
+    finder      : require('./finder'),
+    user        : require('./user'),
+    filemanager : require('./filemanager'),
+    deckeditor  : require('./deckeditor'),
+    deckstudy   : require('./deckstudy'),
+    calendar    : require('./calendar'),
+    media       : require('./media'),
+    register    : require('./register')
   };
 
   exports.partials = function (app) {

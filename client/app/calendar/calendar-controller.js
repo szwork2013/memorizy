@@ -127,7 +127,7 @@
         ids.push(files[i].file_id);
       }
 
-      FileManager.getFiles(ids).success(function (data) {
+      FileManager.getFile(ids).success(function (data) {
         $scope.decks = data;
       }). 
       error(function (err) {

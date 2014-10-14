@@ -1,92 +1,93 @@
+(function () { 'use strict';
 
-/**
- * Module dependencies
- */
+  /**
+   * Module dependencies
+   */
 
-var express = require('express'),
-    routes = require('./routes'),
-    http = require('http'),
-    path = require('path');
+  var express = require('express'),
+      routes  = require('./routes'),
+      http    = require('http'),
+      path    = require('path');
 
-var expressJwt = require('express-jwt-modified');
-var jwt = require('jsonwebtoken');
+  var expressJwt = require('express-jwt-modified');
+  var jwt        = require('jsonwebtoken');
 
 
-// Session storage
-var db = require('./models/db');
+  // Session storage
+  var db = require('./models/db');
 
-/**
- * Configuration
- */
+  /**
+   * Configuration
+   */
 
-var app = module.exports = express();
+  var app = module.exports = express();
 
-// all environments
-app.set('build', path.join(__dirname, '../../build'));
-app.set('uploadDir', path.join(__dirname, '../uploads'));
-app.set('port', process.env.PORT || 80);
-app.set('views', app.get('build') + '/partials');
-app.use(express.logger('dev'));
-app.use(express.cookieParser());
+  // all environments
+  app.set('build', path.join(__dirname, '../../build'));
+  app.set('uploadDir', path.join(__dirname, '../uploads'));
+  app.set('port', process.env.PORT || 80);
+  app.set('views', app.get('build') + '/partials');
+  app.use(express.logger('dev'));
+  app.use(express.cookieParser());
 
-//app.use(express.bodyParser());
-app.use(express.json());
-app.use(express.urlencoded());
+  //app.use(express.bodyParser());
+  app.use(express.json());
+  app.use(express.urlencoded());
 
-app.use(express.methodOverride());
+  app.use(express.methodOverride());
 
-app.use(expressJwt({
-  secret: 'hello world !',
-  credentialsRequired: false
-}));
+  app.use(expressJwt({
+    secret: 'hello world !',
+    credentialsRequired: false
+  }));
 
-app.use(express.json());
-app.use(express.urlencoded());
+  app.use(express.json());
+  app.use(express.urlencoded());
 
-app.use(express.static(path.join(app.get('build'))));
-app.use(app.router);
+  app.use(express.static(path.join(app.get('build'))));
+  app.use(app.router);
 
-// development only
-app.set('dbAddr', process.env.DB_PORT_5432_TCP_ADDR || 'localhost');
-db.conn = 'postgres://postgres:postgres@' + app.get('dbAddr') + ':5432/memorizy';
-db.nodepgConn = 'tcp://nodepg:nodepg@' + app.get('dbAddr') + ':5432/memorizy';
+  // development only
+  app.set('dbAddr', process.env.DB_PORT_5432_TCP_ADDR || 'localhost');
+  db.conn = 'postgres://postgres:postgres@' + app.get('dbAddr') + ':5432/memorizy';
+  db.nodepgConn = 'tcp://nodepg:nodepg@' + app.get('dbAddr') + ':5432/memorizy';
 
-/**
- * Routes
- */
+  /**
+   * Routes
+   */
 
-routes.login(app);
-routes.partials(app);
+  routes.login(app);
+  routes.partials(app);
 
-// JSON API
-routes.api.finder(app);
-routes.api.user(app);
-routes.api.filemanager(app);
-routes.api.deckeditor(app);
-routes.api.deckstudy(app);
-routes.api.calendar(app);
-routes.api.media(app);
-routes.api.register(app);
+  // JSON API
+  routes.api.finder(app);
+  routes.api.user(app);
+  routes.api.deckeditor(app);
+  routes.api.deckstudy(app);
+  routes.api.calendar(app);
+  routes.api.media(app);
+  routes.api.register(app);
 
-routes.index(app);
+  routes.index(app);
 
-/**
- * Start Server
- */
+  /**
+   * Start Server
+   */
 
-var server = http.createServer(app),
-    io = require('socket.io')(server);
+  var server = http.createServer(app),
+      io     = require('socket.io')(server);
 
-io.on('connection', function (socket) {
-  var uploader = require('socketio-uploader');
-  uploader.listen(socket);
-});
+  io.on('connection', function (socket) {
+    routes.api.filemanager(socket);
+  });
 
-server.listen(app.get('port'), function () {
-  'use strict';
-  console.log('Express server listening on port ' + app.get('port'));
-});
+  server.listen(app.get('port'), function () {
+    console.log('Express server listening on port ' + app.get('port'));
+  });
 
-var cleaner = require('./utils/cleaner');
-cleaner.workingDir = app.get('uploadDir');
-cleaner.removeUnlinkedMedia();
+
+  var cleaner = require('./utils/cleaner');
+  cleaner.workingDir = app.get('uploadDir');
+  cleaner.removeUnlinkedMedia();
+
+})();

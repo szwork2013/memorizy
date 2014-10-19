@@ -2,54 +2,50 @@
   'use strict'; 
 
   describe('filemanager', function () {
-    var socket   = inject('socketio'),
-        location = inject('$location'),
+    var socket,
+        location,
         sandbox  = sinon.sandbox.create();
-    
-    socket.emit = function(event, data) {};
-    socket.on = function(event, cb) {
-      this.listeners = this.listeners || {};
-      this.listeners[event] = this.listeners.event || [];
-
-      this.listeners[event].push(cb);
-    };
-
-    socket.fire = function(event, data) {
-      if (!this.listeners || !this.listeners[event]) { return; }
-      this.listeners[event].forEach(function(cb) {
-        cb(data);
-      });
-    };
-
-    location.path = function () {
-      return 'here';
-    };
 
     beforeEach(function () {
       module('memorizy');
 
-      module(function ($provide) {
-        $provide.value('socketio', socket);
+      inject(function (socketio, $location) {
+        socket   = socketio;
+        location = $location;
       });
 
+      sandbox.stub(socket, 'emit', function() {});
+      sandbox.stub(socket, 'on', function(event, cb) {
+        this.listeners = this.listeners || {};
+        this.listeners[event] = this.listeners.event || [];
+
+        this.listeners[event].push(cb);
+      });
+      socket.fire = function (event, data) {
+        if (!this.listeners || !this.listeners[event]) { return; }
+        this.listeners[event].forEach(function(cb) {
+          cb(data);
+        });
+      };
+
+      sandbox.stub(location, 'path', function() {
+        return 'here';
+      });
+    });
+
+    afterEach(function() {
       sandbox.restore();
     });
 
     describe('filemanager-model', function () {
-      var fileManagerModel, args;
+      var fileManagerModel;
 
-      beforeEach(inject(function(FileManager, $location) {
+      beforeEach(inject(function(FileManager) {
         fileManagerModel = FileManager;
-        location = $location;
       }));
 
       describe('Get existing files', function () {
         it('should emit an event file:get to get files', function() {
-          sandbox.spy(socket, 'emit');  
-          sandbox.stub(location, 'path', function() {
-            return 'here';
-          });
-
           fileManagerModel.getFile();
           sinon.assert.calledWith(socket.emit, 'file:get', sinon.match({
             path: location.path()
@@ -82,7 +78,6 @@
       describe('Add a new file', function () {
         it('should emit an event file:new to add a file', function() {
           var file = { name: 'test', type: 'folder' };
-          sandbox.spy(socket, 'emit');
           fileManagerModel.addFile(file);
           sinon.assert.calledWith(socket.emit, 'file:new', sinon.match(file));
         });
@@ -130,14 +125,12 @@
       describe('Remove a file', function () {
         it('should emit an event file:remove to remove a file', function() {
           fileManagerModel.folder = { files: [{id: 123}] };
-          sandbox.spy(socket, 'emit');
           fileManagerModel.removeFile(123);
           sinon.assert.calledWith(socket.emit, 'file:remove', 123);
         });
 
         it('should throw when trying to remove a file that isn\'t in the opened folder',
           function() {
-            sandbox.spy(socket, 'emit'); 
             fileManagerModel.folder = { files: [] };
 
             expect(function() {
@@ -163,7 +156,6 @@
             files: [fileToRename]
           };
 
-          sandbox.spy(socket, 'emit');
           fileManagerModel.renameFile(fileToRename.id, 'another name');
           sinon.assert.calledWith(socket.emit, 'file:rename', sinon.match({
             id: fileToRename.id,
@@ -192,7 +184,6 @@
             files: [file]
           };
 
-          sandbox.spy(socket, 'emit');
           fileManagerModel.renameFile(file.id, 'sameName');
           sinon.assert.notCalled(socket.emit);
         });
@@ -204,7 +195,6 @@
             files: [file]
           };
 
-          sandbox.spy(socket, 'emit');
           sandbox.stub(fileManagerModel, 'validFileName', function() {
             return false;
           });
@@ -241,7 +231,6 @@
               dest       = { id: 456 };
 
           fileManagerModel.folder = { files: [fileToMove] };
-          sandbox.spy(socket, 'emit');
           fileManagerModel.moveFile(fileToMove.id, dest.id);
           sinon.assert.calledWith(socket.emit, 'file:move', sinon.match({
             src:  fileToMove.id,
@@ -299,7 +288,6 @@
           var dest       = { id: 456 };
 
           fileManagerModel.folder = { files: [fileToCopy] };
-          sandbox.spy(socket, 'emit');
           fileManagerModel.copyFile(fileToCopy.id, dest.id);
           sinon.assert.calledWith(socket.emit, 'file:copy', sinon.match({
             src:  fileToCopy.id,

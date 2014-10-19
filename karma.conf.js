@@ -1,5 +1,5 @@
 // Karma configuration
-// Generated on Tue Oct 14 2014 22:30:05 GMT+0200 (CEST)
+// Generated on Sat Oct 18 2014 13:39:30 GMT+0200 (CEST)
 
 module.exports = function(config) {
   config.set({
@@ -10,14 +10,15 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha'],
+    frameworks: ['mocha', 'chai', 'sinon'],
 
 
     // list of files / patterns to load in the browser
     files: [
-      'client/**/*.js',
-      'server/**/*.js',
-      'test/**/*.js'
+      'client/vendor/angular/angular.js',
+      'client/vendor/jquery/jquery.js',
+      'client/vendor/**/*.js',
+      'client/**/*.js'
     ],
 
 
@@ -35,7 +36,7 @@ module.exports = function(config) {
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['mocha'],
 
 
     // web server port

@@ -1,7 +1,7 @@
 (function (angular) {
   'use strict';
 
-  function FileManagerController ($document, $scope, $http, $location, $timeout, 
+  function FileManagerController ($document, $scope, $location, $timeout, 
                                      socket, FileManager, cssInjector) 
   {
       cssInjector.add('/css/filemanager/filemanager.css');
@@ -100,10 +100,9 @@
   .controller('FileManagerController', [
     '$document', 
     '$scope', 
-    '$http', 
     '$location', 
     '$timeout', 
-    'socket.io', 
+    'socketio', 
     'FileManager', 
     'cssInjector',
     FileManagerController

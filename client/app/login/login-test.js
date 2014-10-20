@@ -2,16 +2,15 @@
   'use strict'; 
 
   describe('login', function () {
-    var socket,
-        location,
+    var socket, location,
         sandbox  = sinon.sandbox.create();
 
     beforeEach(function () {
       module('memorizy');
 
       inject(function (socketio, $location) {
-        socket   = socketio;
-        location = $location;
+        socket       = socketio;
+        location     = $location;
       });
 
       sandbox.stub(socket, 'emit', function() {});
@@ -38,43 +37,80 @@
     });
 
     describe('login-model', function () {
-      var loginModel;
+      var loginModel, $rootScope, $localStorage;
 
-      beforeEach(inject(['LoginModel', function(lm) {
-        loginModel = lm;
-      }]));
+      beforeEach(inject([
+        'LoginModel', '$rootScope', '$localStorage', 
+        function(lm, rs, ls) {
+          loginModel = lm;
+          $rootScope    = rs;
+          $localStorage = ls;
+        }
+      ]));
 
-      it('should send an event login:classic when login using an email/pseudo', function() {
-        var login    = 'valid@email.fr',
-            password = 'somepassword';
+      describe('login', function() {
+        it('should send an event login:classic when login using an email/pseudo', function() {
+          var login    = 'valid@email.fr',
+              password = 'somepassword';
 
-        loginModel.login(login, password);
+          loginModel.login(login, password);
 
-        sinon.assert.calledWith(socket.emit, 'login:classic', sinon.match({
-          login:    login,
-          password: password
-        }));
+          sinon.assert.calledWith(socket.emit, 'login:classic', sinon.match({
+            login:    login,
+            password: password
+          }));
+        });
+
+        it('should store user information in rootScope and local storage on login:loggedIn', function() {
+          var data = {
+            user: { abc: 'abc' },
+            token: 'supertoken'
+          };
+
+          socket.fire('login:loggedIn', data);  
+          expect($rootScope.user).to.equal(data.user);
+          expect($localStorage.user).to.equal(data.user);
+          expect($localStorage.token).to.equal(data.token);
+        });
+
+        it('should throw when trying to login with an empty email/pseudo', function() {
+          expect(function() {
+            loginModel.login('', 'somepassword');
+          }).to.throw();
+        });
+
+        it('should throw when trying to login with an empty password', function() {
+          expect(function() {
+            loginModel.login('valid@email.fr', '');
+          }).to.throw();
+        });
+
+        it('should not send any event when login or password are empty', function() {
+          try { loginModel.login('valid@email.fr', ''); } catch(e) {}
+          try { loginModel.login('', 'somepassword'); } catch(e) {}
+
+          sinon.assert.notCalled(socket.emit);
+        });
       });
 
-      it('should throw when trying to login with an empty email/pseudo', function() {
-        expect(function() {
-          loginModel.login('', 'somepassword');
-        }).to.throw();
-      });
+      describe('logout', function() {
+        it('should remove user information from rootScope and local storage on login:loggedOut', function () {
+          var data = {
+            user: { abc: 'abc' },
+            token: 'supertoken'
+          };
 
-      it('should throw when trying to login with an empty password', function() {
-        expect(function() {
-          loginModel.login('valid@email.fr', '');
-        }).to.throw();
-      });
+          $rootScope.user     = data.user;
+          $localStorage.user  = data.user;
+          $localStorage.token = data.token;
 
-      it('should not send any event when login or password are empty', function() {
-        loginModel.login('valid@email.fr', '');
-        loginModel.login('', 'somepassword');
+          socket.fire('login:loggedOut', data);  
 
-        sinon.assert.notCalled(socket.emit);
+          expect($rootScope.user).to.equal(null);
+          expect($localStorage.user).to.equal(null);
+          expect($localStorage.token).to.equal(null);
+        });
       });
     });
-
   });
 })();

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   
-  angular.module('memorizy.socketio', []).factory('socket.io', ['$timeout', function ($timeout) {
+  angular.module('memorizy.socketio', []).factory('socketio', ['$timeout', function ($timeout) {
     var socket = io(),
         on     = socket.on;
 

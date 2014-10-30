@@ -7,6 +7,7 @@
     this.socket = socket;
   }
 
+  // TODO: Refactoring, maybe putting register/login code into a user module
   RegisterModel.prototype.register = function (pseudo, email, password) {
     var regex = {
       pseudo:   /^.{2,128}$/,

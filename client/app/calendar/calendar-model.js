@@ -1,30 +1,56 @@
 (function (angular) {
   'use strict';
 
-  function CalendarModel ($http, $location) {
-    this.$http = $http;
+  function CalendarModel (socket, $location) {
+    this.socket = socket;
     this.$location = $location; 
+
+    var self = this;
+
+    socket.on('calendar:count', function (count) {
+      self.count = count;  
+    });
+
+    socket.on('calendar:get', function (calendar) {
+      self.calendar = calendar;
+    });
   }
 
-  CalendarModel.prototype.count = function () {
-    return this.$http.get('/api/calendar', {
-      params: { action: 'count' }
-    });
+  CalendarModel.prototype.getCount = function () {
+    this.socket.emit('calendar:count');
   };
 
   CalendarModel.prototype.getCalendar = function () {
-    return this.$http.get('/api' + this.$location.path(), {
-      params: { action: 'getCalendar' }
-    });
+    this.socket.emit('calendar:get');
+  };
+
+  CalendarModel.prototype.getNextSessionsHeatMap = function (calendar) {
+    function millisecondsToSeconds (milliseconds) {
+      return milliseconds / 1000;
+    }
+
+    var data = {};
+
+    for (var i in calendar) {
+      var timestamp = millisecondsToSeconds(new Date(calendar[i].next_session).getTime());
+      if (data[timestamp]) {
+        data[timestamp] += calendar[i].size;
+      }
+      else {
+        data[timestamp] = calendar[i].size;
+      }
+    }
+
+    return data;
   };
 
   angular.module('memorizy.calendar.CalendarModel', []). 
     provider('calendarModel', function () {
       this.$get = [
-        '$http',
+        'socket.io',
         '$location',
-        function ($http, $location) {
-          return new CalendarModel($http, $location);
+        function (socket, $location) {
+          return new CalendarModel(socket, $location);
         }
       ];
     });

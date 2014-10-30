@@ -9,41 +9,21 @@
     this.$scope    = $scope;
     this.$location = $location;
 
-    calendarModel.count().success(function (count) {
-      console.log('set count to ' , count);
-      $scope.count = count;
-    });
+    calendarModel.getCalendar();
+    $scope.getCalendar = function () { return calendarModel.calendar; };
 
-    calendarModel.getCalendar().success(function (calendar) {
-      $scope.calendar = calendar;
-      updateWeek();
-      updateCalHeatMap();
+      //updateWeek();
+      //updateCalHeatMap();
 
-      $scope.calHeatMapConfig = {
-         domain: 'month',
-         data: toCalHeatMap(calendar),
-         subDomainTextFormat: '%d',
-         cellSize: 15,
-         itemName: 'flashcard',
-         legend: [20, 50, 100, 200]
-      };
-    });
-
-    function toCalHeatMap (calendar) {
-      var data = {};
-
-      for (var i in calendar) {
-        var timestamp = new Date(calendar[i].next_session).getTime() / 1000;
-        if (data[timestamp]) {
-          data[timestamp] += calendar[i].size;
-        }
-        else {
-          data[timestamp] = calendar[i].size;
-        }
-      }
-
-      return data;
-    }
+      //$scope.calHeatMapConfig = {
+         //domain: 'month',
+         //data: toCalHeatMap(calendar),
+         //subDomainTextFormat: '%d',
+         //cellSize: 15,
+         //itemName: 'flashcard',
+         //legend: [20, 50, 100, 200]
+      //};
+    //});
 
     $scope.getDate = function (offset) {
       var res = new Date();

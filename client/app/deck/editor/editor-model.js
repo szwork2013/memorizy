@@ -1,12 +1,46 @@
 (function () {
   'use strict';
 
-  function DeckEditorModel ($http, $location, $upload) {
-    this.$http = $http;
+  function DeckEditorModel (socket, $location, $upload) {
+    this.socket = socket;
     this.$location = $location;
     this.$upload = $upload;
 
     this.deck = null;
+
+    var self = this;
+
+    this.getIndex = function(flashcardId) {
+      for (var i = 0; i < this.deck.flashcards.length; i++) {
+        if (this.deck.flashcards[i].id === flashcardId) {
+          return i;
+        }
+      }
+
+      return -1;
+    };
+
+    socket.on('flashcard:saved', function(data) {
+      if (typeof data.queryId !== 'undefined') {
+        self.deck.queryForId[data.queryId].id = data.id;
+      }
+    });
+
+    socket.on('flashcard:moved', function(data) {
+      var index = self.getIndex(data.id),
+          flashcard = self.deck.flashcards.splice(index, 1)[0];
+
+      self.deck.flashcards.splice(data.newPosition, 0, flashcard);
+    });
+
+    socket.on('flashcard:removed', function(flashcard) {
+      var index = self.getIndex.call(self, flashcard.id);
+
+      self.deck.flashcards.splice(index, 1);
+      if (self.deck.flashcards.length === 0) {
+        self.addFlashcard();
+      }
+    });
   }
 
   DeckEditorModel.prototype = {
@@ -15,38 +49,58 @@
     },
 
     addFlashcard: function () {
-      this.deck.flashcards.push({
+      var flashcard = {
         deck_id: this.deck.id,
         term_text: '',
         definition_text: ''
-      });
+      };
+      this.deck.flashcards.push(flashcard);
+      return flashcard;
     },
 
     saveFlashcard: function (flashcard) {
-      console.log('save flashcard ', flashcard);
-      return this.$http.post('/api' + this.$location.path(), flashcard, { 
-        params: { action: 'saveFlashcard' }
+      var queryId;
+      if (typeof flashcard.id === 'undefined') {
+        this.deck.queryForId = this.deck.queryForId || [];
+        queryId = this.deck.flashcards.length;
+        this.deck.queryForId.push(flashcard);
+      }
+    
+      this.socket.emit('flashcard:save', {
+        flashcard: flashcard,
+        queryId: queryId
       });
+    },
+
+    moveFlashcard: function(from, to) {
+      if (from === to) {
+        return;
+      }
+
+      if (this.deck.flashcards[from].id) {
+        this.socket.emit('flashcard:move', {
+          id:          this.deck.flashcards[from].id,
+          newPosition: to
+        });
+      }
+      else {
+        var flashcard = this.deck.flashcards.splice(from, 1)[0];
+        this.deck.flashcards.splice(to, 0, flashcard);
+      }
     },
 
     removeFlashcard: function (index) {
       var f = this.deck.flashcards[index];
-      var ret = null;
+
       if (f.id) {
-        ret = this.$http.delete('/api' + this.$location.path(), { 
-          params: { 
-            action: 'deleteFlashcard',
-            flashcardId: f.id 
-          }
-        });
+        this.socket.emit('flashcard:remove', { id: f.id });      
       }
-
-      this.deck.flashcards.splice(index, 1);
-      if (this.deck.flashcards.length === 0) {
-        this.addFlashcard();
+      else {
+        this.deck.flashcards.splice(index, 1);
+        if (this.deck.flashcards.length === 0) {
+          this.addFlashcard();
+        }
       }
-
-      return ret;
     },
 
     upload: function (file) {
@@ -75,13 +129,13 @@
   };
 
   angular.module('memorizy.deckeditor.DeckEditorModel', []).
-    provider('DeckEditorModel', function () {
+    provider('deckEditorModel', function () {
       this.$get = [
-        '$http', 
+        'socketio', 
         '$location', 
         '$upload', 
-        function ($http, $location, $upload) {
-          return new DeckEditorModel($http, $location, $upload);
+        function (socket, $location, $upload) {
+          return new DeckEditorModel(socket, $location, $upload);
         }
       ];
     }); 

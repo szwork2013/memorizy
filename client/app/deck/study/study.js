@@ -1,4 +1,5 @@
 angular.module('memorizy.deckstudy', [
   'memorizy.deckstudy.DeckStudyController',
-  'memorizy.deckstudy.SessionManager',
+  'memorizy.deckstudy.StudySession',
+  'memorizy.deckstudy.StudySessionManager',
 ]);

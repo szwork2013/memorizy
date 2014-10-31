@@ -7,7 +7,13 @@
     cssInjector.add('/css/register/register.css');
 
     $scope.user = {};
-    $scope.register = registerModel.register;
+    $scope.register = function() {
+      try {
+        registerModel.register;
+      } catch(err) {
+        $scope.error.register = err;
+      }
+    };
   }
 
   angular.module('memorizy.register.RegisterController', [])

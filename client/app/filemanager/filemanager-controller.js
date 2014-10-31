@@ -2,7 +2,7 @@
   'use strict';
 
   function FileManagerController ($document, $scope, $location, $timeout, 
-                                     socket, FileManager, cssInjector) 
+                                  socket, FileManager, cssInjector) 
   {
       cssInjector.add('/css/filemanager/filemanager.css');
 
@@ -28,21 +28,31 @@
         return FileManager.folder ? FileManager.folder.files : null; 
       };
       $scope.getDeck = function () { 
-        console.log('getDeck gonna return ', FileManager.deck);
         return FileManager.deck; 
       };
 
+      socket.on('file:error', function(err) {
+        $scope.errors.unexpected = err;         
+      });
+
       $scope.addFile = function () {
-        FileManager.addFile($scope.newFile);
-        $scope.newFile.name = '';
-      };
- 
-      $scope.renameFile = function (file, newName) {
-        FileManager.renameFile(file, newName);
-        $scope.renameModal.filename = '';
+        try {
+          FileManager.addFile($scope.newFile);
+          $scope.newFile.name = '';
+        } catch(err) {
+          $scope.errors.add = err;
+        }
       };
 
-      $scope.updateFile       = FileManager.updateFile;
+      $scope.renameFile = function (file, newName) {
+        try {
+          FileManager.renameFile(file, newName);
+          $scope.renameModal.filename = '';
+        } catch(err) {
+          $scope.errors.rename = err;
+        }
+      };
+
       $scope.deleteFile       = FileManager.deleteFile;
       $scope.moveFile         = FileManager.moveFile;
       $scope.copyFile         = FileManager.copyFile;

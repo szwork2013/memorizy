@@ -37,6 +37,15 @@ module.exports = function(config) {
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
     reporters: ['mocha'],
+    mochaReporter: {
+      output: 'autowatch'
+    },
+    //client: {
+      //mocha: {
+        //reporter: 'min', // change Karma's debug.html to the mocha web reporter
+        //ui: 'tdd'
+      //}
+    //},
 
 
     // web server port

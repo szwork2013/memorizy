@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+
   function DeckEditorController ($scope, $sce, $timeout, DeckEditorModel, 
                                  markdownConverter, flashcardService, cssInjector) 
   {

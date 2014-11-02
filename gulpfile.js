@@ -10,34 +10,29 @@
       uglify = require('gulp-uglify'),
       changed = require('gulp-changed'),
       watch = require('gulp-watch'),
-      gutil = require('gulp-util');
+      gutil = require('gulp-util'),
+      exec = require('child_process').exec,
+      karma = require('karma').server;
+
 
   gulp.task('jade', function () {
-    watch({
-      glob: './client/app/**/*.jade'
-    }, function (files) {
+    watch('./client/app/**/*.jade', function (files) {
       return files.pipe(jade({locals: {}}))
         .pipe(gulp.dest('./build/partials'));
     });
   });
 
   gulp.task('css/less', function () {
-    watch({
-      glob: './client/app/**/*.less'
-    }, function (files) {
+    watch('./client/app/**/*.less', function (files) {
       return files.pipe(less())
         .pipe(gulp.dest('./build/css'));
     });
 
-    watch({
-      glob: './client/app/**/*.css'
-    }, function (files) {
+    watch('./client/app/**/*.css', function (files) {
       return files.pipe(gulp.dest('./build/css'));
     });
 
-    watch({
-      glob: './client/vendor/**/*.css'
-    }, function (files) {
+    watch('./client/vendor/**/*.css', function (files) {
       return files.pipe(concat('vendor.css'))
         .pipe(gulp.dest('./build/css'));
     });
@@ -52,9 +47,7 @@
       './client/app/**/*.js'
     ];
 
-    watch({
-      glob: glob
-    }, function (files) {
+    watch(glob, function (files) {
       return gulp.src(glob)
         .pipe(concat('memorizy.js'))
         //.pipe(uglify())
@@ -68,11 +61,43 @@
       .pipe(gulp.dest('./build/'));
   });
 
+  var firstLaunch = true;
+  gulp.task('client/tests', function() {
+    watch('client/**/*.js', function(files) {
+      if (firstLaunch) {
+        karma.start({
+          configFile: __dirname + '/karma.conf.js'
+        });
+        firstLaunch = false;
+      }
+    });
+  });
+
+  gulp.task('server/tests', function() {
+    watch([
+      'models/**/*.js',
+      'middlewares/**/*.js',
+      'routes/**/*.js',
+      'utils/**/*.js',
+      'db/**/*.js',
+      'test/**/*.js',
+      'app.js',
+    ], { name: 'server/tests' }, function(files) {
+      exec('mocha --reporter list', 
+           function (err, stdout, stderr) {
+            console.log(stdout);
+            console.log(stderr);
+          });
+    });
+  });
+
   gulp.task('default', [
     'jade', 
     'css/less',
     'js',
-    'assets'
+    'assets',
+    'client/tests',
+    'server/tests'
   ]);
 
 })();

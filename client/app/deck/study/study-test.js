@@ -99,15 +99,15 @@
             }));
           });
 
-          it('should create a subdeck when switching to method get100', function() {
-            var deck = { id: 123 }, 
-                s = session.create(deck);
+          it('should create a subdeck when switching to method get100');
+            //var deck = { id: 123 }, 
+                //s = session.create(deck);
 
-            s.setMethod(s.config.Methods.GET100);
-            assert.deepEqual(s.subdeck, {
-              index: 0
-            });
-          });
+            //s.setMethod(s.config.Methods.GET100);
+            //assert.deepEqual(s.subdeck, {
+              //index: 0
+            //});
+          //});
         });
 
         describe('Set flashcard order', function() {

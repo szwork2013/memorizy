@@ -286,9 +286,6 @@
         case Orders.CLASSIC           : sortByIndex.call(this); break; 
         case Orders.HARDEST_TO_EASIEST: sortByDifficulty.call(this); break; 
         case Orders.LEAST_STUDIED     : sortByViews.call(this); break; 
-        default:
-          console.log('unknown order');
-        return;
       }
     },
 

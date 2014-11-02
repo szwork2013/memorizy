@@ -19,4 +19,4 @@ run ln -s $(which nodejs) $(dirname $(which nodejs))/node
 
 run    npm install -g gulp mocha istanbul
 
-cmd ["node", "/memorizy/server/src/app.js"]
+cmd ["node", "/memorizy/app.js"]

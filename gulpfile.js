@@ -11,8 +11,7 @@
       changed = require('gulp-changed'),
       watch = require('gulp-watch'),
       gutil = require('gulp-util'),
-      exec = require('child_process').exec,
-      karma = require('karma').server;
+      exec = require('child_process').exec;
 
 
   gulp.task('jade', function () {
@@ -59,18 +58,6 @@
   gulp.task('assets', function () {
     gulp.src('./client/assets/**/*')
       .pipe(gulp.dest('./build/'));
-  });
-
-  var firstLaunch = true;
-  gulp.task('client/tests', function() {
-    watch('client/**/*.js', function(files) {
-      if (firstLaunch) {
-        karma.start({
-          configFile: __dirname + '/karma.conf.js'
-        });
-        firstLaunch = false;
-      }
-    });
   });
 
   gulp.task('server/tests', function() {

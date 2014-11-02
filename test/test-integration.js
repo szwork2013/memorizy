@@ -14,8 +14,8 @@
       var promises = [];
 
       promises.push(registerModel.createUser({
-        name:     'user1',
-        email:    'user1@memorizy.com',
+        name:     'user3',
+        email:    'user3@memorizy.com',
         password: 'user1password'
       }));
 

@@ -35,7 +35,6 @@
    * about the query executed and its results
    */
   Db.prototype.executePreparedStatement = function (pstat) {
-    console.log('this: ', this);
     var deferred = q.defer();
     pg.connect(this.conn, function (err, client, done) {
       if (err) {

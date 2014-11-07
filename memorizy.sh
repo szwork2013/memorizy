@@ -44,7 +44,7 @@ install() {
 
 attach() {
   if [[ $# != 1 ]]; then
-    echo "Syntax: $0 attach <server|db>"
+    echo "Syntax: $0 attach <server|db|gulp>"
     exit
   fi
 
@@ -59,14 +59,14 @@ attach() {
       docker attach "$GULP_CONTAINER_NAME"
       ;;
     *)
-      echo "Can only attach to server or db"
+      echo "Can only attach to server, db or gulp"
       exit
   esac
 }
 
 psql() {
-  docker run -it --link "$DB_CONTAINER_NAME":postgres --rm "$DB_IMAGE_NAME" \
-    sh -c 'exec psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres -d memorizy'
+  docker run -it --link "$DB_CONTAINER_NAME":postgres --rm -v "$APP_DIR"/db:/db "$DB_IMAGE_NAME" \
+     sh -c 'exec psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres -d memorizy'
 } 
 
 extract() {
@@ -93,21 +93,24 @@ restore() {
   ARCHIVE=$1
   DATA_CONTAINER_NAME=$2
 
+  echo -e "Restore $ARCHIVE to $DATA_CONTAINER_NAME...\t\c"
+
   docker rm -f "$DB_CONTAINER_NAME" 2>/dev/null 1>&2
   docker rm -f "$DATA_CONTAINER_NAME" 2>/dev/null 1>&2
 
-  docker run -it --name "$DB_CONTAINER_NAME" -v $APP_DIR:/db "$DB_IMAGE_NAME" sh -c "tar xvf db/$ARCHIVE --no-overwrite-dir" && \
-    docker run -it --name "$DATA_CONTAINER_NAME" --volumes-from "$DB_CONTAINER_NAME" -d ubuntu:14.04 /bin/bash  && \
-    docker rm "$DB_CONTAINER_NAME"
+  docker run -it --name "$DB_CONTAINER_NAME" -v $APP_DIR:/db "$DB_IMAGE_NAME" sh -c "tar xf db/$ARCHIVE --no-overwrite-dir && echo Ok" && \
+    docker run -it --name "$DATA_CONTAINER_NAME" --volumes-from "$DB_CONTAINER_NAME" -d ubuntu:14.04 /bin/bash >/dev/null && \
+    docker rm "$DB_CONTAINER_NAME" >/dev/null
 }
 
 gulp() {
-  docker run -it --rm --link "$DB_CONTAINER_NAME":db --name "$GULP_CONTAINER_NAME" \
-    -v $APP_DIR:/memorizy "$GULP_IMAGE_NAME" sh -c "cd /memorizy && gulp"
+  echo -e "Gulp container\t\c"
+  docker run -it --link "$DB_CONTAINER_NAME":db --name "$GULP_CONTAINER_NAME" \
+    -v $APP_DIR:/memorizy -d "$GULP_IMAGE_NAME" sh -c "cd /memorizy && gulp"
 }
 
 run() {
-  ENV="prod"
+  ENV="dev"
 
   while [[ $# > 0 ]]
   do
@@ -135,18 +138,20 @@ run() {
       ;;
   esac
 
-  docker rm -f "$APP_CONTAINER_NAME" 2>/dev/null
-  docker rm -f "$GULP_CONTAINER_NAME" 2>/dev/null
-  docker rm -f "$DB_CONTAINER_NAME" 2>/dev/null
+  docker rm -f "$APP_CONTAINER_NAME" 2>/dev/null 1>&2
+  docker rm -f "$GULP_CONTAINER_NAME" 2>/dev/null 1>&2
+  docker rm -f "$DB_CONTAINER_NAME" 2>/dev/null 1>&2
 
   docker inspect "$DATA_CONTAINER_NAME" 2>/dev/null 1>&2 || \
-    "$APP_DIR"/restore.sh "$DATA_CONTAINER_NAME" backup.tar.gz
+    restore backup.tar.gz "$DATA_CONTAINER_NAME" 
 
+  echo -e "Database container with data from ${DATA_CONTAINER_NAME}\t\c"
   docker run -it --name "$DB_CONTAINER_NAME" \
-  --volumes-from "$DATA_CONTAINER_NAME" -d "$DB_IMAGE_NAME"
+  --volumes-from "$DATA_CONTAINER_NAME" -d "$DB_IMAGE_NAME" 
 
-  docker run -it --name "$APP_CONTAINER_NAME" -p 3000:80 \
-  --link "$DB_CONTAINER_NAME":db -v $APP_DIR:/memorizy -d "$APP_IMAGE_NAME"
+  echo -e "Node container\t\c"
+  docker run -it --name "$APP_CONTAINER_NAME" -p 3000:80 --link "$DB_CONTAINER_NAME":db \
+    -v $APP_DIR:/memorizy -d "$APP_IMAGE_NAME" 
 
   gulp
 }
@@ -158,7 +163,7 @@ case $ACTION in
     ;;
   "run")
     shift
-    run $*
+    run $* 
     ;;
   "attach")
     shift

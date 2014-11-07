@@ -83,7 +83,6 @@
     'css/less',
     'js',
     'assets',
-    'client/tests',
     'server/tests'
   ]);
 

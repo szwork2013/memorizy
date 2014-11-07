@@ -15,19 +15,22 @@ begin
 		where email = _email
 	) into name_already_exists, email_already_exists;
 	
-	if not (name_already_exists or email_already_exists) then
-    with i as (
-      insert into users (name, password, email, hash, enabled)
-        values( _name, crypt(_password, gen_salt('bf')), _email, md5(salt || _name || _email), false)
-        returning id, hash
-    )
-    select id, hash into _user_id, _hash from i;
+  if name_already_exists then
+    raise exception 'Name already taken'
+    using errcode = '22023'; /*invalid_parameter_value*/
+  elsif email_already_exists then
+    raise exception 'Email already taken'
+    using errcode = '22023'; /*invalid_parameter_value*/
+  end if;
 
-	end if;
+  with i as (
+    insert into users (name, password, email, hash, enabled)
+      values( _name, crypt(_password, gen_salt('bf')), _email, md5(salt || _name || _email), false)
+      returning id, hash
+  )
+  select id, hash into _user_id, _hash from i;
 
-  res := (found, _user_id, _hash, name_already_exists, email_already_exists); -- Arguments order must NOT be changed
-
-	return res;
+	return _user_id;
 end;
 $$ language plpgsql;
 
